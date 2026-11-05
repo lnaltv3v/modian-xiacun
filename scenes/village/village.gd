@@ -8,8 +8,8 @@ signal place_cancelled
 const LAYOUT_PATH := "res://data/buildings/layout.json"
 ## 兩棟建築中心最短距離（設計座標），避免疊太歪
 const MIN_SEPARATION := 96.0
-## 可建區（大致對齊 buildings_pad）
-const BUILDABLE := Rect2(80, 150, 800, 300)
+## 可建區（預設對齊 village_v2 buildings_pad 平坦地皮；可被 layout.json 覆寫）
+var BUILDABLE := Rect2(130, 232, 700, 268)
 
 var _layout: Dictionary = {}
 var _design := Vector2(960, 540)
@@ -60,6 +60,12 @@ func _load_layout() -> void:
 	_design = Vector2(float(ds.get("w", 960)), float(ds.get("h", 540)))
 	var off: Dictionary = _layout.get("icon_anchor_offset", {}) as Dictionary
 	_icon_off = Vector2(float(off.get("x", -64)), float(off.get("y", -72)))
+	var br: Dictionary = _layout.get("buildable_rect", {}) as Dictionary
+	if not br.is_empty():
+		BUILDABLE = Rect2(
+			float(br.get("x", 130)), float(br.get("y", 232)),
+			float(br.get("w", 700)), float(br.get("h", 268))
+		)
 
 func _build_world() -> void:
 	for c in get_children():

@@ -267,9 +267,27 @@ func _complete_hunt(hunt: Dictionary) -> void:
 
 	var flavor: String
 	if success:
-		flavor = "擊退「%s」！（成功率 %.0f%%）" % ["、".join(enemy_names), success_chance * 100.0]
+		var win_bits := [
+			"刀光過處，煙塵散盡。",
+			"一場硬仗，總算守住陣腳。",
+			"獵物倒下，山林暫靜。",
+		]
+		flavor = "%s擊退「%s」！（成功率 %.0f%%）" % [
+			str(win_bits[_rng.randi() % win_bits.size()]),
+			"、".join(enemy_names),
+			success_chance * 100.0,
+		]
 	else:
-		flavor = "不敵「%s」，狼狽撤回。（成功率僅 %.0f%%）" % ["、".join(enemy_names), success_chance * 100.0]
+		var lose_bits := [
+			"力有不逮，且退再戰。",
+			"敵勢太盛，拖著傷退回。",
+			"險些折在亂山，幸得撤出。",
+		]
+		flavor = "%s不敵「%s」。（成功率僅 %.0f%%）" % [
+			str(lose_bits[_rng.randi() % lose_bits.size()]),
+			"、".join(enemy_names),
+			success_chance * 100.0,
+		]
 
 	var rewards: Dictionary = {
 		"silver": silver_gain,

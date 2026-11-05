@@ -22,6 +22,8 @@ var _atk_flip: bool = false
 var _phase: String = "idle"  ## approach | fight | done
 var _fight_left: float = 0.0
 var _rng := RandomNumberGenerator.new()
+var _bg_tex: TextureRect
+var _bg_dim: ColorRect
 
 func _ready() -> void:
 	visible = false
@@ -32,6 +34,7 @@ func _ready() -> void:
 	if btn_ok:
 		btn_ok.pressed.connect(_on_ok)
 		btn_ok.visible = false
+	_ensure_bg()
 
 ## config:
 ##  title, heroes: [hero_id], enemies: [{kind,name,scale?}],
@@ -49,6 +52,7 @@ func play(config: Dictionary) -> void:
 	_fight_left = clampf(dur, 3.0, 8.0)
 	visible = true
 	move_to_front()
+	_apply_zone_bg()
 	if summary_panel:
 		summary_panel.visible = false
 	if btn_ok:
@@ -263,21 +267,7 @@ func _show_summary() -> void:
 		phase_label.text = "結算"
 
 func _format_summary(s: Dictionary) -> String:
-	if s.has("text") and str(s.get("text", "")) != "":
-		return str(s.get("text", ""))
-	var iron: int = int(s.get("iron", 0))
-	var iron_txt: String = ("　鐵 %d" % iron) if iron > 0 else ""
-	var lines: PackedStringArray = PackedStringArray()
-	var flavor: String = str(s.get("flavor", ""))
-	if flavor != "":
-		lines.append(flavor)
-	lines.append("戰利品：銀 %d　毛皮 %d　木 %d%s" % [
-		int(s.get("silver", 0)), int(s.get("fur", 0)), int(s.get("wood", 0)), iron_txt
-	])
-	var injured: Array = s.get("injured", []) as Array
-	if injured.size() > 0:
-		lines.append("受傷：%s" % "、".join(PackedStringArray(injured)))
-	return "\n".join(lines)
+	return LootText.format_summary(s)
 
 func _on_ok() -> void:
 	_finish()
@@ -291,6 +281,53 @@ func _finish() -> void:
 		btn_ok.visible = false
 	_clear_layers()
 	finished.emit(_summary)
+
+
+func _ensure_bg() -> void:
+	if arena == null:
+		return
+	if _bg_tex != null and is_instance_valid(_bg_tex):
+		return
+	## 隱藏純色底，改用野外合成圖
+	var old_bg := arena.get_node_or_null("ArenaBg")
+	if old_bg:
+		old_bg.visible = false
+	_bg_tex = TextureRect.new()
+	_bg_tex.name = "ArenaBgTex"
+	_bg_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_bg_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_bg_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_bg_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_bg_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bg_tex.z_index = -2
+	arena.add_child(_bg_tex)
+	arena.move_child(_bg_tex, 0)
+	_bg_dim = ColorRect.new()
+	_bg_dim.name = "ArenaBgDim"
+	_bg_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_bg_dim.color = Color(0.06, 0.05, 0.04, 0.22)
+	_bg_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bg_dim.z_index = -1
+	arena.add_child(_bg_dim)
+	arena.move_child(_bg_dim, 1)
+
+func _apply_zone_bg() -> void:
+	_ensure_bg()
+	if _bg_tex == null:
+		return
+	var key: String = str(_cfg.get("zone_bg", "")).strip_edges()
+	if key == "":
+		key = ArtPaths.zone_bg_key_for(
+			str(_cfg.get("zone_id", "")),
+			str(_cfg.get("battle_mode", ""))
+		)
+	var path: String = ArtPaths.zone_bg(key)
+	var tex: Texture2D = ArtPaths.load_tex(path)
+	if tex != null:
+		_bg_tex.texture = tex
+		_bg_tex.visible = true
+	else:
+		_bg_tex.visible = false
 
 func is_busy() -> bool:
 	return _playing and visible

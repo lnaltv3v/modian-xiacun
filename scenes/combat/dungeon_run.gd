@@ -120,17 +120,7 @@ func _show_summary() -> void:
 		("全破！" if bool(_rewards.get("cleared", false)) else "中途撤出"),
 	]
 	flavor_label.text = str(_rewards.get("flavor", ""))
-	var iron: int = int(_rewards.get("iron", 0))
-	var iron_txt: String = ("　鐵 %d" % iron) if iron > 0 else ""
-	var loot := "戰利品：銀 %d　毛皮 %d　木 %d%s" % [
-		int(_rewards.get("silver", 0)),
-		int(_rewards.get("fur", 0)),
-		int(_rewards.get("wood", 0)),
-		iron_txt,
-	]
-	var injured: Array = _rewards.get("injured", []) as Array
-	if injured.size() > 0:
-		loot += "\n受傷：%s" % "、".join(PackedStringArray(injured))
+	var loot := LootText.format_summary(_rewards)
 	## reuse enemies box for a simple loot line via label child
 	for c in enemies_box.get_children():
 		c.queue_free()

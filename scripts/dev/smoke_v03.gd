@@ -110,6 +110,18 @@ func _run() -> void:
 		ok = false
 		errors.append("tutorial_step not persisted got %d" % GameState.tutorial_step)
 
+	GameState.tutorial_step = 4
+	if not SaveManager.save_game():
+		ok = false
+		errors.append("save step4 failed")
+	GameState.tutorial_step = 0
+	if not SaveManager.load_game():
+		ok = false
+		errors.append("load step4 failed")
+	if GameState.tutorial_step != 4:
+		ok = false
+		errors.append("tutorial_step 4 not persisted got %d" % GameState.tutorial_step)
+
 	if ok:
 		print("SMOKE_V03_OK")
 		get_tree().quit(0)

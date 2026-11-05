@@ -14,8 +14,14 @@
       "label": "第一波 · 狼群",
       "enemy_power": 18,
       "enemies": [
-        {"kind": "wolf", "name": "野狼"},
-        {"kind": "wolf", "name": "野狼"}
+        {
+          "kind": "wolf",
+          "name": "野狼"
+        },
+        {
+          "kind": "wolf",
+          "name": "野狼"
+        }
       ]
     },
     {
@@ -23,8 +29,14 @@
       "label": "第二波 · 山賊",
       "enemy_power": 28,
       "enemies": [
-        {"kind": "bandit", "name": "山賊"},
-        {"kind": "boar", "name": "野豬"}
+        {
+          "kind": "bandit",
+          "name": "山賊"
+        },
+        {
+          "kind": "boar",
+          "name": "野豬"
+        }
       ]
     },
     {
@@ -33,8 +45,18 @@
       "enemy_power": 48,
       "boss": true,
       "enemies": [
-        {"kind": "wolf", "name": "狼王", "elite": true, "scale": 1.35},
-        {"kind": "bandit", "name": "山賊頭目", "elite": true, "scale": 1.2}
+        {
+          "kind": "wolf",
+          "name": "狼王",
+          "elite": true,
+          "scale": 1.35
+        },
+        {
+          "kind": "bandit",
+          "name": "山賊頭目",
+          "elite": true,
+          "scale": 1.2
+        }
       ]
     }
   ],
@@ -43,5 +65,6 @@
   "base_wood": 2,
   "base_iron": 1,
   "clear_bonus_silver": 30,
-  "clear_bonus_iron": 2
+  "clear_bonus_iron": 2,
+  "bg_key": "crypt"
 }

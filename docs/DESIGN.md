@@ -38,7 +38,7 @@
 
 ## v0.3-playable
 - 自由放置 UX：可建區提示、幽靈預覽（綠可／紅不可）、最短間隔防疊、Esc／右鍵取消
-- 新手 3 步：興建客棧 → 派遣亂山坡 → 回村收資源（可跳過；存檔 `tutorial_step`）
+- 新手 4 步：興建客棧 → 派遣亂山坡 → 回村收資源 → 抽卡／興建（可跳過；存檔 `tutorial_step`）
 - 試玩入口：`tools/play.sh`；煙測 `smoke_v03.tscn`
 - 存檔 version **4**
 - Web export 待 templates（見 `docs/EXPORT.md`）

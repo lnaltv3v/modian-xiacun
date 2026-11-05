@@ -32,7 +32,7 @@ var zones: Dictionary = {}
 var inventory: Array = []
 ## 玩家放置：building_id -> {x, y}（設計座標 960×540）；空則用 layout 預設
 var building_placements: Dictionary = {}
-## 新手引導：0=完成／跳過；1=興建客棧；2=派遣；3=等回村
+## 新手引導：0=完成／跳過；1=興建客棧；2=派遣；3=等回村；4=抽卡／興建
 var tutorial_step: int = 1
 ## 英雄帖碎片（重覆轉換）
 var fragments: int = 0

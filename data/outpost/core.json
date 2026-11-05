@@ -12,7 +12,18 @@
       "count_base": 3,
       "count_per_manor": 1,
       "power_per": 7,
-      "mix": [{"kind": "bandit", "name": "山賊", "weight": 80}, {"kind": "wolf", "name": "惡狼", "weight": 20}]
+      "mix": [
+        {
+          "kind": "bandit",
+          "name": "山賊",
+          "weight": 80
+        },
+        {
+          "kind": "wolf",
+          "name": "惡狼",
+          "weight": 20
+        }
+      ]
     },
     {
       "index": 2,
@@ -22,7 +33,23 @@
       "count_base": 4,
       "count_per_manor": 2,
       "power_per": 8,
-      "mix": [{"kind": "wolf", "name": "野狼", "weight": 50}, {"kind": "boar", "name": "野豬", "weight": 35}, {"kind": "bandit", "name": "山賊", "weight": 15}]
+      "mix": [
+        {
+          "kind": "wolf",
+          "name": "野狼",
+          "weight": 50
+        },
+        {
+          "kind": "boar",
+          "name": "野豬",
+          "weight": 35
+        },
+        {
+          "kind": "bandit",
+          "name": "山賊",
+          "weight": 15
+        }
+      ]
     },
     {
       "index": 3,
@@ -33,7 +60,23 @@
       "count_per_manor": 2,
       "power_per": 10,
       "boss": true,
-      "mix": [{"kind": "bandit", "name": "山賊頭目", "weight": 60}, {"kind": "boar", "name": "鐵背豬", "weight": 25}, {"kind": "wolf", "name": "蒼狼", "weight": 15}]
+      "mix": [
+        {
+          "kind": "bandit",
+          "name": "山賊頭目",
+          "weight": 60
+        },
+        {
+          "kind": "boar",
+          "name": "鐵背豬",
+          "weight": 25
+        },
+        {
+          "kind": "wolf",
+          "name": "蒼狼",
+          "weight": 15
+        }
+      ]
     }
   ],
   "rewards": {
@@ -46,5 +89,6 @@
     "full_clear_bonus_iron": 2
   },
   "fail_injury": 12,
-  "desc": "v0.8：三波山賊／獸潮防衛；自動戰鬥演出後結算。"
+  "desc": "v0.8：三波山賊／獸潮防衛；自動戰鬥演出後結算。",
+  "bg_key": "outpost"
 }

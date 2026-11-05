@@ -267,6 +267,50 @@ const BTN_DISPATCH := UI_DIR + "btn_dispatch.png"
 const BTN_BUILD := UI_DIR + "btn_build.png"
 const HUD_PANEL := UI_DIR + "hud_panel.png"
 const VILLAGE_COMPOSED := TILES_DIR + "village_composed.png"
+
+const ZONES_DIR := TILES_DIR + "zones/"
+const ZONE_BG_KEYS := ["hills", "mire", "crypt", "outpost"]
+const ZONE_ID_TO_BG := {
+	"luan_shan_po": "hills",
+	"du_zhao": "mire",
+	"mi_jing_chu": "crypt",
+	"qianshao": "outpost",
+}
+
+static func zone_bg_key_for(zone_id: String = "", battle_mode: String = "") -> String:
+	var zid: String = zone_id.strip_edges()
+	if zid != "" and ZONE_ID_TO_BG.has(zid):
+		return str(ZONE_ID_TO_BG[zid])
+	var mode: String = battle_mode.strip_edges()
+	match mode:
+		"dungeon":
+			return "crypt"
+		"outpost":
+			return "outpost"
+		"hunt":
+			return "hills"
+		_:
+			pass
+	return "hills"
+
+static func zone_bg(key: String) -> String:
+	var k: String = key.strip_edges()
+	if k == "":
+		k = "hills"
+	if k not in ZONE_BG_KEYS:
+		## allow raw ids like zone_hills
+		if k.begins_with("zone_"):
+			k = k.substr(5)
+		if k not in ZONE_BG_KEYS:
+			k = "hills"
+	return ZONES_DIR + "zone_%s.png" % k
+
+static func zone_bg_layer(key: String, layer: String) -> String:
+	var k: String = key.strip_edges()
+	if k == "" or k not in ZONE_BG_KEYS:
+		k = "hills"
+	return ZONES_DIR + "zone_%s_%s.png" % [k, layer]
+
 const VILLAGE_GROUND := TILES_DIR + "village_ground.png"
 
 static func exists(path: String) -> bool:

@@ -92,5 +92,12 @@
     "h": 128
   },
   "placement_mode": "player_free",
-  "note": "buildings[] 只係示範／預設錨點；正式位置存 GameState.building_placements（玩家拖放）。"
+  "note": "buildings[] 只係示範／預設錨點；正式位置存 GameState.building_placements（玩家拖放）。可建區對齊 village_v2 buildings_pad 平坦地皮。",
+  "buildable_rect": {
+    "x": 130,
+    "y": 232,
+    "w": 700,
+    "h": 268
+  },
+  "art_revision": "village_v2"
 }

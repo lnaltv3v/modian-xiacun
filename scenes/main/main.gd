@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.9.1 — 數值粗平衡／稀有色邊／資源列
+## 墨點俠村 v0.9.2 — 掉落文案／教學④／村景v2／戰鬥區底圖
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -85,7 +85,7 @@ func _ready() -> void:
 	_rng_ui.randomize()
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.1"
+		title_label.text = "墨點俠村 · v0.9.2"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -475,8 +475,12 @@ func _on_upgrade(building_id: String) -> void:
 				GameState.tutorial_step = 2
 				GameState.push_report("引導②：剔選右邊俠客，撳「出征亂山坡」。")
 				_refresh_tutorial()
+			elif GameState.tutorial_step == 4:
+				_complete_tutorial_build_or_gacha("興建")
 		else:
 			GameState.push_report("%s升至 Lv.%d" % [name_cn, after])
+			if GameState.tutorial_step == 4:
+				_complete_tutorial_build_or_gacha("升級")
 	else:
 		GameState.push_report("資源唔夠或已滿級：%s" % name_cn)
 	_rebuild_buildings()
@@ -508,6 +512,10 @@ func _on_hunt_finished(rewards: Dictionary) -> void:
 		_battle_mode = "hunt"
 		_battle_queue.clear()
 		_battle_final = rewards.duplicate(true)
+		var zid: String = str(rewards.get("zone_id", GameState.selected_zone))
+		var zbg: String = str((GameState.get_zone(zid) as Dictionary).get("bg_key", ""))
+		if zbg == "":
+			zbg = ArtPaths.zone_bg_key_for(zid, "hunt")
 		_auto_combat.play({
 			"title": "野外 · %s" % str(rewards.get("zone_name", "獵場")),
 			"heroes": rewards.get("heroes", []),
@@ -516,12 +524,15 @@ func _on_hunt_finished(rewards: Dictionary) -> void:
 			"duration": _rng_ui.randf_range(3.5, 6.5),
 			"summary": rewards,
 			"show_summary": true,
+			"zone_id": zid,
+			"zone_bg": zbg,
+			"battle_mode": "hunt",
 		})
 	elif _hunt_result and _hunt_result.has_method("show_result"):
 		_hunt_result.show_result(rewards)
 	if GameState.tutorial_step == 3:
-		GameState.tutorial_step = 0
-		GameState.push_report("引導完成！之後可自由興建、放置、製作同自動出征。")
+		GameState.tutorial_step = 4
+		GameState.push_report("引導④：撳「英雄帖」抽一次，或興建／升級另一座建築。")
 		_refresh_tutorial()
 
 func _on_save_pressed() -> void:
@@ -550,6 +561,8 @@ func _on_load_pressed() -> void:
 		GameState.push_report("冇存檔可讀。")
 
 func _on_building_placed(_building_id: String, _pos: Vector2) -> void:
+	if GameState.tutorial_step == 4:
+		_complete_tutorial_build_or_gacha("放置")
 	_refresh_hud()
 
 func _on_skip_tutorial() -> void:
@@ -571,9 +584,18 @@ func _refresh_tutorial() -> void:
 		2:
 			tutorial_label.text = "② 剔選右邊俠客（可多選），再撳「出征亂山坡」。"
 		3:
-			tutorial_label.text = "③ 等下方倒數完 → 俠客回村，收銀／毛皮。跟住自由玩！"
+			tutorial_label.text = "③ 等下方倒數完 → 俠客回村，收銀／毛皮。"
+		4:
+			tutorial_label.text = "④ 撳「英雄帖」抽一次，或興建／升級／放置另一座建築。"
 		_:
 			tutorial_label.text = "新手引導"
+
+func _complete_tutorial_build_or_gacha(via: String) -> void:
+	if GameState.tutorial_step != 4:
+		return
+	GameState.tutorial_step = 0
+	GameState.push_report("引導完成（%s）！之後可自由興建、放置、抽卡、製作同自動出征。" % via)
+	_refresh_tutorial()
 
 func _setup_bounty_options() -> void:
 	if opt_bounty == null:
@@ -616,6 +638,8 @@ func _on_gacha_pressed() -> void:
 	var res: Dictionary = GachaSystem.pull_once()
 	if not bool(res.get("ok", false)):
 		GameState.push_report("英雄帖失敗：%s" % str(res.get("reason", "")))
+	elif GameState.tutorial_step == 4:
+		_complete_tutorial_build_or_gacha("抽卡")
 	_rebuild_heroes()
 	_refresh_hud()
 
@@ -824,6 +848,11 @@ func _play_next_wave_battle() -> void:
 	var summary: Dictionary = {}
 	if is_last:
 		summary = _battle_final.duplicate(true)
+	var zbg2: String = ArtPaths.zone_bg_key_for("", _battle_mode)
+	if _battle_mode == "dungeon":
+		zbg2 = "crypt"
+	elif _battle_mode == "outpost":
+		zbg2 = "outpost"
 	_auto_combat.play({
 		"title": str(w.get("_title", "交戰")),
 		"heroes": w.get("_heroes", []),
@@ -832,6 +861,8 @@ func _play_next_wave_battle() -> void:
 		"duration": _rng_ui.randf_range(3.2, 5.8),
 		"summary": summary,
 		"show_summary": is_last,
+		"zone_bg": zbg2,
+		"battle_mode": _battle_mode,
 	})
 
 func _on_auto_combat_finished(_summary: Dictionary) -> void:

@@ -20,17 +20,17 @@ func show_result(rewards: Dictionary) -> void:
 	move_to_front()
 	title_label.text = "回村 · %s" % str(rewards.get("zone_name", "獵場"))
 	flavor_label.text = str(rewards.get("flavor", "戰鬥結束。"))
-	var iron: int = int(rewards.get("iron", 0))
-	var iron_txt: String = ("　鐵 %d" % iron) if iron > 0 else ""
-	loot_label.text = "戰利品：銀 %d　毛皮 %d　木 %d%s" % [
-		int(rewards.get("silver", 0)),
-		int(rewards.get("fur", 0)),
-		int(rewards.get("wood", 0)),
-		iron_txt,
-	]
+	loot_label.text = LootText.format_loot_block(rewards)
+	var bounty: Dictionary = rewards.get("bounty_bonus", {}) as Dictionary
+	if int(bounty.get("hits", 0)) > 0:
+		loot_label.text += "\n懸賞「%s」命中 ×%d" % [
+			str(bounty.get("target_name", "目標")), int(bounty.get("hits", 0))
+		]
 	var injured: Array = rewards.get("injured", []) as Array
 	if injured.size() > 0:
-		loot_label.text += "\n受傷：%s" % "、".join(PackedStringArray(injured))
+		loot_label.text += "\n受傷回村：%s（醫館可療）" % "、".join(PackedStringArray(injured))
+	elif bool(rewards.get("success", true)):
+		loot_label.text += "\n全員無大礙。"
 
 	for c in enemies_box.get_children():
 		c.queue_free()
