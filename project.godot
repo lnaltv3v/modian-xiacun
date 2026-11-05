@@ -1,0 +1,28 @@
+; Engine configuration file.
+; Godot 4.x — 墨點俠村 / Ink Hero Village
+config_version=5
+
+[application]
+
+config/name="墨點俠村"
+config/description="墨點江湖村莊經營＋俠客養成（參考獵魔村物語）"
+run/main_scene="res://scenes/main/main.tscn"
+config/features=PackedStringArray("4.3", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameState="*res://scripts/autoload/GameState.gd"
+SaveManager="*res://scripts/autoload/SaveManager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/handheld/orientation=1
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0

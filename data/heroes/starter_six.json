@@ -1,0 +1,62 @@
+[
+  {
+    "id": "hero_atie",
+    "name": "刀客阿鐵",
+    "weapon": "刀",
+    "rarity": "綠",
+    "level": 1,
+    "base_power": 12,
+    "personality": "忠厚",
+    "status": "idle"
+  },
+  {
+    "id": "hero_aqing",
+    "name": "劍客阿青",
+    "weapon": "劍",
+    "rarity": "綠",
+    "level": 1,
+    "base_power": 11,
+    "personality": "冷靜",
+    "status": "idle"
+  },
+  {
+    "id": "hero_achang",
+    "name": "槍客阿長",
+    "weapon": "長槍",
+    "rarity": "綠",
+    "level": 1,
+    "base_power": 13,
+    "personality": "豪邁",
+    "status": "idle"
+  },
+  {
+    "id": "hero_dali",
+    "name": "棍僧大力",
+    "weapon": "棍",
+    "rarity": "綠",
+    "level": 1,
+    "base_power": 14,
+    "personality": "慈悲",
+    "status": "idle"
+  },
+  {
+    "id": "hero_azhen",
+    "name": "暗衛阿針",
+    "weapon": "暗器",
+    "rarity": "綠",
+    "level": 1,
+    "base_power": 10,
+    "personality": "機敏",
+    "status": "idle"
+  },
+  {
+    "id": "hero_aniu",
+    "name": "拳師阿牛",
+    "weapon": "拳腳",
+    "rarity": "綠",
+    "level": 1,
+    "base_power": 12,
+    "personality": "直率",
+    "status": "idle"
+  }
+]

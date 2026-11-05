@@ -1,0 +1,31 @@
+# Godot 4
+.godot/
+*.translation
+export.cfg
+export_presets.cfg
+
+# Export artifacts
+*.apk
+*.aab
+*.ipa
+*.exe
+*.x86_64
+*.app
+*.dmg
+*.zip
+!data/**/*.json
+dist/
+builds/
+export/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+
+# Local saves (runtime)
+user://
+*.sav

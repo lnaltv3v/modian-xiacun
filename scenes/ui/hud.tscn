@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://bmodianhud00001"]
+
+[node name="Hud" type="CanvasLayer"]
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Bar" type="ColorRect" parent="Root"]
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 48.0
+color = Color(0.101961, 0.0823529, 0.0627451, 0.85)
+
+[node name="Resources" type="Label" parent="Root"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = 640.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(0.909804, 0.862745, 0.784314, 1)
+text = "資源列占位 · 銀兩／木材／俠客"
