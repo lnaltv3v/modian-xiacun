@@ -100,12 +100,12 @@
     "h": 160
   },
   "placement_mode": "player_free",
-  "note": "buildings[] 預設拉開錨點（Pivot R4＝R3 spaced＋academy 280,320＋全棟加厚）；正式位置存 GameState.building_placements。中央大片可建空地。",
+  "note": "buildings[] 預設拉開錨點（Pivot R5＝R4 spaced＋八棟／村景再密；pad 全透明）；正式位置存 GameState.building_placements。中央大片可建空地。分層 tiles（ground/hills/pad/fg），唔用 composed。",
   "buildable_rect": {
     "x": 100,
     "y": 160,
     "w": 760,
     "h": 360
   },
-  "art_revision": "pivot_r4"
+  "art_revision": "pivot_r5"
 }

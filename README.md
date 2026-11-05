@@ -1,4 +1,4 @@
-# 墨點俠村（Ink Hero Village）· v0.10.0
+# 墨點俠村（Ink Hero Village）· v0.10.2
 
 武俠墨點風格村莊經營＋俠客養成。玩法跟足《獵魔村物語》核心循環（建築→養俠→派遣→資源→再升級）。
 
@@ -43,7 +43,7 @@ Headless 煙測（唔開窗）：
 ## 美術
 
 - 綠俠／怪：**64×64**（walk sheet 256×64）
-- 建築圖示：**160×160** Pivot R3（八棟含師門書院）；村景 960×540 分層拉開預設；橙紫 idle／walk／attack 已接
+- 建築圖示：**160×160** Pivot R5（八棟再密）；村景 960×540 分層拉開；橙紫／紅 idle／walk／attack 已接
 - 稀有階梯（後期）：綠64 → 紫96 → 橙128 → **紅256**
 
 ## 目錄
@@ -105,3 +105,8 @@ Headless 煙測（唔開窗）：
 - 村莊「維護」小面板：食／住／醫等級、日耗預覽、短缺紅點（`UpkeepSystem.describe_panel`）
 - 煙測：`res://scenes/dev/smoke_v010.tscn`
 
+
+## v0.10.2
+- Pivot R5 八棟＋村景分層 tiles 接入（`art_revision: pivot_r5`；pad 透明；拉開 free-place）
+- 預覽 `assets/art/_preview/pivot_r5_*`；備份 `_prev_pivot_r4/`；`tools/gen_pivot_r5.py`
+- 煙測：`res://scenes/dev/smoke_v010.tscn`
