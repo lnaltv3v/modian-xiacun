@@ -131,14 +131,19 @@ static func mutate(hero_id: String, mutator: Callable) -> void:
 	GameState.heroes[idx] = normalize_hero(hd)
 	GameState.heroes_changed.emit()
 
-static func equip_item(hero_id: String, slot: String, item: Dictionary) -> void:
+static func equip_item(hero_id: String, slot: String, item: Dictionary) -> Dictionary:
+	## 裝備並回傳被替換嘅舊件（可入庫）；{ previous }
+	var prev_box: Array = [{}]
 	mutate(hero_id, func(hd: Dictionary) -> void:
 		var eq: Dictionary = {}
 		if hd.has("equipment") and typeof(hd["equipment"]) == TYPE_DICTIONARY:
 			eq = (hd["equipment"] as Dictionary).duplicate(true)
+		if eq.has(slot) and typeof(eq[slot]) == TYPE_DICTIONARY:
+			prev_box[0] = (eq[slot] as Dictionary).duplicate(true)
 		eq[slot] = item.duplicate(true)
 		hd["equipment"] = eq
 	)
+	return {"previous": prev_box[0]}
 
 static func equipment_power(hero: Dictionary) -> int:
 	var total: int = 0

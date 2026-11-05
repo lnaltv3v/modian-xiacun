@@ -54,3 +54,29 @@ static func tick(delta: float) -> Dictionary:
 		GameState.push_report("%s 修煉有成，升至 Lv.%d！" % [str(d.get("name", "")), int(d.get("level", 1))])
 
 	return {"gained": gained_total, "levelups": levelups}
+
+static func apply_xp_to_hero(hero_id: String, amount: float) -> Dictionary:
+	## 一次性加 XP（比武／出征）；回傳 { ok, levelups, new_level, xp }
+	if amount <= 0.0 or hero_id == "":
+		return {"ok": false, "levelups": 0, "new_level": 0, "xp": 0.0}
+	var idx: int = HeroSystem.find_hero_index(hero_id)
+	if idx < 0:
+		return {"ok": false, "levelups": 0, "new_level": 0, "xp": 0.0}
+	var hd: Dictionary = (GameState.heroes[idx] as Dictionary).duplicate(true)
+	var lv: int = int(hd.get("level", 1))
+	var xp: float = float(hd.get("xp", 0)) + amount
+	var need: float = float(xp_to_next(lv))
+	var ups: int = 0
+	while xp >= need and lv < 30:
+		xp -= need
+		lv += 1
+		ups += 1
+		need = float(xp_to_next(lv))
+	hd["level"] = lv
+	hd["xp"] = xp
+	hd["xp_to_next"] = int(need)
+	GameState.heroes[idx] = HeroSystem.normalize_hero(hd)
+	GameState.heroes_changed.emit()
+	if ups > 0:
+		GameState.push_report("%s 比武／修煉有成，升至 Lv.%d！" % [str(hd.get("name", hero_id)), lv])
+	return {"ok": true, "levelups": ups, "new_level": lv, "xp": xp}

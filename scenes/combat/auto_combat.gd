@@ -146,24 +146,65 @@ func _spawn_sides() -> void:
 		var ed: Dictionary = ev as Dictionary
 		var kind: String = str(ed.get("kind", "wolf"))
 		var scale_m: float = float(ed.get("scale", 1.0))
-		var spr2 := Sprite2D.new()
-		spr2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		spr2.centered = true
-		var idle: Texture2D = ArtPaths.load_tex(ArtPaths.monster_idle(kind))
-		var atk: Texture2D = ArtPaths.load_tex(ArtPaths.monster_attack(kind))
-		spr2.texture = idle if idle != null else atk
-		var mds: float = (88.0 / 64.0) * scale_m
-		spr2.scale = Vector2(mds, mds)
-		## 面向左（對俠）
-		spr2.flip_h = true
-		spr2.position = Vector2(right_x + 80.0, mid_y + float(ei) * 32.0 - float(mini(enemies.size(), 4) - 1) * 16.0)
-		spr2.set_meta("home", Vector2(right_x - 40.0 - float(ei) * 18.0, mid_y + float(ei) * 32.0 - float(mini(enemies.size(), 4) - 1) * 16.0))
-		spr2.set_meta("kind", kind)
-		spr2.set_meta("idle_tex", idle)
-		spr2.set_meta("atk_tex", atk)
-		spr2.set_meta("side", "enemy")
-		enemies_layer.add_child(spr2)
-		_enemy_nodes.append(spr2)
+		var duel_hid: String = str(ed.get("hero_id", "")).strip_edges()
+		var home_y: float = mid_y + float(ei) * 32.0 - float(mini(enemies.size(), 4) - 1) * 16.0
+		if duel_hid != "":
+			## 比武台：對手用俠客精靈（右方、面向左）
+			var sprh := AnimatedSprite2D.new()
+			sprh.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sprh.centered = true
+			var idle_ok2: bool = ArtPaths.exists(ArtPaths.hero_idle(duel_hid))
+			if idle_ok2:
+				sprh.sprite_frames = ArtPaths.make_hero_frames(duel_hid)
+				if sprh.sprite_frames.has_animation("walk"):
+					sprh.play("walk")
+				elif sprh.sprite_frames.has_animation("idle"):
+					sprh.play("idle")
+			else:
+				var frames2 := SpriteFrames.new()
+				frames2.remove_animation("default")
+				frames2.add_animation("idle")
+				frames2.set_animation_loop("idle", true)
+				var img2 := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+				img2.fill(Color(0.55, 0.22, 0.18))
+				var tex2 := ImageTexture.create_from_image(img2)
+				frames2.add_frame("idle", tex2)
+				frames2.add_animation("walk")
+				frames2.set_animation_loop("walk", true)
+				frames2.add_frame("walk", tex2)
+				sprh.sprite_frames = frames2
+				sprh.play("walk")
+			var ds2: float = ArtPaths.display_scale_for(duel_hid, 88.0) if idle_ok2 else (88.0 / 32.0)
+			sprh.scale = Vector2(ds2, ds2)
+			sprh.flip_h = true
+			sprh.position = Vector2(right_x + 80.0, home_y)
+			sprh.set_meta("home", Vector2(right_x - 40.0 - float(ei) * 18.0, home_y))
+			sprh.set_meta("kind", kind)
+			sprh.set_meta("hero_id", duel_hid)
+			sprh.set_meta("side", "enemy")
+			sprh.set_meta("duelist", true)
+			enemies_layer.add_child(sprh)
+			_enemy_nodes.append(sprh)
+		else:
+			var spr2 := Sprite2D.new()
+			spr2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			spr2.centered = true
+			var idle: Texture2D = ArtPaths.load_tex(ArtPaths.monster_idle(kind))
+			var atk: Texture2D = ArtPaths.load_tex(ArtPaths.monster_attack(kind))
+			spr2.texture = idle if idle != null else atk
+			var mds: float = (88.0 / 64.0) * scale_m
+			spr2.scale = Vector2(mds, mds)
+			## 面向左（對俠）
+			spr2.flip_h = true
+			spr2.position = Vector2(right_x + 80.0, home_y)
+			spr2.set_meta("home", Vector2(right_x - 40.0 - float(ei) * 18.0, home_y))
+			spr2.set_meta("kind", kind)
+			spr2.set_meta("idle_tex", idle)
+			spr2.set_meta("atk_tex", atk)
+			spr2.set_meta("side", "enemy")
+			spr2.set_meta("duelist", false)
+			enemies_layer.add_child(spr2)
+			_enemy_nodes.append(spr2)
 		ei += 1
 		if ei >= 4:
 			break
@@ -186,7 +227,8 @@ func _begin_fight() -> void:
 		return
 	_phase = "fight"
 	if phase_label:
-		phase_label.text = "交鋒中…"
+		var mode: String = str(_cfg.get("battle_mode", ""))
+		phase_label.text = "切磋中…" if mode == "arena" else "交鋒中…"
 	## heroes: prefer walk as "attack" loop (no attack sheet yet); pulse scale
 	for n in _hero_nodes:
 		var spr: AnimatedSprite2D = n as AnimatedSprite2D
@@ -194,6 +236,13 @@ func _begin_fight() -> void:
 			if spr.sprite_frames.has_animation("walk"):
 				spr.play("walk")
 				spr.speed_scale = 1.35
+	for n_e in _enemy_nodes:
+		if not bool(n_e.get_meta("duelist", false)):
+			continue
+		var spr_e: AnimatedSprite2D = n_e as AnimatedSprite2D
+		if spr_e and spr_e.sprite_frames and spr_e.sprite_frames.has_animation("walk"):
+			spr_e.play("walk")
+			spr_e.speed_scale = 1.35
 
 func _process(delta: float) -> void:
 	if not _playing or _phase != "fight":
@@ -211,6 +260,11 @@ func _process(delta: float) -> void:
 
 func _pulse_frames() -> void:
 	for n in _enemy_nodes:
+		if bool(n.get_meta("duelist", false)):
+			var spr_d: Node2D = n as Node2D
+			if spr_d:
+				spr_d.position.x += -3.0 if _atk_flip else 3.0
+			continue
 		var spr: Sprite2D = n as Sprite2D
 		if spr == null:
 			continue
@@ -235,7 +289,11 @@ func _end_fight() -> void:
 	set_process(false)
 	var success: bool = bool(_cfg.get("success", true))
 	if phase_label:
-		phase_label.text = "得勝！" if success else "失利…"
+		var mode2: String = str(_cfg.get("battle_mode", ""))
+		if mode2 == "arena":
+			phase_label.text = "挑戰方勝！" if success else "對手勝！"
+		else:
+			phase_label.text = "得勝！" if success else "失利…"
 	## 勝：敵退後淡出；敗：俠退後
 	var tw := create_tween()
 	tw.set_parallel(true)
@@ -249,6 +307,13 @@ func _end_fight() -> void:
 			if spr2 and spr2.sprite_frames and spr2.sprite_frames.has_animation("idle"):
 				spr2.play("idle")
 				spr2.speed_scale = 1.0
+		for n_de in _enemy_nodes:
+			if not bool(n_de.get_meta("duelist", false)):
+				continue
+			var spr_de: AnimatedSprite2D = n_de as AnimatedSprite2D
+			if spr_de and spr_de.sprite_frames and spr_de.sprite_frames.has_animation("idle"):
+				spr_de.play("idle")
+				spr_de.speed_scale = 1.0
 	else:
 		for n3 in _hero_nodes:
 			var spr3: Node2D = n3 as Node2D
@@ -270,7 +335,8 @@ func _show_summary() -> void:
 		summary_label.text = _format_summary(_summary)
 	if btn_ok:
 		btn_ok.visible = true
-		btn_ok.text = "收下戰利品"
+		var mode3: String = str(_cfg.get("battle_mode", ""))
+		btn_ok.text = "完場" if mode3 == "arena" else "收下戰利品"
 	if phase_label:
 		phase_label.text = "結算"
 
@@ -340,3 +406,45 @@ func _apply_zone_bg() -> void:
 
 func is_busy() -> bool:
 	return _playing and visible
+
+func _ensure_float_layer() -> void:
+	if arena == null:
+		return
+	if _float_layer != null and is_instance_valid(_float_layer):
+		return
+	_float_layer = Control.new()
+	_float_layer.name = "FloatLayer"
+	_float_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_float_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_float_layer.z_index = 30
+	arena.add_child(_float_layer)
+
+func _clear_floaters() -> void:
+	if _float_layer == null or not is_instance_valid(_float_layer):
+		return
+	for c in _float_layer.get_children():
+		c.queue_free()
+
+func _spawn_hit_floaters() -> void:
+	_ensure_float_layer()
+	if _float_layer == null:
+		return
+	_hit_tick += 1
+	## 每隔一拍左右各噴一兩個飄字
+	var spawn_hero: bool = (_hit_tick % 2) == 0
+	var spawn_enemy: bool = (_hit_tick % 2) == 1 or str(_cfg.get("battle_mode", "")) == "arena"
+	if spawn_hero and not _hero_nodes.is_empty():
+		var hn: Node2D = _hero_nodes[_rng.randi_range(0, _hero_nodes.size() - 1)] as Node2D
+		if hn:
+			var amt: int = _rng.randi_range(6, 28)
+			var kind: String = "crit" if _rng.randf() < 0.12 else "hit"
+			var fl = _DamageFloater.new()
+			_float_layer.add_child(fl)
+			fl.setup(amt, hn.position + Vector2(_rng.randf_range(-12, 12), -30), kind)
+	if spawn_enemy and not _enemy_nodes.is_empty():
+		var en: Node2D = _enemy_nodes[_rng.randi_range(0, _enemy_nodes.size() - 1)] as Node2D
+		if en:
+			var amt2: int = _rng.randi_range(5, 24)
+			var fl2 = _DamageFloater.new()
+			_float_layer.add_child(fl2)
+			fl2.setup(amt2, en.position + Vector2(_rng.randf_range(-12, 12), -28), "enemy")

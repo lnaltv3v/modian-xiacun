@@ -61,3 +61,8 @@
 - UI：稀有色邊；資源列圖示＋獨立數字唔裁切
 - 紫階 12 人 96×96：`assets/art/heroes/purple/` + ArtPaths；pool `art_stem`、`placeholder:false`
 - 煙測：`smoke_v091.tscn`；試玩清單：`docs/PLAYTEST.md`
+
+## v0.9.5 比武台／製作裝備
+- **比武台**：依附練功場；剔 2 俠切磋；戰力＋亂數結算；自動戰鬥演出（對手用俠客精靈）；日限 12；連勝微 XP；存檔欄 `arena_*`
+- **製作→裝備**：庫存列可裝／用／賣；換裝舊件回庫；`TrainingSystem.apply_xp_to_hero`
+- 存檔 SaveManager **11**；煙測 `smoke_v095.tscn`

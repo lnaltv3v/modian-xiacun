@@ -1,10 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "比武台",
   "require_building": "training",
   "require_level": 1,
   "stamina_cost": 12,
   "xp_winner": 18,
   "xp_loser": 8,
-  "note": "stub：依附練功場；完整 UI／自動戰鬥演出後補"
+  "daily_limit": 12,
+  "note": "v0.9.5：村內切磋可玩；依附練功場；日限 12 場；自動戰鬥演出"
 }

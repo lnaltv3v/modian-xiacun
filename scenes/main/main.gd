@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.9.4 — 戰鬥飄字／抽卡稀有閃光／存檔自動備份
+## 墨點俠村 v0.9.5 — 比武台可玩對決／庫存裝用賣／裝備替換回庫
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -46,6 +46,7 @@ var btn_gacha10: Button
 @onready var btn_academy: Button = %BtnAcademy
 @onready var opt_zone: OptionButton = %OptZone
 @onready var btn_outpost: Button = %BtnOutpost
+@onready var btn_arena: Button = %BtnArena
 
 var _dispatch: DispatchSystem
 var _village: Control
@@ -91,7 +92,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.4"
+		title_label.text = "墨點俠村 · v0.9.5"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -145,6 +146,8 @@ func _ready() -> void:
 		opt_zone.item_selected.connect(_on_zone_selected)
 	if btn_outpost:
 		btn_outpost.pressed.connect(_on_outpost_pressed)
+	if btn_arena:
+		btn_arena.pressed.connect(_on_arena_pressed)
 
 	_rebuild_buildings()
 	_rebuild_heroes()
@@ -344,12 +347,42 @@ func _refresh_craft() -> void:
 		row.add_child(btn)
 		craft_box.add_child(row)
 
-	var lines: PackedStringArray = PackedStringArray()
-	lines.append("庫存 %d 件" % GameState.inventory.size())
-	for i in range(mini(6, GameState.inventory.size())):
+	var inv_head := Label.new()
+	inv_head.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
+	inv_head.add_theme_font_size_override("font_size", 12)
+	inv_head.text = "庫存 %d 件（揀目標後可裝／用／賣）" % GameState.inventory.size()
+	craft_box.add_child(inv_head)
+	var show_n: int = mini(8, GameState.inventory.size())
+	for i in range(show_n):
 		var it: Dictionary = GameState.inventory[i] as Dictionary
-		lines.append("· %s" % str(it.get("name", "?")))
-	inv_label.text = "\n".join(lines)
+		var kind: String = str(it.get("kind", ""))
+		var row_i := HBoxContainer.new()
+		var lab_i := Label.new()
+		lab_i.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lab_i.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
+		lab_i.add_theme_font_size_override("font_size", 11)
+		var extra: String = ""
+		if kind == "equip":
+			extra = " [%s＋%d]" % [str(it.get("slot", "?")), int(it.get("power", 0))]
+		elif kind == "consumable":
+			extra = " [傷%+d]" % int(it.get("injury", 0))
+		lab_i.text = "· %s%s" % [str(it.get("name", "?")), extra]
+		row_i.add_child(lab_i)
+		if kind == "equip" or kind == "consumable":
+			var btn_use := Button.new()
+			btn_use.text = "裝" if kind == "equip" else "用"
+			btn_use.disabled = _craft_hero_id == ""
+			btn_use.tooltip_text = "需要先點選俠客名作目標" if _craft_hero_id == "" else ("裝備／使用於 %s" % target_name)
+			btn_use.pressed.connect(_on_inv_use.bind(i))
+			row_i.add_child(btn_use)
+		var btn_sell := Button.new()
+		btn_sell.text = "賣"
+		btn_sell.tooltip_text = "賣出換銀"
+		btn_sell.pressed.connect(_on_inv_sell.bind(i))
+		row_i.add_child(btn_sell)
+		craft_box.add_child(row_i)
+	if inv_label:
+		inv_label.visible = false
 
 func _refresh_hud() -> void:
 	if lab_silver:
@@ -431,6 +464,7 @@ func _refresh_dispatch_btn() -> void:
 	btn_dispatch.text = "出征%s（已選 %d）" % [zname, n]
 	_refresh_dungeon_btn()
 	_refresh_outpost_btn()
+	_refresh_arena_btn()
 
 func _on_hero_toggled(pressed: bool, hid: String) -> void:
 	if pressed:
@@ -862,6 +896,81 @@ func _refresh_outpost_btn() -> void:
 		btn_outpost.text = "前哨（%d）" % n
 		btn_outpost.tooltip_text = str(chk.get("reason", "三波山賊／獸潮"))
 
+func _refresh_arena_btn() -> void:
+	if btn_arena == null:
+		return
+	var n_all: int = _selected_ids(99).size()
+	var ids: Array = _selected_ids(2)
+	if not ArenaSystem.arena_ready():
+		btn_arena.disabled = true
+		btn_arena.text = "比武（鎖）"
+		btn_arena.tooltip_text = "先興建練功場"
+		return
+	var left: int = ArenaSystem.spars_left()
+	if n_all != 2:
+		btn_arena.disabled = true
+		btn_arena.text = "比武" if n_all < 2 else "比武（要2人）"
+		btn_arena.tooltip_text = "剔選剛好兩名在村俠客切磋（今日剩 %d）" % left
+	else:
+		var chk: Dictionary = ArenaSystem.can_spar(str(ids[0]), str(ids[1]))
+		btn_arena.disabled = not bool(chk.get("ok", false))
+		btn_arena.text = "比武（%d）" % left
+		btn_arena.tooltip_text = str(chk.get("reason", "村內切磋"))
+
+func _on_arena_pressed() -> void:
+	var ids: Array = _selected_ids(2)
+	if ids.size() != 2:
+		GameState.push_report("比武要剔選剛好兩名俠客。")
+		return
+	if _auto_combat != null and _auto_combat.has_method("is_busy") and _auto_combat.is_busy():
+		GameState.push_report("戰鬥演出中，稍候。")
+		return
+	var res: Dictionary = ArenaSystem.spar(str(ids[0]), str(ids[1]))
+	if not bool(res.get("ok", false)):
+		GameState.push_report("比武失敗：%s" % str(res.get("reason", "")))
+		_refresh_arena_btn()
+		return
+	_selected.clear()
+	_rebuild_heroes()
+	_refresh_hud()
+	var duel: Dictionary = res.get("duel", {}) as Dictionary
+	var summary: Dictionary = res.get("summary", {}) as Dictionary
+	if _auto_combat != null and _auto_combat.has_method("play") and not duel.is_empty():
+		_battle_mode = "arena"
+		_battle_queue.clear()
+		_battle_final = summary.duplicate(true)
+		_auto_combat.play({
+			"title": str(duel.get("title", "比武台")),
+			"heroes": duel.get("heroes", []),
+			"enemies": duel.get("enemies", []),
+			"success": bool(duel.get("success", true)),
+			"duration": float(duel.get("duration", 4.2)),
+			"summary": summary,
+			"show_summary": true,
+			"zone_bg": str(duel.get("zone_bg", "hills")),
+			"battle_mode": "arena",
+		})
+	else:
+		_refresh_arena_btn()
+
+func _on_inv_use(inv_index: int) -> void:
+	if _craft_hero_id == "":
+		GameState.push_report("先點俠客名作製作／裝備目標。")
+		return
+	var res: Dictionary = CraftSystem.use_inventory_on_hero(inv_index, _craft_hero_id)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("用唔到：%s" % str(res.get("reason", "")))
+	_refresh_craft()
+	_rebuild_heroes()
+	_refresh_hud()
+
+func _on_inv_sell(inv_index: int) -> void:
+	var res: Dictionary = CraftSystem.sell_inventory_at(inv_index)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("賣唔成：%s" % str(res.get("reason", "")))
+	_refresh_craft()
+	_refresh_hud()
+
 func _on_outpost_pressed() -> void:
 	var ids: Array = _selected_ids(6)
 	var res: Dictionary = _OutpostScript.run_defense(ids)
@@ -931,6 +1040,13 @@ func _on_auto_combat_finished(_summary: Dictionary) -> void:
 		_battle_mode = ""
 		_rebuild_heroes()
 		_refresh_hud()
+		return
+	if _battle_mode == "arena":
+		_battle_mode = ""
+		_battle_queue.clear()
+		_rebuild_heroes()
+		_refresh_hud()
+		_refresh_arena_btn()
 		return
 	if not _battle_queue.is_empty():
 		_play_next_wave_battle()

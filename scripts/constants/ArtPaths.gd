@@ -317,6 +317,8 @@ static func zone_bg_key_for(zone_id: String = "", battle_mode: String = "") -> S
 			return "crypt"
 		"outpost":
 			return "outpost"
+		"arena":
+			return "hills"
 		"hunt":
 			return "hills"
 		_:

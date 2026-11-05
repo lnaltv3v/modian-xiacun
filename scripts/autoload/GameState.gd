@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 9
+const SAVE_VERSION := 11
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -55,6 +55,12 @@ var gacha_free_used_today: bool = false
 var selected_zone: String = "luan_shan_po"
 ## 前哨成功次數（stub 統計）
 var outpost_clears: int = 0
+## 比武台日限／連勝
+var arena_day_key: String = ""
+var arena_spars_today: int = 0
+var arena_wins_total: int = 0
+var arena_win_streak: int = 0
+var arena_last_winner: String = ""
 var _hunt_seq: int = 0
 var _gacha_seq: int = 0
 var _default_layout_buildings: Array = []
@@ -85,6 +91,11 @@ func _load_starter_data() -> void:
 	gacha_free_used_today = false
 	selected_zone = "luan_shan_po"
 	outpost_clears = 0
+	arena_day_key = ""
+	arena_spars_today = 0
+	arena_wins_total = 0
+	arena_win_streak = 0
+	arena_last_winner = ""
 	_hunt_seq = 0
 	_gacha_seq = 0
 	silver = 120
@@ -309,6 +320,11 @@ func to_save_dict() -> Dictionary:
 		"gacha_free_used_today": gacha_free_used_today,
 		"selected_zone": selected_zone,
 		"outpost_clears": outpost_clears,
+		"arena_day_key": arena_day_key,
+		"arena_spars_today": arena_spars_today,
+		"arena_wins_total": arena_wins_total,
+		"arena_win_streak": arena_win_streak,
+		"arena_last_winner": arena_last_winner,
 		"hunt_seq": _hunt_seq,
 		"gacha_seq": _gacha_seq,
 	}
@@ -356,6 +372,11 @@ func load_from_dict(d: Dictionary) -> void:
 	gacha_free_used_today = bool(d.get("gacha_free_used_today", false))
 	selected_zone = str(d.get("selected_zone", "luan_shan_po"))
 	outpost_clears = int(d.get("outpost_clears", 0))
+	arena_day_key = str(d.get("arena_day_key", ""))
+	arena_spars_today = int(d.get("arena_spars_today", 0))
+	arena_wins_total = int(d.get("arena_wins_total", 0))
+	arena_win_streak = int(d.get("arena_win_streak", 0))
+	arena_last_winner = str(d.get("arena_last_winner", ""))
 	dungeon_busy = false
 	_hunt_seq = int(d.get("hunt_seq", _hunt_seq))
 	_gacha_seq = int(d.get("gacha_seq", _gacha_seq))

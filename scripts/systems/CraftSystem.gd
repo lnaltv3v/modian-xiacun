@@ -107,11 +107,21 @@ static func craft(recipe_id: String, hero_id: String = "") -> Dictionary:
 			var slot: String = str(result.get("slot", "armor"))
 			var power: int = int(result.get("power", 0))
 			if hero_id != "":
-				HeroSystem.equip_item(hero_id, slot, {
+				var swapped: Dictionary = HeroSystem.equip_item(hero_id, slot, {
 					"id": item_id,
 					"name": name_cn,
 					"power": power,
 				})
+				var prev: Dictionary = swapped.get("previous", {}) as Dictionary
+				if not prev.is_empty() and str(prev.get("id", "")) != "":
+					GameState.add_inventory_item({
+						"id": str(prev.get("id", "")),
+						"name": str(prev.get("name", "舊裝")),
+						"kind": "equip",
+						"slot": slot,
+						"power": int(prev.get("power", 0)),
+						"sell_silver": maxi(3, int(prev.get("power", 0)) * 2),
+					})
 				crafted["equipped_to"] = hero_id
 				GameState.push_report("製作「%s」裝備俾 %s（%s＋%d）" % [
 					name_cn,
@@ -150,12 +160,33 @@ static func use_inventory_on_hero(inv_index: int, hero_id: String) -> Dictionary
 		])
 		return {"ok": true, "reason": ""}
 	if kind == "equip":
-		HeroSystem.equip_item(hero_id, str(item.get("slot", "armor")), {
+		var slot: String = str(item.get("slot", "armor"))
+		var swapped: Dictionary = HeroSystem.equip_item(hero_id, slot, {
 			"id": str(item.get("id", "")),
 			"name": str(item.get("name", "")),
 			"power": int(item.get("power", 0)),
 		})
 		GameState.remove_inventory_at(inv_index)
+		var prev: Dictionary = swapped.get("previous", {}) as Dictionary
+		if not prev.is_empty() and str(prev.get("id", "")) != "":
+			GameState.add_inventory_item({
+				"id": str(prev.get("id", "")),
+				"name": str(prev.get("name", "舊裝")),
+				"kind": "equip",
+				"slot": slot,
+				"power": int(prev.get("power", 0)),
+				"sell_silver": maxi(3, int(prev.get("power", 0)) * 2),
+			})
+			GameState.push_report("裝備「%s」俾 %s；舊「%s」回庫" % [
+				str(item.get("name", "")),
+				str(HeroSystem.get_hero(hero_id).get("name", hero_id)),
+				str(prev.get("name", "舊裝")),
+			])
+		else:
+			GameState.push_report("裝備「%s」俾 %s" % [
+				str(item.get("name", "")),
+				str(HeroSystem.get_hero(hero_id).get("name", hero_id)),
+			])
 		return {"ok": true, "reason": ""}
 	return {"ok": false, "reason": "唔能用喺俠客"}
 
