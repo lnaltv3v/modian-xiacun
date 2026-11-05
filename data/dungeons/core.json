@@ -26,7 +26,7 @@
     },
     {
       "index": 2,
-      "label": "第二波 · 山賊",
+      "label": "第二波 · 山賊／毒蛇",
       "enemy_power": 28,
       "enemies": [
         {
@@ -36,6 +36,10 @@
         {
           "kind": "boar",
           "name": "野豬"
+        },
+        {
+          "kind": "snake",
+          "name": "毒蛇"
         }
       ]
     },

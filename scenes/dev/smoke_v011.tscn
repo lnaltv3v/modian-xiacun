@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/dev/smoke_v011.gd" id="1"]
+
+[node name="SmokeV011" type="Node"]
+script = ExtResource("1")

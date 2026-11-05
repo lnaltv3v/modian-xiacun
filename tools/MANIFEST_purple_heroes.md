@@ -1,20 +1,19 @@
-# MANIFEST — 紫階十二人 96（獵魔村密度重繪）
+# MANIFEST — 紫階十二人 96（獵魔村密度・walk／attack 升質）
 
-生成：AI 高密度 idle；walk／attack 由 idle 程序合成 4 幀（對齊紅階密度方向）
+生成：AI 高密度 walk／attack strip 後處理；近靜態幀則以 AI 高質單幀強化步幅／攻擊動態
 輸出：`assets/art/heroes/purple/`
-舊墨點備份：`assets/art/heroes/purple/_prev_inkdot/`
-Raw idle：`assets/art/heroes/purple/_gen_raw/`
+舊程序合成備份：`assets/art/heroes/purple/_prev_proc_anim/`
+Raw：`assets/art/heroes/purple/_gen_raw/`
 預覽：
 - `assets/art/_preview/purple_roster96_x2.png`
-- `assets/art/_preview/purple_faces_compare.png`（上＝舊墨點／下＝新）
 - `assets/art/_preview/purple_attack_f3_strip_x2.png`
+- `assets/art/_preview/purple_walk_f0_strip_x2.png`
 
 ## 規格
-- Idle：96×96 RGBA
-- Walk：384×96（4 幀）
-- Attack：384×96（4 幀）
-- 風格：對齊《獵魔村物語》像素密度／辨識；題材武俠；多色階過渡
-- 每人獨立五官／髮型／服裝／神態／體型
+- Idle：96×96 RGBA（保留）
+- Walk：384×96（4 幀）— 對齊橙階可讀步幅
+- Attack：384×96（4 幀）— 對齊橙階攻擊條
+- 風格：對齊《獵魔村物語》像素密度；每人獨立神態
 
 ## 清單
 | id | 名 | idle | walk | attack | 特徵 |
@@ -34,5 +33,4 @@ Raw idle：`assets/art/heroes/purple/_gen_raw/`
 
 ## 自檢
 - 尺寸正確；idle／walk／attack 齊
-- 十二剪影可辨；唔抄原著立繪
-- **未完成／可升級**：紫階 walk／attack 目前為 idle 派生動幀；若要同橙階同級 AI 攻擊條，可再派一輪專出 strip
+- walk／attack 已唔再係純 idle 程序合成；對齊橙階攻擊條可讀度

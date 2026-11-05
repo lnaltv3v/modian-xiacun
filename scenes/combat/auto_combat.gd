@@ -192,7 +192,7 @@ func _spawn_sides() -> void:
 			var idle: Texture2D = ArtPaths.load_tex(ArtPaths.monster_idle(kind))
 			var atk: Texture2D = ArtPaths.load_tex(ArtPaths.monster_attack(kind))
 			spr2.texture = idle if idle != null else atk
-			var mds: float = (88.0 / 64.0) * scale_m
+			var mds: float = ArtPaths.monster_display_scale(kind, 88.0, scale_m)
 			spr2.scale = Vector2(mds, mds)
 			## 面向左（對俠）
 			spr2.flip_h = true

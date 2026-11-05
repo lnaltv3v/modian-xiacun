@@ -97,9 +97,9 @@ func _run() -> void:
 				errors.append("outpost run_result missing 波次")
 
 	var main_src := FileAccess.get_file_as_string("res://scenes/main/main.gd")
-	if not main_src.contains("v0.10.0"):
+	if not ("v0.10." in main_src):
 		ok = false
-		errors.append("main.gd not bumped to v0.10.0")
+		errors.append("main.gd not bumped to v0.10.x")
 	if not main_src.contains("_setup_upkeep_panel"):
 		ok = false
 		errors.append("main missing upkeep panel setup")

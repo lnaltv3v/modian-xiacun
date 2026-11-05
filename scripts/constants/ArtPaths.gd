@@ -258,18 +258,26 @@ static func display_scale_for(hero_id: String, target_px: float = 72.0) -> float
 static func building_icon(building_id: String) -> String:
 	return BUILDINGS_DIR + building_id + ".png"
 
+static func _res_or_file(path: String) -> bool:
+	## ResourceLoader 未 import 前仍可用 FileAccess 認到磁碟 PNG
+	if path == "":
+		return false
+	if ResourceLoader.exists(path):
+		return true
+	return FileAccess.file_exists(path)
+
 static func monster_stem(kind: String) -> String:
 	var k: String = kind.strip_edges()
 	if k == "":
 		return "monster_wolf"
 	var preferred: String = str(MONSTER_ART.get(k, "monster_" + k))
-	## 有正式檔就用；否則回退到已知可用 stem
-	if ResourceLoader.exists(MONSTERS_DIR + preferred + "_idle.png"):
+	## 有正式高密度檔（精英／毒蛇）就用；否則回退舊 64
+	if _res_or_file(MONSTERS_DIR + preferred + "_idle.png"):
 		return preferred
 	if MONSTER_FALLBACK.has(k):
-		return str(MONSTER_FALLBACK[k])
-	if ResourceLoader.exists(MONSTERS_DIR + preferred + "_idle.png"):
-		return preferred
+		var fb: String = str(MONSTER_FALLBACK[k])
+		if _res_or_file(MONSTERS_DIR + fb + "_idle.png"):
+			return fb
 	return preferred
 
 static func monster_idle(kind: String) -> String:
@@ -350,19 +358,35 @@ static func zone_bg_layer(key: String, layer: String) -> String:
 const VILLAGE_GROUND := TILES_DIR + "village_ground.png"
 
 static func exists(path: String) -> bool:
-	return path != "" and ResourceLoader.exists(path)
+	return _res_or_file(path)
 
 static func load_tex(path: String) -> Texture2D:
 	if not exists(path):
 		return null
-	return load(path) as Texture2D
+	var tex: Texture2D = load(path) as Texture2D
+	if tex != null:
+		return tex
+	## import 未完成時直讀 PNG
+	if FileAccess.file_exists(path):
+		var img := Image.new()
+		if img.load(ProjectSettings.globalize_path(path) if path.begins_with("res://") else path) == OK:
+			return ImageTexture.create_from_image(img)
+	return null
 
 static func _first_existing(paths: Array) -> String:
 	for p in paths:
 		var s: String = str(p)
-		if ResourceLoader.exists(s):
+		if _res_or_file(s):
 			return s
 	return str(paths[0]) if paths.size() > 0 else ""
+
+static func monster_frame_px(kind: String) -> int:
+	var tex: Texture2D = load_tex(monster_idle(kind))
+	return detect_frame(tex)
+
+static func monster_display_scale(kind: String, target_px: float = 88.0, scale_m: float = 1.0) -> float:
+	var fw: int = monster_frame_px(kind)
+	return (target_px / float(maxi(1, fw))) * scale_m
 
 static func detect_frame(tex: Texture2D) -> int:
 	if tex == null:

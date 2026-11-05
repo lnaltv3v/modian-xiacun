@@ -94,10 +94,18 @@ static func _pick_enemies(wave: Dictionary, count: int) -> Array:
 			if roll <= acc:
 				chosen = m2 as Dictionary
 				break
+		var ck: String = str(chosen.get("kind", "bandit"))
+		var is_elite: bool = ck in ["bandit_chief", "wolf_king", "python"]
+		var sc: float = 1.0
+		if bool(wave.get("boss", false)) and out.is_empty():
+			sc = 1.35 if is_elite else 1.25
+		elif is_elite:
+			sc = 1.2
 		out.append({
-			"kind": str(chosen.get("kind", "bandit")),
+			"kind": ck,
 			"name": str(chosen.get("name", chosen.get("kind", "敵"))),
-			"scale": 1.25 if bool(wave.get("boss", false)) and out.is_empty() else 1.0,
+			"elite": is_elite,
+			"scale": sc,
 		})
 	return out
 

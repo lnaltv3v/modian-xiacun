@@ -54,7 +54,7 @@
     {
       "index": 3,
       "label": "第三波 · 山賊頭目潮",
-      "enemy_kind": "bandit",
+      "enemy_kind": "bandit_chief",
       "enemy_name": "山賊頭目潮",
       "count_base": 5,
       "count_per_manor": 2,
@@ -62,19 +62,19 @@
       "boss": true,
       "mix": [
         {
-          "kind": "bandit",
+          "kind": "bandit_chief",
           "name": "山賊頭目",
-          "weight": 60
+          "weight": 55
+        },
+        {
+          "kind": "wolf_king",
+          "name": "狼王",
+          "weight": 25
         },
         {
           "kind": "boar",
           "name": "鐵背豬",
-          "weight": 25
-        },
-        {
-          "kind": "wolf",
-          "name": "蒼狼",
-          "weight": 15
+          "weight": 20
         }
       ]
     }

@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.10.0 — 秘境／前哨結果卡（波次＋掉落＋解鎖）＋村莊維護面板
+## 墨點俠村 v0.10.1 — 紫 AI walk／attack＋精英怪高密度優先（毒蛇／巨蟒／狼王／山賊頭目）
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -95,7 +95,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.10.0"
+		title_label.text = "墨點俠村 · v0.10.1"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
