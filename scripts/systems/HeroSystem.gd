@@ -34,6 +34,9 @@ static func normalize_hero(raw: Dictionary) -> Dictionary:
 	h["max_stamina"] = float(h.get("max_stamina", 100))
 	h["satiety"] = float(h.get("satiety", 100))
 	h["injury"] = float(h.get("injury", 0))
+	h["xp"] = float(h.get("xp", 0))
+	var lv: int = int(h["level"])
+	h["xp_to_next"] = int(h.get("xp_to_next", TrainingSystem.xp_to_next(lv)))
 	if not h.has("equipment") or typeof(h["equipment"]) != TYPE_DICTIONARY:
 		h["equipment"] = {}
 	else:
@@ -149,27 +152,5 @@ static func power_of(hero: Dictionary) -> int:
 	return int(maxi(1, int(round(raw * factor))))
 
 static func apply_village_recovery(delta: float) -> void:
-	if delta <= 0.0:
-		return
-	var stam: float = GameState.recovery_stamina_per_sec() * delta
-	var sat: float = GameState.recovery_satiety_per_sec() * delta
-	var inj: float = GameState.recovery_injury_per_sec() * delta
-	var changed: bool = false
-	for i in range(GameState.heroes.size()):
-		var hd: Dictionary = GameState.heroes[i] as Dictionary
-		if str(hd.get("status", "idle")) != "idle":
-			continue
-		var before_s: float = float(hd.get("stamina", 100))
-		var before_a: float = float(hd.get("satiety", 100))
-		var before_i: float = float(hd.get("injury", 0))
-		var max_s: float = float(hd.get("max_stamina", 100))
-		hd["stamina"] = clampf(before_s + stam, 0.0, max_s)
-		hd["satiety"] = clampf(before_a + sat, 0.0, 100.0)
-		hd["injury"] = clampf(before_i - inj, 0.0, 100.0)
-		GameState.heroes[i] = hd
-		if absf(float(hd["stamina"]) - before_s) > 0.01 \
-				or absf(float(hd["satiety"]) - before_a) > 0.01 \
-				or absf(float(hd["injury"]) - before_i) > 0.01:
-			changed = true
-	if changed:
-		GameState.heroes_changed.emit()
+	## 已改由 UpkeepSystem（食住醫消耗）；保留入口兼容舊呼叫
+	UpkeepSystem.tick(delta)

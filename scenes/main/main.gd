@@ -52,7 +52,7 @@ func _ready() -> void:
 	add_child(_hunt_result)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.3 試玩"
+		title_label.text = "墨點俠村 · v0.4"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -218,13 +218,17 @@ func _hero_line(h: Dictionary) -> String:
 	var st_cn := "在村" if st == "idle" else ("出征" if st == "hunting" else st)
 	var gear: int = HeroSystem.equipment_power(h)
 	var gear_txt: String = (" 裝+%d" % gear) if gear > 0 else ""
-	return "%s · %s · 力%d%s · 體%.0f 傷%.0f · %s" % [
+	return "%s Lv%d · %s · 力%d%s · 體%.0f 飽%.0f 傷%.0f · XP%.0f/%d · %s" % [
 		str(h.get("name", "")),
+		int(h.get("level", 1)),
 		str(h.get("weapon", "")),
 		HeroSystem.power_of(h),
 		gear_txt,
 		float(h.get("stamina", 0)),
+		float(h.get("satiety", 0)),
 		float(h.get("injury", 0)),
+		float(h.get("xp", 0)),
+		int(h.get("xp_to_next", TrainingSystem.xp_to_next(int(h.get("level", 1))))),
 		st_cn,
 	]
 
@@ -287,10 +291,9 @@ func _refresh_hud() -> void:
 		GameState.idle_hero_count(),
 		GameState.hunting_hero_count(),
 	]
-	status_label.text = "恢復：體+%.1f/s 飽+%.1f/s 傷-%.1f/s　｜　%s　｜　放＝自由放置（Esc 取消）" % [
-		GameState.recovery_stamina_per_sec(),
-		GameState.recovery_satiety_per_sec(),
-		GameState.recovery_injury_per_sec(),
+	status_label.text = "%s　｜　練功+%.1f XP/s　｜　%s　｜　放＝自由放置（Esc 取消）" % [
+		UpkeepSystem.describe_rates(),
+		TrainingSystem.xp_per_sec(),
 		ResourceLoop.describe_loop(),
 	]
 	for hid in _hero_rows.keys():

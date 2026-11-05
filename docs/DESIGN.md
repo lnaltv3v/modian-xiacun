@@ -42,3 +42,10 @@
 - 試玩入口：`tools/play.sh`；煙測 `smoke_v03.tscn`
 - 存檔 version **4**
 - Web export 待 templates（見 `docs/EXPORT.md`）
+
+## v0.4 食住醫／練功
+- **食**：客棧 Lv≥1，閒置俠客耗銀回飽食；自然饑餓持續
+- **住**：客棧或村長府，耗木回體力
+- **醫**：醫館 Lv≥1，耗銀療傷
+- **成功率**：`UpkeepSystem.party_success_chance` 由飽／傷／體綜合；失敗≈30% 收益＋額外受傷
+- **練功場**：閒置 XP／秒隨等級；出征成功額外 XP

@@ -17,7 +17,7 @@
     "max_level": 8,
     "base_cost_silver": 50,
     "base_cost_wood": 25,
-    "desc": "安置俠客、加快飽食恢復、提高可駐人數。"
+    "desc": "食住核心：耗銀供飯、耗木安置；加快飽食／體力，提高可駐人數。"
   },
   {
     "id": "forge",
@@ -37,7 +37,7 @@
     "max_level": 8,
     "base_cost_silver": 55,
     "base_cost_wood": 20,
-    "desc": "療傷回體；可製傷藥。"
+    "desc": "醫：耗銀療傷回體；可製傷藥。缺醫則傷勢難好，出征易敗。"
   },
   {
     "id": "training",
@@ -47,7 +47,7 @@
     "max_level": 8,
     "base_cost_silver": 70,
     "base_cost_wood": 35,
-    "desc": "修煉升級（後期接經驗）。"
+    "desc": "在村閒置自動攞經驗升級；等級越高練功越快。"
   },
   {
     "id": "bounty",
