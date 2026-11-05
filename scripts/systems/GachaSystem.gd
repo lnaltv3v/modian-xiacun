@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GachaSystem
-## 英雄帖／簡易抽卡 — 白綠藍池；重覆轉碎片
+## 英雄帖／簡易抽卡 — 白綠藍紫池；重覆轉碎片
 
 const POOL_PATH := "res://data/gacha/pool.json"
 
@@ -46,7 +46,7 @@ static func rarity_weights() -> Dictionary:
 	var w: Variant = _pool.get("weights", {})
 	if typeof(w) == TYPE_DICTIONARY:
 		return (w as Dictionary).duplicate(true)
-	return {"白": 55, "綠": 35, "藍": 10}
+	return {"白": 50, "綠": 32, "藍": 13, "紫": 5}
 
 static func heroes_of_rarity(rarity: String) -> Array:
 	ensure_loaded()
@@ -141,7 +141,10 @@ static func pull_once() -> Dictionary:
 		"satiety": 100,
 		"injury": 0,
 		"art_key": str(pick.get("art_key", "")),
+		"placeholder": bool(pick.get("placeholder", false)) or str(pick.get("art_key", "")) == "",
 		"equipment": {},
+		"passive_id": "",
+		"passive_name": "",
 	}
 	new_hero = HeroSystem.normalize_hero(new_hero)
 	GameState.heroes.append(new_hero)

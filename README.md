@@ -1,4 +1,4 @@
-# 墨點俠村（Ink Hero Village）· v0.5
+# 墨點俠村（Ink Hero Village）· v0.6
 
 武俠墨點風格村莊經營＋俠客養成。玩法跟足《獵魔村物語》核心循環（建築→養俠→派遣→資源→再升級）。
 
@@ -18,7 +18,7 @@ Headless 煙測（唔開窗）：
 
 ```bash
 /workspace/tools/godot/godot --headless --path /workspace/modian-xiacun --quit-after 2
-/workspace/tools/godot/godot --headless --path /workspace/modian-xiacun res://scenes/dev/smoke_v05.tscn
+/workspace/tools/godot/godot --headless --path /workspace/modian-xiacun res://scenes/dev/smoke_v06.tscn
 ```
 
 > **Web／HTML5**：`tools/export_web.sh` → `export/web/`（`python3 -m http.server 8877`）  
@@ -61,7 +61,8 @@ Headless 煙測（唔開窗）：
 - v0.1 核心循環
 - v0.2 製作鏈＋戰鬥結果＋自由放置＋64 art
 - v0.4 放置 UX＋新手引導＋食住醫／練功／Web
-- **v0.5** 英雄帖／懸賞／兵器鋪（本版）
+- v0.5 英雄帖／懸賞／兵器鋪
+- **v0.6** 秘境三波／紫池／師門書院（本版）
 
 私人開發中。勿與 `yinlou-defense`、`wuxia-inn` 混目錄。
 
@@ -75,4 +76,10 @@ Headless 煙測（唔開窗）：
 - **英雄帖**：白／綠／藍池抽卡（權重可調）；重覆轉碎片；存檔含碎片
 - **懸賞榜**：指定野狼／山賊，出征擊中額外賞
 - **兵器鋪**：鐵匠鋪開後可銀購裝；「自動買裝」／「買一次」
-- smoke：`res://scenes/dev/smoke_v05.tscn`
+- smoke：`res://scenes/dev/smoke_v06.tscn`
+
+## v0.6 秘境／紫池／書院
+- **亂山秘境**：剔選最多 5 俠，3 波結算＋簡演出（現有狼／豬／山賊 sprite；末波狼王／山賊頭目放大示意）
+- **英雄帖紫池**：權重低；韋小保／胡飛／令狐忠／楊菓／張無記（暫色塊＋兵種標）
+- **師門書院**：興建後解鎖 1 個被動技能槽（鐵骨／疾風／沉著／血氣；撳「書院技」輪換）
+- smoke：`res://scenes/dev/smoke_v06.tscn`

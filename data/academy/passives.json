@@ -1,0 +1,35 @@
+{
+  "require_building": "academy",
+  "require_level": 1,
+  "passive_slots": 1,
+  "skills": [
+    {
+      "id": "tiegu",
+      "name": "鐵骨",
+      "desc": "傷勢對戰力懲罰減半；秘境／出征受傷略減。",
+      "power_bonus": 2,
+      "injury_resist": 0.5
+    },
+    {
+      "id": "jifeng",
+      "name": "疾風",
+      "desc": "戰力＋3；體力消耗略減（示意）。",
+      "power_bonus": 3,
+      "stamina_discount": 0.15
+    },
+    {
+      "id": "chenzhuo",
+      "name": "沉著",
+      "desc": "出征／秘境成功率＋8%。",
+      "power_bonus": 1,
+      "success_bonus": 0.08
+    },
+    {
+      "id": "xueqi",
+      "name": "血氣",
+      "desc": "戰力＋4；秘境清關銀兩略增。",
+      "power_bonus": 4,
+      "silver_bonus": 0.1
+    }
+  ]
+}

@@ -43,6 +43,9 @@ static func normalize_hero(raw: Dictionary) -> Dictionary:
 		h["equipment"] = {}
 	else:
 		h["equipment"] = (h["equipment"] as Dictionary).duplicate(true)
+	h["passive_id"] = str(h.get("passive_id", ""))
+	h["passive_name"] = str(h.get("passive_name", ""))
+	h["placeholder"] = bool(h.get("placeholder", false))
 	return h
 
 static func weapon_from_string(s: String) -> int:
@@ -148,10 +151,12 @@ static func power_of(hero: Dictionary) -> int:
 	var base: int = int(hero.get("base_power", 10))
 	var forge: int = ResourceLoop.forge_bonus_power()
 	var gear: int = equipment_power(hero)
+	var passive: int = AcademySystem.passive_power_bonus(hero)
 	var injury: float = float(hero.get("injury", 0))
-	var raw: float = float(base + (level - 1) * 3 + forge + gear)
-	var factor: float = clampf(1.0 - injury / 120.0, 0.4, 1.0)
-	return int(maxi(1, int(round(raw * factor))))
+	var resist: float = AcademySystem.passive_injury_resist(hero)
+	var raw: float = float(base + (level - 1) * 3 + forge + gear + passive)
+	var injury_factor: float = clampf(1.0 - (injury / 120.0) * (1.0 - resist * 0.5), 0.4, 1.0)
+	return int(maxi(1, int(round(raw * injury_factor))))
 
 static func apply_village_recovery(delta: float) -> void:
 	## 已改由 UpkeepSystem（食住醫消耗）；保留入口兼容舊呼叫

@@ -398,10 +398,29 @@ offset_right = 632.0
 offset_bottom = 26.0
 text = "跳過"
 
-[node name="Hint" type="Label" parent="."]
+
+[node name="BtnDungeon" type="Button" parent="."]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 1010.0
-offset_top = 664.0
+offset_top = 620.0
+offset_right = 1108.0
+offset_bottom = 648.0
+text = "秘境"
+
+[node name="BtnAcademy" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1010.0
+offset_top = 652.0
+offset_right = 1108.0
+offset_bottom = 680.0
+text = "書院技"
+
+[node name="Hint" type="Label" parent="."]
+layout_mode = 0
+offset_left = 1116.0
+offset_top = 652.0
 offset_right = 1260.0
 offset_bottom = 712.0
 theme_override_colors/font_color = Color(0.101961, 0.0823529, 0.0627451, 0.5)

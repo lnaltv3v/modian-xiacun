@@ -153,6 +153,7 @@ static func party_success_chance(hero_ids: Array) -> float:
 		var inj: float = clampf(float(h.get("injury", 0)) / 100.0, 0.0, 1.0)
 		var stam: float = clampf(float(h.get("stamina", 100)) / maxf(1.0, float(h.get("max_stamina", 100))), 0.0, 1.0)
 		sum += sat * 0.50 + (1.0 - inj) * 0.35 + stam * 0.15
+		sum += AcademySystem.passive_success_bonus(h)
 		n += 1
 	if n <= 0:
 		return 0.5

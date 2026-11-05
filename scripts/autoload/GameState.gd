@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -40,6 +40,8 @@ var fragments: int = 0
 var bounty_target: String = ""
 ## 兵器鋪自動買裝
 var auto_shop: bool = false
+## 秘境演出中（鎖重複入場）
+var dungeon_busy: bool = false
 var _hunt_seq: int = 0
 var _gacha_seq: int = 0
 var _default_layout_buildings: Array = []
@@ -61,6 +63,7 @@ func _load_starter_data() -> void:
 	fragments = 0
 	bounty_target = ""
 	auto_shop = false
+	dungeon_busy = false
 	_hunt_seq = 0
 	_gacha_seq = 0
 	silver = 120
@@ -302,6 +305,7 @@ func load_from_dict(d: Dictionary) -> void:
 	fragments = int(d.get("fragments", 0))
 	bounty_target = str(d.get("bounty_target", ""))
 	auto_shop = bool(d.get("auto_shop", false))
+	dungeon_busy = false
 	_hunt_seq = int(d.get("hunt_seq", _hunt_seq))
 	_gacha_seq = int(d.get("gacha_seq", _gacha_seq))
 	_emit_all()

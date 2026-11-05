@@ -68,5 +68,15 @@
     "base_cost_silver": 45,
     "base_cost_wood": 30,
     "desc": "製作商店鏈：打包毛皮換銀、存放道具。"
+  },
+  {
+    "id": "academy",
+    "name": "師門書院",
+    "start_level": 0,
+    "unlocked": false,
+    "max_level": 5,
+    "base_cost_silver": 90,
+    "base_cost_wood": 45,
+    "desc": "解鎖俠客被動技能槽（v0.6 最小：1 格）。"
   }
 ]

@@ -1,8 +1,9 @@
 extends Control
-## 墨點俠村 v0.5 — 英雄帖／懸賞／兵器鋪
+## 墨點俠村 v0.6 — 秘境／紫池／師門書院
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
+const DungeonRunScene := preload("res://scenes/combat/dungeon_run.tscn")
 const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 
 @onready var hud_label: Label = %HudLabel
@@ -33,10 +34,13 @@ const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 @onready var opt_bounty: OptionButton = %OptBounty
 @onready var chk_auto_shop: CheckBox = %ChkAutoShop
 @onready var btn_shop_once: Button = %BtnShopOnce
+@onready var btn_dungeon: Button = %BtnDungeon
+@onready var btn_academy: Button = %BtnAcademy
 
 var _dispatch: DispatchSystem
 var _village: Control
 var _hunt_result: Control
+var _dungeon_run: Control
 var _selected: Dictionary = {}
 var _hero_rows: Dictionary = {}
 var _craft_hero_id: String = ""
@@ -56,8 +60,13 @@ func _ready() -> void:
 	_hunt_result = HuntResultScene.instantiate()
 	add_child(_hunt_result)
 
+	_dungeon_run = DungeonRunScene.instantiate()
+	add_child(_dungeon_run)
+	if _dungeon_run.has_signal("closed"):
+		_dungeon_run.closed.connect(_on_dungeon_closed)
+
 	if title_label:
-		title_label.text = "墨點俠村 · v0.5"
+		title_label.text = "墨點俠村 · v0.6"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -101,6 +110,10 @@ func _ready() -> void:
 		chk_auto_shop.button_pressed = GameState.auto_shop
 	if btn_shop_once:
 		btn_shop_once.pressed.connect(_on_shop_once_pressed)
+	if btn_dungeon:
+		btn_dungeon.pressed.connect(_on_dungeon_pressed)
+	if btn_academy:
+		btn_academy.pressed.connect(_on_academy_pressed)
 
 	_rebuild_buildings()
 	_rebuild_heroes()
@@ -231,15 +244,21 @@ func _rebuild_heroes() -> void:
 
 func _hero_line(h: Dictionary) -> String:
 	var st: String = str(h.get("status", "idle"))
-	var st_cn := "在村" if st == "idle" else ("出征" if st == "hunting" else st)
+	var st_cn := "在村" if st == "idle" else ("出征" if st == "hunting" else ("秘境" if st == "dungeon" else st))
 	var gear: int = HeroSystem.equipment_power(h)
 	var gear_txt: String = (" 裝+%d" % gear) if gear > 0 else ""
-	return "%s Lv%d · %s · 力%d%s · 體%.0f 飽%.0f 傷%.0f · XP%.0f/%d · %s" % [
+	var pas: String = str(h.get("passive_name", ""))
+	var pas_txt: String = (" ·技%s" % pas) if pas != "" else ""
+	var rar: String = str(h.get("rarity", ""))
+	var rar_txt: String = ("[%s]" % rar) if rar != "" else ""
+	return "%s%s Lv%d · %s · 力%d%s%s · 體%.0f 飽%.0f 傷%.0f · XP%.0f/%d · %s" % [
 		str(h.get("name", "")),
+		rar_txt,
 		int(h.get("level", 1)),
 		str(h.get("weapon", "")),
 		HeroSystem.power_of(h),
 		gear_txt,
+		pas_txt,
 		float(h.get("stamina", 0)),
 		float(h.get("satiety", 0)),
 		float(h.get("injury", 0)),
@@ -333,6 +352,7 @@ func _refresh_hud() -> void:
 				chk.button_pressed = false
 				_selected.erase(hid)
 	_refresh_dispatch_btn()
+	_refresh_dungeon_btn()
 	_refresh_craft()
 
 func _refresh_hunts() -> void:
@@ -365,6 +385,7 @@ func _refresh_dispatch_btn() -> void:
 			n += 1
 	btn_dispatch.disabled = n < 1 and not GameState.auto_dispatch
 	btn_dispatch.text = "出征亂山坡（已選 %d）" % n
+	_refresh_dungeon_btn()
 
 func _on_hero_toggled(pressed: bool, hid: String) -> void:
 	if pressed:
@@ -535,7 +556,7 @@ func _refresh_gacha_shop() -> void:
 		var chk: Dictionary = GachaSystem.can_pull()
 		btn_gacha.disabled = not bool(chk.get("ok", false))
 		btn_gacha.text = "英雄帖（%d銀）" % GachaSystem.pull_cost()
-		btn_gacha.tooltip_text = str(chk.get("reason", "白／綠／藍池；重覆轉碎片"))
+		btn_gacha.tooltip_text = str(chk.get("reason", "白／綠／藍／紫池；重覆轉碎片"))
 	if btn_shop_once:
 		btn_shop_once.disabled = not ShopSystem.forge_ready()
 		btn_shop_once.tooltip_text = "為在村俠客買一件更強裝" if ShopSystem.forge_ready() else "要先起鐵匠鋪"
@@ -567,3 +588,82 @@ func _on_shop_once_pressed() -> void:
 	_rebuild_heroes()
 	_refresh_hud()
 
+func _selected_ids(limit: int = 99) -> Array:
+	var ids: Array = []
+	for hid in _selected.keys():
+		if bool(_selected[hid]):
+			ids.append(hid)
+			if ids.size() >= limit:
+				break
+	return ids
+
+func _refresh_dungeon_btn() -> void:
+	if btn_dungeon == null:
+		return
+	var n: int = _selected_ids(99).size()
+	var chk: Dictionary = DungeonSystem.can_enter(_selected_ids(DungeonSystem.max_party())) if n > 0 else {"ok": false, "reason": "剔選最多5俠"}
+	if n < 1:
+		btn_dungeon.disabled = true
+		btn_dungeon.text = "秘境"
+		btn_dungeon.tooltip_text = "剔選 1～5 名在村俠客入亂山秘境"
+	elif n > DungeonSystem.max_party():
+		btn_dungeon.disabled = true
+		btn_dungeon.text = "秘境（最多5）"
+		btn_dungeon.tooltip_text = "最多 5 俠"
+	else:
+		btn_dungeon.disabled = not bool(chk.get("ok", false)) or GameState.dungeon_busy
+		btn_dungeon.text = "秘境（%d）" % n
+		btn_dungeon.tooltip_text = str(chk.get("reason", "三波簡演出"))
+	if btn_academy:
+		btn_academy.disabled = not AcademySystem.academy_ready()
+		btn_academy.tooltip_text = "揀一名俠客後授被動技" if AcademySystem.academy_ready() else "先興建師門書院"
+
+func _on_dungeon_pressed() -> void:
+	var ids: Array = _selected_ids(DungeonSystem.max_party())
+	var res: Dictionary = DungeonSystem.run_dungeon(ids)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("秘境失敗：%s" % str(res.get("reason", "")))
+		return
+	GameState.dungeon_busy = true
+	_selected.clear()
+	_rebuild_heroes()
+	_refresh_hud()
+	if _dungeon_run and _dungeon_run.has_method("play_run"):
+		_dungeon_run.play_run(res)
+	else:
+		GameState.dungeon_busy = false
+
+func _on_dungeon_closed(_rewards: Dictionary) -> void:
+	GameState.dungeon_busy = false
+	_rebuild_heroes()
+	_refresh_hud()
+	_refresh_hunts()
+
+func _on_academy_pressed() -> void:
+	if not AcademySystem.academy_ready():
+		GameState.push_report("書院：先興建師門書院")
+		return
+	var ids: Array = _selected_ids(1)
+	if ids.is_empty() and _craft_hero_id != "":
+		ids = [_craft_hero_id]
+	if ids.is_empty():
+		GameState.push_report("書院：先剔選／點一名俠客")
+		return
+	var hid: String = str(ids[0])
+	var skills: Array = AcademySystem.all_skills()
+	if skills.is_empty():
+		GameState.push_report("書院：技能表空")
+		return
+	## 最小：輪換下一招（按現有 passive 循環）
+	var cur: String = str(HeroSystem.get_hero(hid).get("passive_id", ""))
+	var idx: int = 0
+	for i in range(skills.size()):
+		if str((skills[i] as Dictionary).get("id", "")) == cur:
+			idx = (i + 1) % skills.size()
+			break
+	var sk: Dictionary = skills[idx] as Dictionary
+	var res: Dictionary = AcademySystem.assign_passive(hid, str(sk.get("id", "")))
+	if not bool(res.get("ok", false)):
+		GameState.push_report("書院失敗：%s" % str(res.get("reason", "")))
+	_rebuild_heroes()
+	_refresh_hud()

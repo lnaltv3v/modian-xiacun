@@ -3,14 +3,16 @@
   "require_building": "manor",
   "require_level": 1,
   "weights": {
-    "白": 55,
-    "綠": 35,
-    "藍": 10
+    "白": 50,
+    "綠": 32,
+    "藍": 13,
+    "紫": 5
   },
   "fragment_per_dupe": {
     "白": 5,
     "綠": 10,
-    "藍": 25
+    "藍": 25,
+    "紫": 60
   },
   "heroes": [
     {
@@ -93,6 +95,56 @@
       "base_power": 17,
       "personality": "傲骨",
       "art_key": "hero_achang"
+    },
+    {
+      "template_id": "pool_p_weixiaobao",
+      "name": "韋小保",
+      "weapon": "暗器",
+      "rarity": "紫",
+      "base_power": 24,
+      "personality": "機靈",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_p_hufei",
+      "name": "胡飛",
+      "weapon": "刀",
+      "rarity": "紫",
+      "base_power": 26,
+      "personality": "俠義",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_p_linghuzhong",
+      "name": "令狐忠",
+      "weapon": "劍",
+      "rarity": "紫",
+      "base_power": 25,
+      "personality": "正氣",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_p_yangguo",
+      "name": "楊菓",
+      "weapon": "長槍",
+      "rarity": "紫",
+      "base_power": 27,
+      "personality": "倔強",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_p_zhangwuji",
+      "name": "張無記",
+      "weapon": "拳腳",
+      "rarity": "紫",
+      "base_power": 28,
+      "personality": "溫和",
+      "art_key": "",
+      "placeholder": true
     }
   ]
 }
