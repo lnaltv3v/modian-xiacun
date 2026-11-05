@@ -405,7 +405,7 @@ static func make_hero_frames(hero_id: String) -> SpriteFrames:
 	elif idle_tex != null:
 		frames.add_frame("walk", idle_tex)
 
-	## attack sheet：有正式檔先加 anim（紅階 Pivot）；否則戰鬥繼續用 walk
+	## attack sheet：有正式檔先加 anim（紅／橙／紫 Pivot）；否則戰鬥繼續用 walk
 	var atk_path: String = hero_attack(hero_id)
 	var atk_tex: Texture2D = load_tex(atk_path) if exists(atk_path) else null
 	if atk_tex != null:

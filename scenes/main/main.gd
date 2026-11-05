@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.9.7 — 建築 Pivot R2（clinic／training／bounty／warehouse）＋村景拉開預設
+## 墨點俠村 v0.9.8 — 橙／紫 Pivot 高密度＋attack 接入
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -92,7 +92,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.7"
+		title_label.text = "墨點俠村 · v0.9.8"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
