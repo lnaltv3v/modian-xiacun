@@ -815,52 +815,8 @@ def gen_hills_r4() -> Image.Image:
 
 
 def gen_pad_r4() -> Image.Image:
-    """建築墊層：旗石縫、微粒；錨位拉開；中央大片淨。"""
-    img = r2.gen_pad_r2()
-    pix = img.load()
-
-    # flagstone seams only near pad cells (not flood center empty)
-    cell_w, cell_h = 150, 96
-    # spaced pad origins matching R2/R3 layout feel — leave center open
-    origins = [
-        (480 - cell_w // 2, 200),   # manor north
-        (100 - cell_w // 2, 260),   # warehouse
-        (860 - cell_w // 2, 260),   # forge
-        (140 - cell_w // 2, 430),   # inn
-        (840 - cell_w // 2, 430),   # training
-        (340 - cell_w // 2, 450),   # clinic
-        (620 - cell_w // 2, 450),   # bounty
-        (300 - cell_w // 2, 310),   # academy
-    ]
-    for oi, (ox, oy) in enumerate(origins):
-        # soft packed rect
-        for y in range(oy, oy + cell_h):
-            for x in range(ox, ox + cell_w):
-                if not (0 <= x < VW and 0 <= y < VH):
-                    continue
-                # border only denser — interior light grit
-                on_edge = (x < ox + 3 or x > ox + cell_w - 4 or y < oy + 3 or y > oy + cell_h - 4)
-                if on_edge:
-                    put(pix, VW, VH, x, y, STONE[(x + y) % len(STONE)])
-                    if (x + y) % 7 == 0:
-                        put(pix, VW, VH, x, y, MORTAR)
-                else:
-                    if noise(x, y, 2300 + oi) < 0.04:
-                        put(pix, VW, VH, x, y, blend(PACK[1], STONE[1], 0.35))
-        # gold corner ticks
-        for cx, cy in [(ox + 4, oy + 4), (ox + cell_w - 5, oy + 4),
-                       (ox + 4, oy + cell_h - 5), (ox + cell_w - 5, oy + cell_h - 5)]:
-            put(pix, VW, VH, cx, cy, GOLD[2])
-            put(pix, VW, VH, cx + 1, cy, GOLD[1])
-
-    # explicit clear center rect (wipe props) — 可建空地
-    for y in range(300, 440):
-        for x in range(400, 560):
-            # only clear pad layer pixels that aren't near academy/manor pads
-            if abs(x - 480) < 70 and abs(y - 370) < 55:
-                pix[x, y] = TRANS
-
-    return img
+    """建築墊層：正式 tile 全透明（唔焗碰撞／預覽灰框）；可建提示用遊戲內 pad_hint。"""
+    return new_img(VW, VH)
 
 
 def gen_fg_r4() -> Image.Image:
