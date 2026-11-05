@@ -46,13 +46,13 @@
       "boss": true,
       "enemies": [
         {
-          "kind": "wolf",
+          "kind": "wolf_king",
           "name": "狼王",
           "elite": true,
           "scale": 1.35
         },
         {
-          "kind": "bandit",
+          "kind": "bandit_chief",
           "name": "山賊頭目",
           "elite": true,
           "scale": 1.2
@@ -66,5 +66,76 @@
   "base_iron": 1,
   "clear_bonus_silver": 30,
   "clear_bonus_iron": 2,
-  "bg_key": "crypt"
+  "bg_key": "crypt",
+  "reward_table": {
+    "base": {
+      "silver": 40,
+      "fur": 4,
+      "wood": 2,
+      "iron": 1
+    },
+    "per_wave_mult": {
+      "silver": 0.2,
+      "fur": 0.2
+    },
+    "wave_floor": {
+      "silver": 0.4,
+      "fur": 0.5
+    },
+    "clear_bonus": {
+      "silver": 30,
+      "iron": 2,
+      "fragments": [
+        8,
+        18
+      ],
+      "diamond_chance": 0.4,
+      "diamond_amount": [
+        1,
+        2
+      ]
+    },
+    "boss_bonus": {
+      "silver": 18,
+      "fragments": [
+        10,
+        24
+      ],
+      "diamond_chance": 0.55,
+      "diamond_amount": [
+        1,
+        3
+      ],
+      "require_boss_wave_success": true
+    },
+    "fail_mult": {
+      "silver": 0.35,
+      "fur": 0.3,
+      "wood": 0.3,
+      "iron": 0.2
+    },
+    "rare_drops": [
+      {
+        "id": "crypt_jade",
+        "name": "秘境玉屑",
+        "chance": 0.22,
+        "kind": "material",
+        "require_clear": true
+      },
+      {
+        "id": "wolf_king_fang",
+        "name": "狼王牙",
+        "chance": 0.14,
+        "kind": "material",
+        "require_boss": true
+      },
+      {
+        "id": "bandit_token",
+        "name": "山賊令牌",
+        "chance": 0.12,
+        "kind": "material",
+        "require_boss": true
+      }
+    ]
+  }
 }

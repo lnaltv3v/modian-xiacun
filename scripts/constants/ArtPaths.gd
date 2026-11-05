@@ -103,8 +103,18 @@ const MONSTER_ART := {
 	"wolf": "monster_wolf",
 	"boar": "monster_boar",
 	"bandit": "monster_bandit",
+	"snake": "monster_snake",
+	"python": "monster_python",
+	"wolf_king": "monster_wolf_king",
+	"bandit_chief": "monster_bandit_chief",
+}
+
+## 專用檔未到時嘅回退 stem
+const MONSTER_FALLBACK := {
 	"snake": "monster_wolf",
 	"python": "monster_boar",
+	"wolf_king": "monster_wolf",
+	"bandit_chief": "monster_bandit",
 }
 
 static func hero_stem(hero_id: String) -> String:
@@ -244,18 +254,38 @@ static func display_scale_for(hero_id: String, target_px: float = 72.0) -> float
 static func building_icon(building_id: String) -> String:
 	return BUILDINGS_DIR + building_id + ".png"
 
+static func monster_stem(kind: String) -> String:
+	var k: String = kind.strip_edges()
+	if k == "":
+		return "monster_wolf"
+	var preferred: String = str(MONSTER_ART.get(k, "monster_" + k))
+	## 有正式檔就用；否則回退到已知可用 stem
+	if ResourceLoader.exists(MONSTERS_DIR + preferred + "_idle.png"):
+		return preferred
+	if MONSTER_FALLBACK.has(k):
+		return str(MONSTER_FALLBACK[k])
+	if ResourceLoader.exists(MONSTERS_DIR + preferred + "_idle.png"):
+		return preferred
+	return preferred
+
 static func monster_idle(kind: String) -> String:
-	var stem: String = str(MONSTER_ART.get(kind, "monster_" + kind))
+	var stem: String = monster_stem(kind)
+	var fb: String = str(MONSTER_FALLBACK.get(kind, stem))
 	return _first_existing([
 		MONSTERS_DIR + stem + "_idle.png",
+		MONSTERS_DIR + fb + "_idle.png",
 		MONSTERS_FALLBACK_DIR + stem + "_idle.png",
+		MONSTERS_FALLBACK_DIR + fb + "_idle.png",
 	])
 
 static func monster_attack(kind: String) -> String:
-	var stem: String = str(MONSTER_ART.get(kind, "monster_" + kind))
+	var stem: String = monster_stem(kind)
+	var fb: String = str(MONSTER_FALLBACK.get(kind, stem))
 	return _first_existing([
 		MONSTERS_DIR + stem + "_attack.png",
+		MONSTERS_DIR + fb + "_attack.png",
 		MONSTERS_FALLBACK_DIR + stem + "_attack.png",
+		MONSTERS_FALLBACK_DIR + fb + "_attack.png",
 	])
 
 const ICON_SILVER := UI_DIR + "icon_silver.png"

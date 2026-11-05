@@ -7,6 +7,8 @@ const RES_FLAVOR := {
 	"fur": ["毛皮", "獸皮", "皮貨", "獵獲之皮"],
 	"wood": ["山木", "薪柴", "木材", "枯枝"],
 	"iron": ["廢鐵", "鐵釘", "刀錆鐵片", "礦渣鐵"],
+	"diamonds": ["墨晶", "紫鑽", "鑽石", "秘境晶石"],
+	"fragments": ["英雄帖碎片", "殘帖", "碎帖", "帖角"],
 }
 
 const ENEMY_LOOT_HINT := {
@@ -15,6 +17,8 @@ const ENEMY_LOOT_HINT := {
 	"bandit": "山賊腰包與鏽刃",
 	"snake": "毒囊與蛻皮",
 	"python": "巨蟒鱗片與膽",
+	"wolf_king": "狼王鬃與牙",
+	"bandit_chief": "頭目腰牌與贓銀",
 }
 
 static func format_summary(s: Dictionary) -> String:
@@ -49,7 +53,9 @@ static func format_loot_block(s: Dictionary) -> String:
 	var fur: int = int(s.get("fur", 0))
 	var wood: int = int(s.get("wood", 0))
 	var iron: int = int(s.get("iron", 0))
-	if silver <= 0 and fur <= 0 and wood <= 0 and iron <= 0:
+	var diamonds: int = int(s.get("diamonds", 0))
+	var fragments: int = int(s.get("fragments", 0))
+	if silver <= 0 and fur <= 0 and wood <= 0 and iron <= 0 and diamonds <= 0 and fragments <= 0:
 		return "戰利品：兩手空空……只帶回一身塵土。"
 	var parts: PackedStringArray = PackedStringArray()
 	if silver > 0:
@@ -60,6 +66,10 @@ static func format_loot_block(s: Dictionary) -> String:
 		parts.append("%s ×%d" % [_pick_name("wood", s), wood])
 	if iron > 0:
 		parts.append("%s ×%d" % [_pick_name("iron", s), iron])
+	if diamonds > 0:
+		parts.append("%s ×%d" % [_pick_name("diamonds", s), diamonds])
+	if fragments > 0:
+		parts.append("%s ×%d" % [_pick_name("fragments", s), fragments])
 	var head: String = "戰利品：" + "　".join(parts)
 	var hint: String = _enemy_hint(s)
 	if hint != "":

@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.9.2 — 掉落文案／教學④／村景v2／戰鬥區底圖
+## 墨點俠村 v0.9.3 — 鑽石 stub／招募日節奏／秘境獎勵表
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -36,6 +36,7 @@ const _OutpostScript := preload("res://scripts/systems/OutpostSystem.gd")
 @onready var tutorial_label: Label = %TutorialLabel
 @onready var btn_skip_tutorial: Button = %BtnSkipTutorial
 @onready var btn_gacha: Button = %BtnGacha
+var btn_gacha10: Button
 @onready var frag_label: Label = %FragLabel
 @onready var opt_bounty: OptionButton = %OptBounty
 @onready var chk_auto_shop: CheckBox = %ChkAutoShop
@@ -85,7 +86,7 @@ func _ready() -> void:
 	_rng_ui.randomize()
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.2"
+		title_label.text = "墨點俠村 · v0.9.3"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -122,6 +123,7 @@ func _ready() -> void:
 	_setup_bounty_options()
 	if btn_gacha:
 		btn_gacha.pressed.connect(_on_gacha_pressed)
+		_ensure_gacha10_btn()
 	if opt_bounty:
 		opt_bounty.item_selected.connect(_on_bounty_selected)
 	if chk_auto_shop:
@@ -354,7 +356,8 @@ func _refresh_hud() -> void:
 	if lab_iron:
 		lab_iron.text = str(GameState.iron)
 	## 次列：碎片／駐紮／狀態（唔同圖示行搶位，避免裁切）
-	hud_label.text = "碎片 %d　　駐紮 %d／%d　　在村 %d　　出征 %d" % [
+	hud_label.text = "鑽 %d　　碎片 %d　　駐紮 %d／%d　　在村 %d　　出征 %d" % [
+		GameState.diamonds,
 		GameState.fragments,
 		GameState.hero_count(),
 		GameState.hero_capacity(),
@@ -624,15 +627,35 @@ func _sync_bounty_option() -> void:
 func _refresh_gacha_shop() -> void:
 	_setup_zone_options()
 	if frag_label:
-		frag_label.text = "碎片 %d" % GameState.fragments
+		frag_label.text = "碎片 %d｜%s" % [GameState.fragments, GachaSystem.status_line()]
 	if btn_gacha:
 		var chk: Dictionary = GachaSystem.can_pull()
+		var free_n: int = GachaSystem.free_pulls_remaining()
 		btn_gacha.disabled = not bool(chk.get("ok", false))
-		btn_gacha.text = "英雄帖（%d銀）" % GachaSystem.pull_cost()
-		btn_gacha.tooltip_text = str(chk.get("reason", "白→紅；橙／紅軟保底；重覆轉碎片")) + "｜紅保%d 橙保%d" % [GameState.pity_red, GameState.pity_orange]
+		if free_n > 0:
+			btn_gacha.text = "英雄帖（免費）"
+		else:
+			btn_gacha.text = "英雄帖（%d銀）" % GachaSystem.pull_cost()
+		btn_gacha.tooltip_text = str(chk.get("reason", "白→紅")) + "｜" + GachaSystem.status_line()
+	if btn_gacha10:
+		var chk10: Dictionary = GachaSystem.can_pull_diamond(10)
+		btn_gacha10.disabled = not bool(chk10.get("ok", false))
+		btn_gacha10.text = "十連（%d鑽）" % GachaSystem.diamond_ten_cost()
+		btn_gacha10.tooltip_text = str(chk10.get("reason", "鑽石十連 stub"))
 	if btn_shop_once:
 		btn_shop_once.disabled = not ShopSystem.forge_ready()
 		btn_shop_once.tooltip_text = "為在村俠客買一件更強裝" if ShopSystem.forge_ready() else "要先起鐵匠鋪"
+
+func _ensure_gacha10_btn() -> void:
+	if btn_gacha10 != null or btn_gacha == null:
+		return
+	btn_gacha10 = Button.new()
+	btn_gacha10.name = "BtnGacha10"
+	btn_gacha10.text = "十連（鑽）"
+	btn_gacha10.position = Vector2(btn_gacha.position.x, btn_gacha.position.y - 32.0)
+	btn_gacha10.size = Vector2(184, 28)
+	btn_gacha10.pressed.connect(_on_gacha10_pressed)
+	add_child(btn_gacha10)
 
 func _on_gacha_pressed() -> void:
 	var res: Dictionary = GachaSystem.pull_once()
@@ -640,6 +663,25 @@ func _on_gacha_pressed() -> void:
 		GameState.push_report("英雄帖失敗：%s" % str(res.get("reason", "")))
 	elif GameState.tutorial_step == 4:
 		_complete_tutorial_build_or_gacha("抽卡")
+	_rebuild_heroes()
+	_refresh_hud()
+
+func _on_gacha10_pressed() -> void:
+	var res: Dictionary = GachaSystem.pull_diamond(10)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("十連失敗：%s" % str(res.get("reason", "")))
+	else:
+		var news: int = 0
+		var dupes: int = 0
+		for r in res.get("results", []) as Array:
+			var rd: Dictionary = r as Dictionary
+			if str(rd.get("result", "")) == "new":
+				news += 1
+			else:
+				dupes += 1
+		GameState.push_report("十連完成：新俠 %d／重覆 %d（耗鑽 %d）" % [news, dupes, int(res.get("cost", 0))])
+		if GameState.tutorial_step == 4:
+			_complete_tutorial_build_or_gacha("抽卡")
 	_rebuild_heroes()
 	_refresh_hud()
 

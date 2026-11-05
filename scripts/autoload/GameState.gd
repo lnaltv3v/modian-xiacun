@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 8
+const SAVE_VERSION := 9
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -21,6 +21,7 @@ var silver: int = 120
 var wood: int = 60
 var fur: int = 0
 var iron: int = 0
+var diamonds: int = 5  ## 鑽石（付費／秘境 stub）
 var heroes: Array = []
 var buildings: Dictionary = {}
 ## 進行中出征
@@ -46,6 +47,10 @@ var dungeon_busy: bool = false
 var pity_red: int = 0
 var pity_orange: int = 0
 var gacha_pulls_total: int = 0
+## 招募日節奏（UTC+8 曆日字串 YYYY-MM-DD）
+var gacha_day_key: String = ""
+var gacha_silver_today: int = 0
+var gacha_free_used_today: bool = false
 ## 當前野外圖
 var selected_zone: String = "luan_shan_po"
 ## 前哨成功次數（stub 統計）
@@ -75,6 +80,9 @@ func _load_starter_data() -> void:
 	pity_red = 0
 	pity_orange = 0
 	gacha_pulls_total = 0
+	gacha_day_key = ""
+	gacha_silver_today = 0
+	gacha_free_used_today = false
 	selected_zone = "luan_shan_po"
 	outpost_clears = 0
 	_hunt_seq = 0
@@ -83,6 +91,7 @@ func _load_starter_data() -> void:
 	wood = 60
 	fur = 0
 	iron = 2
+	diamonds = 5
 
 	var heroes_data: Variant = _read_json(STARTER_HEROES_PATH)
 	if heroes_data is Array:
@@ -196,6 +205,17 @@ func add_fragments(amount: int) -> void:
 	fragments = maxi(0, fragments + amount)
 	resources_changed.emit()
 
+func add_diamonds(amount: int) -> void:
+	diamonds = maxi(0, diamonds + amount)
+	resources_changed.emit()
+
+func try_spend_diamonds(cost: int) -> bool:
+	if diamonds < cost:
+		return false
+	diamonds -= cost
+	resources_changed.emit()
+	return true
+
 func try_spend(silver_cost: int, wood_cost: int = 0, fur_cost: int = 0, iron_cost: int = 0) -> bool:
 	if silver < silver_cost or wood < wood_cost or fur < fur_cost or iron < iron_cost:
 		return false
@@ -269,6 +289,7 @@ func to_save_dict() -> Dictionary:
 		"wood": wood,
 		"fur": fur,
 		"iron": iron,
+		"diamonds": diamonds,
 		"heroes": heroes.duplicate(true),
 		"buildings": buildings.duplicate(true),
 		"active_hunts": active_hunts.duplicate(true),
@@ -283,6 +304,9 @@ func to_save_dict() -> Dictionary:
 		"pity_red": pity_red,
 		"pity_orange": pity_orange,
 		"gacha_pulls_total": gacha_pulls_total,
+		"gacha_day_key": gacha_day_key,
+		"gacha_silver_today": gacha_silver_today,
+		"gacha_free_used_today": gacha_free_used_today,
 		"selected_zone": selected_zone,
 		"outpost_clears": outpost_clears,
 		"hunt_seq": _hunt_seq,
@@ -294,6 +318,7 @@ func load_from_dict(d: Dictionary) -> void:
 	wood = int(d.get("wood", wood))
 	fur = int(d.get("fur", fur))
 	iron = int(d.get("iron", iron))
+	diamonds = int(d.get("diamonds", diamonds))
 	if d.has("heroes"):
 		heroes.clear()
 		for h in d["heroes"] as Array:
@@ -326,6 +351,9 @@ func load_from_dict(d: Dictionary) -> void:
 	pity_red = int(d.get("pity_red", 0))
 	pity_orange = int(d.get("pity_orange", 0))
 	gacha_pulls_total = int(d.get("gacha_pulls_total", 0))
+	gacha_day_key = str(d.get("gacha_day_key", ""))
+	gacha_silver_today = int(d.get("gacha_silver_today", 0))
+	gacha_free_used_today = bool(d.get("gacha_free_used_today", false))
 	selected_zone = str(d.get("selected_zone", "luan_shan_po"))
 	outpost_clears = int(d.get("outpost_clears", 0))
 	dungeon_busy = false

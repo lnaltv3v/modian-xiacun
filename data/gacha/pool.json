@@ -444,5 +444,12 @@
       "placeholder": false,
       "art_stem": "red_zhangwuji"
     }
-  ]
+  ],
+  "pacing": {
+    "daily_silver_limit": 30,
+    "free_pull_per_day": 1,
+    "diamond_single_cost": 3,
+    "diamond_ten_cost": 28,
+    "note": "獵魔村式招募節奏 stub：每日免費1抽；銀抽日上限；鑽石單抽／十連"
+  }
 }
