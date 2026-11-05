@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.10.1 — 紫 AI walk／attack＋精英怪高密度優先（毒蛇／巨蟒／狼王／山賊頭目）
+## 墨點俠村 v0.10.3 — Pivot R6 UI drop-in（hud／btn／resource icons）
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -95,9 +95,10 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.10.1"
+		title_label.text = "墨點俠村 · v0.10.3"
 
 	_setup_resource_icons()
+	_setup_ui_art()
 	_setup_monster_reserve()
 
 	if SaveManager.has_save():
@@ -162,10 +163,61 @@ func _ready() -> void:
 	_refresh_tutorial()
 
 func _setup_resource_icons() -> void:
-	_set_tex(icon_silver, ArtPaths.ICON_SILVER)
-	_set_tex(icon_wood, ArtPaths.ICON_WOOD)
-	_set_tex(icon_fur, ArtPaths.ICON_FUR)
-	_set_tex(icon_iron, ArtPaths.ICON_IRON)
+	## Pivot R6 drop-in：32×32 icons @ assets/art/ui/
+	for pair in [
+		[icon_silver, ArtPaths.ICON_SILVER],
+		[icon_wood, ArtPaths.ICON_WOOD],
+		[icon_fur, ArtPaths.ICON_FUR],
+		[icon_iron, ArtPaths.ICON_IRON],
+	]:
+		var node: TextureRect = pair[0] as TextureRect
+		var path: String = str(pair[1])
+		if node == null:
+			continue
+		node.custom_minimum_size = Vector2(32, 32)
+		node.size = Vector2(32, 32)
+		_set_tex(node, path)
+
+func _setup_ui_art() -> void:
+	## HUD panel 320×64 behind resource strip
+	var hud := get_node_or_null("HudPanel") as TextureRect
+	if hud == null:
+		hud = TextureRect.new()
+		hud.name = "HudPanel"
+		hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hud.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		hud.stretch_mode = TextureRect.STRETCH_SCALE
+		hud.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		## sit under InkBar content, left of resource icons
+		hud.position = Vector2(300, 4)
+		hud.size = Vector2(320, 64)
+		hud.z_index = -1
+		add_child(hud)
+		move_child(hud, 1)
+	_set_tex(hud, ArtPaths.HUD_PANEL)
+
+	_apply_btn_art(btn_dispatch, ArtPaths.BTN_DISPATCH, Vector2(128, 40))
+
+func _apply_btn_art(btn: Button, path: String, size: Vector2) -> void:
+	if btn == null:
+		return
+	var tex: Texture2D = ArtPaths.load_tex(path)
+	if tex == null:
+		return
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = 10.0
+	sb.texture_margin_top = 8.0
+	sb.texture_margin_right = 10.0
+	sb.texture_margin_bottom = 8.0
+	btn.add_theme_stylebox_override("normal", sb)
+	btn.add_theme_stylebox_override("hover", sb)
+	btn.add_theme_stylebox_override("pressed", sb)
+	btn.add_theme_stylebox_override("disabled", sb)
+	btn.custom_minimum_size = size
+	btn.size = Vector2(maxf(btn.size.x, size.x), size.y)
+	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 
 func _setup_monster_reserve() -> void:
 	_set_tex(monster_preview, ArtPaths.monster_idle("wolf"))
@@ -234,6 +286,7 @@ func _rebuild_buildings() -> void:
 		btn.text = "升級" if lv > 0 or bool(b.get("unlocked", false)) else "興建"
 		btn.disabled = not BuildingSystem.can_upgrade(bid)
 		btn.pressed.connect(_on_upgrade.bind(bid))
+		_apply_btn_art(btn, ArtPaths.BTN_BUILD, Vector2(64, 28))
 		row.add_child(btn)
 		buildings_box.add_child(row)
 

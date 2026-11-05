@@ -45,26 +45,26 @@ offset_right = 300.0
 offset_bottom = 34.0
 theme_override_colors/font_color = Color(0.788235, 0.635294, 0.152941, 1)
 theme_override_font_sizes/font_size = 18
-text = "墨點俠村 · v0.9.1"
+text = "墨點俠村 · v0.10.3"
 clip_text = false
 
 [node name="IconSilver" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 310.0
+offset_left = 308.0
 offset_top = 8.0
-offset_right = 334.0
-offset_bottom = 32.0
+offset_right = 340.0
+offset_bottom = 40.0
 expand_mode = 1
 stretch_mode = 5
 
 [node name="LabSilver" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 336.0
-offset_top = 8.0
+offset_left = 344.0
+offset_top = 12.0
 offset_right = 420.0
-offset_bottom = 32.0
+offset_bottom = 36.0
 theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
 theme_override_font_sizes/font_size = 14
 text = "0"
@@ -73,20 +73,20 @@ clip_text = false
 [node name="IconWood" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 430.0
+offset_left = 428.0
 offset_top = 8.0
-offset_right = 454.0
-offset_bottom = 32.0
+offset_right = 460.0
+offset_bottom = 40.0
 expand_mode = 1
 stretch_mode = 5
 
 [node name="LabWood" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 456.0
-offset_top = 8.0
+offset_left = 464.0
+offset_top = 12.0
 offset_right = 540.0
-offset_bottom = 32.0
+offset_bottom = 36.0
 theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
 theme_override_font_sizes/font_size = 14
 text = "0"
@@ -95,20 +95,20 @@ clip_text = false
 [node name="IconFur" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 550.0
+offset_left = 548.0
 offset_top = 8.0
-offset_right = 574.0
-offset_bottom = 32.0
+offset_right = 580.0
+offset_bottom = 40.0
 expand_mode = 1
 stretch_mode = 5
 
 [node name="LabFur" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 576.0
-offset_top = 8.0
+offset_left = 584.0
+offset_top = 12.0
 offset_right = 660.0
-offset_bottom = 32.0
+offset_bottom = 36.0
 theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
 theme_override_font_sizes/font_size = 14
 text = "0"
@@ -117,20 +117,20 @@ clip_text = false
 [node name="IconIron" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 670.0
+offset_left = 668.0
 offset_top = 8.0
-offset_right = 694.0
-offset_bottom = 32.0
+offset_right = 700.0
+offset_bottom = 40.0
 expand_mode = 1
 stretch_mode = 5
 
 [node name="LabIron" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 696.0
-offset_top = 8.0
+offset_left = 704.0
+offset_top = 12.0
 offset_right = 780.0
-offset_bottom = 32.0
+offset_bottom = 36.0
 theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
 theme_override_font_sizes/font_size = 14
 text = "0"
@@ -290,6 +290,7 @@ offset_left = 936.0
 offset_top = 408.0
 offset_right = 1260.0
 offset_bottom = 448.0
+custom_minimum_size = Vector2(128, 40)
 text = "出征亂山坡"
 
 [node name="BottomPanel" type="ColorRect" parent="."]
