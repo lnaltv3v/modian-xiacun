@@ -1,6 +1,6 @@
 extends RefCounted
 class_name BuildingSystem
-## 建築升級／解鎖
+## 建築升級／解鎖（v0.9.1：曲線 1.45^lv + 等級軟加，避免早崩／晚瘋）
 
 static func get_upgrade_cost(building_id: String) -> Dictionary:
 	if not GameState.buildings.has(building_id):
@@ -9,12 +9,11 @@ static func get_upgrade_cost(building_id: String) -> Dictionary:
 	var level: int = int(b.get("level", 0))
 	var base_s: int = int(b.get("base_cost_silver", 50))
 	var base_w: int = int(b.get("base_cost_wood", 20))
-	var mult: float = 1.0
-	for _i in range(maxi(0, level)):
-		mult *= 1.5
+	## 基礎指數 × 等級軟加：前段可跟教學節奏，後期要持續出征
+	var mult: float = pow(1.45, float(level)) * (1.0 + float(level) * 0.06)
 	return {
-		"silver": int(ceil(base_s * mult)),
-		"wood": int(ceil(base_w * mult)),
+		"silver": int(ceil(float(base_s) * mult)),
+		"wood": int(ceil(float(base_w) * mult)),
 	}
 
 static func max_level(building_id: String) -> int:

@@ -122,7 +122,8 @@
       "base_power": 24,
       "personality": "機靈",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "purple_weixiaobao"
     },
     {
       "template_id": "pool_p_hufei",
@@ -132,7 +133,8 @@
       "base_power": 26,
       "personality": "俠義",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "purple_hufei"
     },
     {
       "template_id": "pool_p_miaorenfeng",
@@ -142,7 +144,8 @@
       "base_power": 27,
       "personality": "剛烈",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "purple_miaorenfeng"
     },
     {
       "template_id": "pool_p_yuanchengzhi",
@@ -152,7 +155,8 @@
       "base_power": 25,
       "personality": "正氣",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "purple_yuanchengzhi"
     },
     {
       "template_id": "pool_p_diyun",
@@ -162,7 +166,85 @@
       "base_power": 24,
       "personality": "堅韌",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "purple_diyun"
+    },
+    {
+      "template_id": "pool_p_shipotian",
+      "name": "石破添",
+      "weapon": "拳腳",
+      "rarity": "紫",
+      "base_power": 25,
+      "personality": "憨直",
+      "art_key": "",
+      "placeholder": false,
+      "art_stem": "purple_shipotian"
+    },
+    {
+      "template_id": "pool_p_xuzhu",
+      "name": "虛竺",
+      "weapon": "棍",
+      "rarity": "紫",
+      "base_power": 26,
+      "personality": "慈悲",
+      "art_key": "",
+      "placeholder": false,
+      "art_stem": "purple_xuzhu"
+    },
+    {
+      "template_id": "pool_p_limochou",
+      "name": "李莫秋",
+      "weapon": "鞭",
+      "rarity": "紫",
+      "base_power": 25,
+      "personality": "狠辣",
+      "art_key": "",
+      "placeholder": false,
+      "art_stem": "purple_limochou"
+    },
+    {
+      "template_id": "pool_p_xiaolongnu",
+      "name": "小龍妞",
+      "weapon": "劍",
+      "rarity": "紫",
+      "base_power": 27,
+      "personality": "清冷",
+      "art_key": "",
+      "placeholder": false,
+      "art_stem": "purple_xiaolongnu"
+    },
+    {
+      "template_id": "pool_p_zhaomin",
+      "name": "趙敏",
+      "weapon": "扇",
+      "rarity": "紫",
+      "base_power": 26,
+      "personality": "狡黠",
+      "art_key": "",
+      "placeholder": false,
+      "art_stem": "purple_zhaomin"
+    },
+    {
+      "template_id": "pool_p_zhouzhiruo",
+      "name": "周芷偌",
+      "weapon": "劍",
+      "rarity": "紫",
+      "base_power": 25,
+      "personality": "隱忍",
+      "art_key": "",
+      "placeholder": false,
+      "art_stem": "purple_zhouzhiruo"
+    },
+    {
+      "template_id": "pool_p_yuebuqun",
+      "name": "岳不裙",
+      "weapon": "劍",
+      "rarity": "紫",
+      "base_power": 26,
+      "personality": "偽善",
+      "art_key": "",
+      "placeholder": false,
+      "art_stem": "purple_yuebuqun"
     },
     {
       "template_id": "pool_o_fengqingyang",

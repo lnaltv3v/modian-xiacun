@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.8 — 短自動戰鬥／紅階圖／前哨三波
+## 墨點俠村 v0.9.1 — 數值粗平衡／稀有色邊／資源列
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -24,6 +24,10 @@ const _OutpostScript := preload("res://scripts/systems/OutpostSystem.gd")
 @onready var icon_wood: TextureRect = %IconWood
 @onready var icon_fur: TextureRect = %IconFur
 @onready var icon_iron: TextureRect = %IconIron
+@onready var lab_silver: Label = %LabSilver
+@onready var lab_wood: Label = %LabWood
+@onready var lab_fur: Label = %LabFur
+@onready var lab_iron: Label = %LabIron
 @onready var monster_preview: TextureRect = %MonsterPreview
 @onready var craft_box: VBoxContainer = %CraftBox
 @onready var inv_label: Label = %InvLabel
@@ -81,7 +85,7 @@ func _ready() -> void:
 	_rng_ui.randomize()
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.8"
+		title_label.text = "墨點俠村 · v0.9.1"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -249,7 +253,12 @@ func _rebuild_heroes() -> void:
 
 		var lab := Label.new()
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		lab.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
+		var rar_c: Color = HeroPortraitScript.rarity_color(str(h.get("rarity", "綠")))
+		## 字色偏墨，稀有用邊框辨識；紫無圖時字略帶稀有色
+		if str(h.get("rarity", "")) in ["紫", "橙", "紅"] and bool(h.get("placeholder", false)):
+			lab.add_theme_color_override("font_color", rar_c.darkened(0.15))
+		else:
+			lab.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
 		lab.add_theme_font_size_override("font_size", 12)
 		lab.text = _hero_line(h)
 		lab.gui_input.connect(func(ev: InputEvent) -> void:
@@ -336,17 +345,23 @@ func _refresh_craft() -> void:
 	inv_label.text = "\n".join(lines)
 
 func _refresh_hud() -> void:
-	hud_label.text = "銀 %d　木 %d　毛皮 %d　鐵 %d　碎片 %d　駐紮 %d／%d　在村 %d　出征 %d" % [
-		GameState.silver,
-		GameState.wood,
-		GameState.fur,
-		GameState.iron,
+	if lab_silver:
+		lab_silver.text = str(GameState.silver)
+	if lab_wood:
+		lab_wood.text = str(GameState.wood)
+	if lab_fur:
+		lab_fur.text = str(GameState.fur)
+	if lab_iron:
+		lab_iron.text = str(GameState.iron)
+	## 次列：碎片／駐紮／狀態（唔同圖示行搶位，避免裁切）
+	hud_label.text = "碎片 %d　　駐紮 %d／%d　　在村 %d　　出征 %d" % [
 		GameState.fragments,
 		GameState.hero_count(),
 		GameState.hero_capacity(),
 		GameState.idle_hero_count(),
 		GameState.hunting_hero_count(),
 	]
+	hud_label.clip_text = false
 	_refresh_gacha_shop()
 	status_label.text = "%s　｜　練功+%.1f XP/s　｜　%s　｜　放＝自由放置（Esc 取消）" % [
 		UpkeepSystem.describe_rates(),

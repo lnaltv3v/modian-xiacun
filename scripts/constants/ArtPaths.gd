@@ -1,10 +1,11 @@
 extends RefCounted
 class_name ArtPaths
-## 美術路徑 — 紅 heroes/red/ → 橙 heroes/orange/ → 綠 64 → _prev_48
+## 美術路徑 — 紅 → 橙 → 紫 → 綠 64 → _prev_48
 
 const HEROES_DIR := "res://assets/art/heroes/"
 const HEROES_RED_DIR := "res://assets/art/heroes/red/"
 const HEROES_ORANGE_DIR := "res://assets/art/heroes/orange/"
+const HEROES_PURPLE_DIR := "res://assets/art/heroes/purple/"
 const HEROES_FALLBACK_DIR := "res://assets/art/heroes/_prev_48/"
 const BUILDINGS_DIR := "res://assets/art/buildings/"
 const UI_DIR := "res://assets/art/ui/"
@@ -58,6 +59,35 @@ const ORANGE_ART := {
 	"orange_yideng": "orange_yideng",
 	"orange_zhoubotong": "orange_zhoubotong",
 	"orange_miejueshitai": "orange_miejueshitai",
+}
+
+
+## 紫階 template_id / id → purple_* stem（96×96）
+const PURPLE_ART := {
+	"pool_p_weixiaobao": "purple_weixiaobao",
+	"pool_p_hufei": "purple_hufei",
+	"pool_p_miaorenfeng": "purple_miaorenfeng",
+	"pool_p_yuanchengzhi": "purple_yuanchengzhi",
+	"pool_p_diyun": "purple_diyun",
+	"pool_p_shipotian": "purple_shipotian",
+	"pool_p_xuzhu": "purple_xuzhu",
+	"pool_p_limochou": "purple_limochou",
+	"pool_p_xiaolongnu": "purple_xiaolongnu",
+	"pool_p_zhaomin": "purple_zhaomin",
+	"pool_p_zhouzhiruo": "purple_zhouzhiruo",
+	"pool_p_yuebuqun": "purple_yuebuqun",
+	"purple_weixiaobao": "purple_weixiaobao",
+	"purple_hufei": "purple_hufei",
+	"purple_miaorenfeng": "purple_miaorenfeng",
+	"purple_yuanchengzhi": "purple_yuanchengzhi",
+	"purple_diyun": "purple_diyun",
+	"purple_shipotian": "purple_shipotian",
+	"purple_xuzhu": "purple_xuzhu",
+	"purple_limochou": "purple_limochou",
+	"purple_xiaolongnu": "purple_xiaolongnu",
+	"purple_zhaomin": "purple_zhaomin",
+	"purple_zhouzhiruo": "purple_zhouzhiruo",
+	"purple_yuebuqun": "purple_yuebuqun",
 }
 
 const HERO_ART := {
@@ -132,11 +162,26 @@ static func orange_stem_for(hero_id: String) -> String:
 		return str(ORANGE_ART[hero_id])
 	return _stem_from_gacha_id(hero_id, ORANGE_ART)
 
+static func purple_stem_for(hero_id: String) -> String:
+	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
+	var art_stem: String = str(hero.get("art_stem", ""))
+	if art_stem.begins_with("purple_"):
+		return art_stem
+	if art_stem != "" and PURPLE_ART.has(art_stem):
+		return str(PURPLE_ART[art_stem])
+	var tid: String = str(hero.get("template_id", ""))
+	if PURPLE_ART.has(tid):
+		return str(PURPLE_ART[tid])
+	if PURPLE_ART.has(hero_id):
+		return str(PURPLE_ART[hero_id])
+	return _stem_from_gacha_id(hero_id, PURPLE_ART)
+
 static func _hero_path_candidates(hero_id: String, suffix: String) -> Array:
-	## 紅目錄 → 橙目錄 → 一般 64 → 48 fallback
+	## 紅 → 橙 → 紫 → 一般 64 → 48 fallback
 	var stem: String = hero_stem(hero_id)
 	var red: String = red_stem_for(hero_id)
 	var orange: String = orange_stem_for(hero_id)
+	var purple: String = purple_stem_for(hero_id)
 	var out: Array = []
 	var seen: Dictionary = {}
 	if red != "":
@@ -149,6 +194,11 @@ static func _hero_path_candidates(hero_id: String, suffix: String) -> Array:
 		if not seen.has(op):
 			seen[op] = true
 			out.append(op)
+	if purple != "":
+		var pp: String = HEROES_PURPLE_DIR + purple + suffix
+		if not seen.has(pp):
+			seen[pp] = true
+			out.append(pp)
 	if stem != "":
 		var gp: String = HEROES_DIR + stem + suffix
 		var fp: String = HEROES_FALLBACK_DIR + stem + suffix
@@ -178,6 +228,12 @@ static func has_red_art(hero_id: String) -> bool:
 static func has_orange_art(hero_id: String) -> bool:
 	var orange: String = orange_stem_for(hero_id)
 	if orange != "" and ResourceLoader.exists(HEROES_ORANGE_DIR + orange + "_idle.png"):
+		return true
+	return false
+
+static func has_purple_art(hero_id: String) -> bool:
+	var purple: String = purple_stem_for(hero_id)
+	if purple != "" and ResourceLoader.exists(HEROES_PURPLE_DIR + purple + "_idle.png"):
 		return true
 	return false
 

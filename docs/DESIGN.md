@@ -54,3 +54,10 @@
 - 英雄帖（白綠藍池＋碎片）
 - 懸賞指定狼／山賊
 - 兵器鋪自動買裝
+
+
+## v0.9.1 打磨
+- 出征：亂山坡 14s／毒沼 20s；power_bonus 略收；建築升級 `1.45^lv × (1+0.06lv)`
+- UI：稀有色邊；資源列圖示＋獨立數字唔裁切
+- 紫階 12 人 96×96：`assets/art/heroes/purple/` + ArtPaths；pool `art_stem`、`placeholder:false`
+- 煙測：`smoke_v091.tscn`；試玩清單：`docs/PLAYTEST.md`

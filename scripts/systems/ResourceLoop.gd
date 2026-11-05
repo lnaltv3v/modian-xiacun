@@ -15,4 +15,4 @@ static func training_bonus_xp() -> int:
 	return BuildingSystem.building_level("training") * 5
 
 static func bounty_reward_mult() -> float:
-	return 1.0 + float(BuildingSystem.building_level("bounty")) * 0.08
+	return 1.0 + float(BuildingSystem.building_level("bounty")) * 0.07
