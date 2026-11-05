@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.2 — 核心循環＋製作鏈＋戰鬥結果＋自由放置
+## 墨點俠村 v0.3-playable — 放置 UX＋新手引導＋試玩打磨
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -25,6 +25,9 @@ const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 @onready var craft_box: VBoxContainer = %CraftBox
 @onready var inv_label: Label = %InvLabel
 @onready var title_label: Label = %Title
+@onready var tutorial_banner: ColorRect = %TutorialBanner
+@onready var tutorial_label: Label = %TutorialLabel
+@onready var btn_skip_tutorial: Button = %BtnSkipTutorial
 
 var _dispatch: DispatchSystem
 var _village: Control
@@ -42,12 +45,14 @@ func _ready() -> void:
 	village_host.add_child(_village)
 	_village.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_village.building_clicked.connect(_on_building_clicked)
+	if _village.has_signal("building_placed"):
+		_village.building_placed.connect(_on_building_placed)
 
 	_hunt_result = HuntResultScene.instantiate()
 	add_child(_hunt_result)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.2"
+		title_label.text = "墨點俠村 · v0.3 試玩"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -57,6 +62,7 @@ func _ready() -> void:
 		GameState.push_report("已讀取存檔。")
 	else:
 		GameState.push_report("歡迎返嚟墨點俠村。開局六綠俠已就位。")
+		GameState.tutorial_step = 1
 
 	_dispatch.resolve_due_hunts()
 
@@ -77,6 +83,8 @@ func _ready() -> void:
 	btn_dispatch.pressed.connect(_on_dispatch_pressed)
 	btn_save.pressed.connect(_on_save_pressed)
 	btn_load.pressed.connect(_on_load_pressed)
+	if btn_skip_tutorial:
+		btn_skip_tutorial.pressed.connect(_on_skip_tutorial)
 
 	_rebuild_buildings()
 	_rebuild_heroes()
@@ -84,6 +92,7 @@ func _ready() -> void:
 	_refresh_hud()
 	_refresh_hunts()
 	_refresh_reports()
+	_refresh_tutorial()
 
 func _setup_resource_icons() -> void:
 	_set_tex(icon_silver, ArtPaths.ICON_SILVER)
@@ -150,7 +159,7 @@ func _rebuild_buildings() -> void:
 
 		var btn_place := Button.new()
 		btn_place.text = "放"
-		btn_place.tooltip_text = "自由放置：點村莊地面"
+		btn_place.tooltip_text = "自由放置：點村莊可建區｜再撳取消"
 		btn_place.pressed.connect(_on_place_building.bind(bid))
 		row.add_child(btn_place)
 
@@ -278,7 +287,7 @@ func _refresh_hud() -> void:
 		GameState.idle_hero_count(),
 		GameState.hunting_hero_count(),
 	]
-	status_label.text = "恢復：體+%.1f/s 飽+%.1f/s 傷-%.1f/s　｜　%s　｜　建築可拖放" % [
+	status_label.text = "恢復：體+%.1f/s 飽+%.1f/s 傷-%.1f/s　｜　%s　｜　放＝自由放置（Esc 取消）" % [
 		GameState.recovery_stamina_per_sec(),
 		GameState.recovery_satiety_per_sec(),
 		GameState.recovery_injury_per_sec(),
@@ -354,18 +363,27 @@ func _on_dispatch_pressed() -> void:
 	for hid in _selected.keys():
 		if bool(_selected[hid]):
 			ids.append(hid)
+	var ok := false
 	if ids.is_empty():
 		var res: Dictionary = _dispatch.dispatch_ready(int(spin_count.value), "luan_shan_po")
 		if not bool(res.get("ok", false)):
 			GameState.push_report("派遣失敗：%s" % str(res.get("reason", "")))
+		else:
+			ok = true
 		_selected.clear()
 		_rebuild_heroes()
-		return
-	var res2: Dictionary = _dispatch.start_hunt(ids, "luan_shan_po")
-	if not bool(res2.get("ok", false)):
-		GameState.push_report("派遣失敗：%s" % str(res2.get("reason", "")))
-	_selected.clear()
-	_rebuild_heroes()
+	else:
+		var res2: Dictionary = _dispatch.start_hunt(ids, "luan_shan_po")
+		if not bool(res2.get("ok", false)):
+			GameState.push_report("派遣失敗：%s" % str(res2.get("reason", "")))
+		else:
+			ok = true
+		_selected.clear()
+		_rebuild_heroes()
+	if ok and GameState.tutorial_step == 2:
+		GameState.tutorial_step = 3
+		GameState.push_report("引導③：等俠客回村收資源（睇下方倒數）。")
+		_refresh_tutorial()
 
 func _on_upgrade(building_id: String) -> void:
 	var before: int = BuildingSystem.building_level(building_id)
@@ -374,6 +392,10 @@ func _on_upgrade(building_id: String) -> void:
 		var after: int = BuildingSystem.building_level(building_id)
 		if before == 0:
 			GameState.push_report("%s落成！Lv.%d（駐紮上限 %d）" % [name_cn, after, GameState.hero_capacity()])
+			if building_id == "inn" and GameState.tutorial_step == 1:
+				GameState.tutorial_step = 2
+				GameState.push_report("引導②：剔選右邊俠客，撳「出征亂山坡」。")
+				_refresh_tutorial()
 		else:
 			GameState.push_report("%s升至 Lv.%d" % [name_cn, after])
 	else:
@@ -405,6 +427,10 @@ func _on_hunt_finished(rewards: Dictionary) -> void:
 		_set_tex(monster_preview, ArtPaths.monster_attack(kind))
 	if _hunt_result and _hunt_result.has_method("show_result"):
 		_hunt_result.show_result(rewards)
+	if GameState.tutorial_step == 3:
+		GameState.tutorial_step = 0
+		GameState.push_report("引導完成！之後可自由興建、放置、製作同自動出征。")
+		_refresh_tutorial()
 
 func _on_save_pressed() -> void:
 	if SaveManager.save_game():
@@ -423,6 +449,33 @@ func _on_load_pressed() -> void:
 		_refresh_hud()
 		_refresh_hunts()
 		_refresh_reports()
+		_refresh_tutorial()
 		GameState.push_report("已讀檔。")
 	else:
 		GameState.push_report("冇存檔可讀。")
+
+func _on_building_placed(_building_id: String, _pos: Vector2) -> void:
+	_refresh_hud()
+
+func _on_skip_tutorial() -> void:
+	GameState.tutorial_step = 0
+	GameState.push_report("已跳過新手引導。")
+	_refresh_tutorial()
+
+func _refresh_tutorial() -> void:
+	if tutorial_banner == null or tutorial_label == null:
+		return
+	var step: int = GameState.tutorial_step
+	if step <= 0:
+		tutorial_banner.visible = false
+		return
+	tutorial_banner.visible = true
+	match step:
+		1:
+			tutorial_label.text = "① 新手：左邊撳客棧「興建」（銀50／木25），建立村莊循環。"
+		2:
+			tutorial_label.text = "② 剔選右邊俠客（可多選），再撳「出征亂山坡」。"
+		3:
+			tutorial_label.text = "③ 等下方倒數完 → 俠客回村，收銀／毛皮。跟住自由玩！"
+		_:
+			tutorial_label.text = "新手引導"

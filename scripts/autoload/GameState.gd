@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -32,6 +32,8 @@ var zones: Dictionary = {}
 var inventory: Array = []
 ## 玩家放置：building_id -> {x, y}（設計座標 960×540）；空則用 layout 預設
 var building_placements: Dictionary = {}
+## 新手引導：0=完成／跳過；1=興建客棧；2=派遣；3=等回村
+var tutorial_step: int = 1
 var _hunt_seq: int = 0
 var _default_layout_buildings: Array = []
 
@@ -48,6 +50,7 @@ func _load_starter_data() -> void:
 	inventory.clear()
 	building_placements.clear()
 	auto_dispatch = false
+	tutorial_step = 1
 	_hunt_seq = 0
 	silver = 120
 	wood = 60
@@ -242,6 +245,7 @@ func to_save_dict() -> Dictionary:
 		"reports": reports.duplicate(true),
 		"inventory": inventory.duplicate(true),
 		"building_placements": building_placements.duplicate(true),
+		"tutorial_step": tutorial_step,
 		"hunt_seq": _hunt_seq,
 	}
 
@@ -275,5 +279,6 @@ func load_from_dict(d: Dictionary) -> void:
 		inventory = (d["inventory"] as Array).duplicate(true)
 	if d.has("building_placements"):
 		building_placements = (d["building_placements"] as Dictionary).duplicate(true)
+	tutorial_step = int(d.get("tutorial_step", 0))
 	_hunt_seq = int(d.get("hunt_seq", _hunt_seq))
 	_emit_all()

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bsmokev03play"]
+
+[ext_resource type="Script" path="res://scripts/dev/smoke_v03.gd" id="1"]
+
+[node name="SmokeV03" type="Node"]
+script = ExtResource("1")

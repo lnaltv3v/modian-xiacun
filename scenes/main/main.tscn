@@ -45,7 +45,7 @@ offset_right = 360.0
 offset_bottom = 36.0
 theme_override_colors/font_color = Color(0.788235, 0.635294, 0.152941, 1)
 theme_override_font_sizes/font_size = 20
-text = "墨點俠村 · v0.2"
+text = "墨點俠村 · v0.3 試玩"
 
 [node name="IconSilver" type="TextureRect" parent="."]
 unique_name_in_owner = true
@@ -310,6 +310,36 @@ offset_right = 1260.0
 offset_bottom = 648.0
 text = "讀檔"
 
+
+[node name="TutorialBanner" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 280.0
+offset_top = 96.0
+offset_right = 920.0
+offset_bottom = 124.0
+color = Color(0.101961, 0.0823529, 0.0627451, 0.92)
+
+[node name="TutorialLabel" type="Label" parent="TutorialBanner"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 560.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(0.909804, 0.862745, 0.784314, 1)
+theme_override_font_sizes/font_size = 13
+text = "新手引導…"
+
+[node name="BtnSkipTutorial" type="Button" parent="TutorialBanner"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 568.0
+offset_top = 2.0
+offset_right = 632.0
+offset_bottom = 26.0
+text = "跳過"
+
 [node name="Hint" type="Label" parent="."]
 layout_mode = 0
 offset_left = 16.0
@@ -318,4 +348,4 @@ offset_right = 1260.0
 offset_bottom = 708.0
 theme_override_colors/font_color = Color(0.101961, 0.0823529, 0.0627451, 0.5)
 theme_override_font_sizes/font_size = 12
-text = "v0.2 製作鏈＋戰鬥結果＋自由放置 · 64×64 俠客 · HD 建築 · 後期 iOS export"
+text = "v0.3 試玩：建客棧→派遣→回村｜自由放置（可建區＋防疊）｜Esc／右鍵取消｜後期 iOS"
