@@ -1,4 +1,4 @@
-# 墨點俠村（Ink Hero Village）· v0.9.9
+# 墨點俠村（Ink Hero Village）· v0.10.0
 
 武俠墨點風格村莊經營＋俠客養成。玩法跟足《獵魔村物語》核心循環（建築→養俠→派遣→資源→再升級）。
 
@@ -99,3 +99,9 @@ Headless 煙測（唔開窗）：
 - 食住醫狀態列＋俠客成功率短標；秘境／前哨按鈕顯示波次與解鎖條件
 - 缺口清單：`docs/NEXT.md`；煙測 `smoke_v099.tscn`
 - （v0.9.8 已接橙紫高密度 idle／walk／attack）
+
+## v0.10.0
+- 秘境／前哨結果卡：波次 ✓✗ 清單、掉落摘要、解鎖／下一步提示（EHT 式清晰）
+- 村莊「維護」小面板：食／住／醫等級、日耗預覽、短缺紅點（`UpkeepSystem.describe_panel`）
+- 煙測：`res://scenes/dev/smoke_v010.tscn`
+

@@ -120,7 +120,12 @@ func _show_summary() -> void:
 		("全破！" if bool(_rewards.get("cleared", false)) else "中途撤出"),
 	]
 	flavor_label.text = str(_rewards.get("flavor", ""))
-	var loot := LootText.format_summary(_rewards)
+	var pack: Dictionary = _rewards.duplicate(true)
+	pack["run_mode"] = "dungeon"
+	pack["waves"] = _waves
+	if not pack.has("zone_name"):
+		pack["zone_name"] = _dungeon_name
+	var loot := LootText.format_run_result(pack)
 	## reuse enemies box for a simple loot line via label child
 	for c in enemies_box.get_children():
 		c.queue_free()

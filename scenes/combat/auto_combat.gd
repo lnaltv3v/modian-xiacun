@@ -336,18 +336,46 @@ func _after_outro() -> void:
 		_finish()
 
 func _show_summary() -> void:
+	var mode3: String = str(_cfg.get("battle_mode", ""))
+	var tall: bool = mode3 in ["dungeon", "outpost"] or _summary.has("waves")
 	if summary_panel:
 		summary_panel.visible = true
+		if tall:
+			summary_panel.offset_top = 300.0
+			summary_panel.offset_bottom = 560.0
+		else:
+			summary_panel.offset_top = 430.0
+			summary_panel.offset_bottom = 540.0
 	if summary_label:
+		if tall:
+			summary_label.offset_top = 308.0
+			summary_label.offset_bottom = 548.0
+			summary_label.add_theme_font_size_override("font_size", 13)
+		else:
+			summary_label.offset_top = 440.0
+			summary_label.offset_bottom = 530.0
+			summary_label.add_theme_font_size_override("font_size", 14)
 		summary_label.text = _format_summary(_summary)
 	if btn_ok:
 		btn_ok.visible = true
-		var mode3: String = str(_cfg.get("battle_mode", ""))
 		btn_ok.text = "完場" if mode3 == "arena" else "收下戰利品"
 	if phase_label:
-		phase_label.text = "結算"
+		if tall:
+			var wc: int = int(_summary.get("waves_cleared", 0))
+			var wt: int = int(_summary.get("total_waves", (_summary.get("waves", []) as Array).size()))
+			phase_label.text = "結算 · 波次 %d／%d" % [wc, maxi(wt, 1)]
+		else:
+			phase_label.text = "結算"
 
 func _format_summary(s: Dictionary) -> String:
+	var mode: String = str(_cfg.get("battle_mode", s.get("run_mode", "")))
+	if mode in ["dungeon", "outpost"] or s.has("waves"):
+		var pack: Dictionary = s.duplicate(true)
+		if not pack.has("run_mode"):
+			pack["run_mode"] = mode
+		if not pack.has("battle_mode"):
+			pack["battle_mode"] = mode
+		return LootText.format_run_result(pack)
 	return LootText.format_summary(s)
 
 func _on_ok() -> void:

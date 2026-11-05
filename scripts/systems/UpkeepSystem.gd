@@ -184,6 +184,100 @@ static func describe_status() -> String:
 		return base + " · 循環正常"
 	return base + " · " + "／".join(tips)
 
+static func panel_snapshot() -> Dictionary:
+	## 村莊維護面板用結構化狀態
+	var inn: int = BuildingSystem.building_level("inn")
+	var manor: int = BuildingSystem.building_level("manor")
+	var clinic: int = BuildingSystem.building_level("clinic")
+	var has_lodge: bool = inn >= 1 or manor >= 1
+	var need_food: int = 0
+	var need_lodge: int = 0
+	var need_med: int = 0
+	var idle_n: int = 0
+	for h in GameState.heroes:
+		var hd: Dictionary = h as Dictionary
+		if str(hd.get("status", "idle")) != "idle":
+			continue
+		idle_n += 1
+		if inn >= 1 and float(hd.get("satiety", 100)) < 99.5:
+			need_food += 1
+		if has_lodge and float(hd.get("stamina", 100)) < float(hd.get("max_stamina", 100)) - 0.01:
+			need_lodge += 1
+		if clinic >= 1 and float(hd.get("injury", 0)) > 0.05:
+			need_med += 1
+	var food_cost_ps: float = 0.0 if inn < 1 else maxf(0.10, 0.40 - float(inn) * 0.03)
+	var lodge_cost_ps: float = 0.0 if not has_lodge else maxf(0.04, 0.16 - float(inn) * 0.012)
+	var med_cost_ps: float = 0.0 if clinic < 1 else maxf(0.08, 0.32 - float(clinic) * 0.025)
+	var food_ok: bool = inn >= 1 and (need_food <= 0 or GameState.silver >= 1)
+	var lodge_ok: bool = has_lodge and (need_lodge <= 0 or GameState.wood >= 1)
+	var med_ok: bool = clinic >= 1 and (need_med <= 0 or GameState.silver >= 1)
+	if inn < 1:
+		food_ok = false
+	if not has_lodge:
+		lodge_ok = false
+	if clinic < 1:
+		med_ok = false
+	## 短缺紅點：有需求但資源／建築唔夠
+	var food_alert: bool = (inn < 1) or (need_food > 0 and GameState.silver < maxi(1, int(ceil(food_cost_ps * float(need_food)))))
+	var lodge_alert: bool = (not has_lodge) or (need_lodge > 0 and GameState.wood < maxi(1, int(ceil(lodge_cost_ps * float(need_lodge)))))
+	var med_alert: bool = (clinic < 1 and _any_injured()) or (need_med > 0 and GameState.silver < maxi(1, int(ceil(med_cost_ps * float(need_med)))))
+	return {
+		"inn_lv": inn,
+		"manor_lv": manor,
+		"clinic_lv": clinic,
+		"idle": idle_n,
+		"need_food": need_food,
+		"need_lodge": need_lodge,
+		"need_med": need_med,
+		"food_cost_ps": food_cost_ps * float(maxi(need_food, 0)),
+		"lodge_cost_ps": lodge_cost_ps * float(maxi(need_lodge, 0)),
+		"med_cost_ps": med_cost_ps * float(maxi(need_med, 0)),
+		"food_ok": food_ok and not food_alert,
+		"lodge_ok": lodge_ok and not lodge_alert,
+		"med_ok": med_ok and not med_alert,
+		"food_alert": food_alert,
+		"lodge_alert": lodge_alert,
+		"med_alert": med_alert,
+		"has_alert": food_alert or lodge_alert or med_alert,
+		"status_line": describe_status(),
+	}
+
+
+static func _any_injured() -> bool:
+	for h in GameState.heroes:
+		if float((h as Dictionary).get("injury", 0)) > 0.5:
+			return true
+	return false
+
+
+static func describe_panel() -> String:
+	## 獨立「村莊維護」卡文案
+	var s: Dictionary = panel_snapshot()
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("【村莊維護】食／住／醫")
+	lines.append("在村閒置 %d 人　｜　%s" % [int(s.get("idle", 0)), str(s.get("status_line", ""))])
+	var food_mark: String = "⚠" if bool(s.get("food_alert", false)) else ("✓" if int(s.get("inn_lv", 0)) >= 1 else "·")
+	var lodge_mark: String = "⚠" if bool(s.get("lodge_alert", false)) else ("✓" if int(s.get("inn_lv", 0)) >= 1 or int(s.get("manor_lv", 0)) >= 1 else "·")
+	var med_mark: String = "⚠" if bool(s.get("med_alert", false)) else ("✓" if int(s.get("clinic_lv", 0)) >= 1 else "·")
+	lines.append("%s 食　客棧 Lv%d　缺飯 %d　約 %.1f 銀/秒　銀庫 %d" % [
+		food_mark, int(s.get("inn_lv", 0)), int(s.get("need_food", 0)),
+		float(s.get("food_cost_ps", 0)), GameState.silver,
+	])
+	lines.append("%s 住　客棧/府　缺睡 %d　約 %.1f 木/秒　木庫 %d" % [
+		lodge_mark, int(s.get("need_lodge", 0)),
+		float(s.get("lodge_cost_ps", 0)), GameState.wood,
+	])
+	lines.append("%s 醫　醫館 Lv%d　療傷 %d　約 %.1f 銀/秒" % [
+		med_mark, int(s.get("clinic_lv", 0)), int(s.get("need_med", 0)),
+		float(s.get("med_cost_ps", 0)),
+	])
+	if bool(s.get("has_alert", false)):
+		lines.append("紅點：有短缺或未建 — 出征成功率會跌。")
+	else:
+		lines.append("循環正常：保持銀木庫存，閒置俠會自動恢復。")
+	return "\n".join(lines)
+
+
 static func hero_condition_label(hero: Dictionary) -> String:
 	## 單俠狀態短標：成／危／疲
 	if hero.is_empty():

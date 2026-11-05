@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.9.9 — academy Pivot R4＋食住醫／秘境前哨 UI 釐清（橙紫 art 見 v0.9.8）
+## 墨點俠村 v0.10.0 — 秘境／前哨結果卡（波次＋掉落＋解鎖）＋村莊維護面板
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -61,6 +61,9 @@ var _battle_final: Dictionary = {}
 var _battle_mode: String = ""
 var _rng_ui := RandomNumberGenerator.new()
 var _gacha_flash: Control
+var _btn_upkeep: Button
+var _upkeep_panel: ColorRect
+var _upkeep_label: Label
 
 func _ready() -> void:
 	_dispatch = DispatchSystem.new()
@@ -92,7 +95,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.9"
+		title_label.text = "墨點俠村 · v0.10.0"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -148,6 +151,7 @@ func _ready() -> void:
 		btn_outpost.pressed.connect(_on_outpost_pressed)
 	if btn_arena:
 		btn_arena.pressed.connect(_on_arena_pressed)
+	_setup_upkeep_panel()
 
 	_rebuild_buildings()
 	_rebuild_heroes()
@@ -439,6 +443,7 @@ func _refresh_hud() -> void:
 	_refresh_dispatch_btn()
 	_refresh_dungeon_btn()
 	_refresh_craft()
+	_refresh_upkeep_panel()
 
 func _refresh_hunts() -> void:
 	if GameState.active_hunts.is_empty():
@@ -824,12 +829,21 @@ func _on_dungeon_pressed() -> void:
 	_selected.clear()
 	_rebuild_heroes()
 	_refresh_hud()
+	var d_waves: Array = res.get("waves", []) as Array
+	var d_rewards: Dictionary = (res.get("rewards", {}) as Dictionary).duplicate(true)
+	d_rewards["run_mode"] = "dungeon"
+	d_rewards["battle_mode"] = "dungeon"
+	d_rewards["waves"] = d_waves
+	d_rewards["cleared"] = bool(res.get("cleared", d_rewards.get("cleared", false)))
+	d_rewards["total_waves"] = maxi(d_waves.size(), int((DungeonSystem.dungeon_def().get("waves", []) as Array).size()))
+	d_rewards["zone_name"] = str(res.get("dungeon_name", d_rewards.get("zone_name", "秘境")))
+	d_rewards["run_title"] = str(d_rewards["zone_name"])
 	_start_wave_battles(
 		"dungeon",
 		str(res.get("dungeon_name", "秘境")),
-		res.get("waves", []) as Array,
+		d_waves,
 		res.get("heroes", ids),
-		(res.get("rewards", {}) as Dictionary).duplicate(true)
+		d_rewards
 	)
 
 func _on_dungeon_closed(_rewards: Dictionary) -> void:
@@ -1020,13 +1034,23 @@ func _on_outpost_pressed() -> void:
 	_selected.clear()
 	_rebuild_heroes()
 	_refresh_hud()
+	var o_waves: Array = res.get("waves", []) as Array
 	var rewards: Dictionary = (res.get("rewards", {}) as Dictionary).duplicate(true)
 	rewards["flavor"] = str(res.get("flavor", rewards.get("flavor", "")))
 	rewards["injured"] = rewards.get("injured", [])
+	rewards["run_mode"] = "outpost"
+	rewards["battle_mode"] = "outpost"
+	rewards["waves"] = o_waves
+	rewards["waves_cleared"] = int(res.get("waves_cleared", rewards.get("waves_cleared", 0)))
+	rewards["cleared"] = bool(res.get("cleared", rewards.get("cleared", false)))
+	rewards["success"] = bool(res.get("success", rewards.get("cleared", false)))
+	rewards["total_waves"] = maxi(o_waves.size(), _OutpostScript.wave_count())
+	rewards["zone_name"] = str(_OutpostScript.def().get("name", "前哨防衛"))
+	rewards["run_title"] = str(rewards["zone_name"])
 	_start_wave_battles(
 		"outpost",
 		"前哨防衛",
-		res.get("waves", []) as Array,
+		o_waves,
 		res.get("heroes", ids),
 		rewards
 	)
@@ -1035,9 +1059,20 @@ func _start_wave_battles(mode: String, title: String, waves: Array, hero_ids: Ar
 	_battle_mode = mode
 	_battle_final = final_rewards.duplicate(true)
 	_battle_queue.clear()
+	var total_w: int = maxi(waves.size(), int(final_rewards.get("total_waves", waves.size())))
+	_battle_final["waves"] = waves
+	_battle_final["run_mode"] = mode
+	_battle_final["battle_mode"] = mode
+	_battle_final["total_waves"] = total_w
+	if not _battle_final.has("zone_name") or str(_battle_final.get("zone_name", "")) == "":
+		_battle_final["zone_name"] = title
+	var wi: int = 0
 	for wv in waves:
 		var w: Dictionary = (wv as Dictionary).duplicate(true)
-		w["_title"] = "%s · %s" % [title, str(w.get("label", "波次"))]
+		wi += 1
+		var idx: int = int(w.get("index", wi))
+		var lab: String = str(w.get("label", "波次%d" % idx))
+		w["_title"] = "%s · %d／%d　%s" % [title, idx, total_w, lab]
 		w["_heroes"] = hero_ids.duplicate()
 		_battle_queue.append(w)
 	if _battle_queue.is_empty():
@@ -1102,4 +1137,55 @@ func _on_wave_battles_done() -> void:
 	_rebuild_heroes()
 	_refresh_hud()
 	_refresh_hunts()
+
+func _setup_upkeep_panel() -> void:
+	_btn_upkeep = Button.new()
+	_btn_upkeep.name = "BtnUpkeep"
+	_btn_upkeep.text = "維護"
+	_btn_upkeep.tooltip_text = "村莊維護：食／住／醫狀態與日耗預覽"
+	_btn_upkeep.position = Vector2(1188, 72)
+	_btn_upkeep.size = Vector2(72, 26)
+	_btn_upkeep.pressed.connect(_on_upkeep_pressed)
+	add_child(_btn_upkeep)
+
+	_upkeep_panel = ColorRect.new()
+	_upkeep_panel.name = "UpkeepPanel"
+	_upkeep_panel.color = Color(0.08, 0.06, 0.05, 0.94)
+	_upkeep_panel.position = Vector2(880, 104)
+	_upkeep_panel.size = Vector2(380, 168)
+	_upkeep_panel.visible = false
+	_upkeep_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_upkeep_panel)
+
+	_upkeep_label = Label.new()
+	_upkeep_label.name = "UpkeepLabel"
+	_upkeep_label.position = Vector2(12, 10)
+	_upkeep_label.size = Vector2(356, 148)
+	_upkeep_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_upkeep_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
+	_upkeep_label.add_theme_font_size_override("font_size", 13)
+	_upkeep_panel.add_child(_upkeep_label)
+	_refresh_upkeep_panel()
+
+
+func _on_upkeep_pressed() -> void:
+	if _upkeep_panel == null:
+		return
+	_upkeep_panel.visible = not _upkeep_panel.visible
+	if _upkeep_panel.visible:
+		_upkeep_panel.move_to_front()
+		_refresh_upkeep_panel()
+
+
+func _refresh_upkeep_panel() -> void:
+	if _btn_upkeep:
+		var snap: Dictionary = UpkeepSystem.panel_snapshot()
+		if bool(snap.get("has_alert", false)):
+			_btn_upkeep.text = "維護⚠"
+			_btn_upkeep.tooltip_text = "有短缺／未建 — " + str(snap.get("status_line", ""))
+		else:
+			_btn_upkeep.text = "維護"
+			_btn_upkeep.tooltip_text = "村莊維護：食／住／醫 · " + str(snap.get("status_line", ""))
+	if _upkeep_label and _upkeep_panel and _upkeep_panel.visible:
+		_upkeep_label.text = UpkeepSystem.describe_panel()
 
