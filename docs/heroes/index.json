@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "red_count": 6,
+  "orange_count": 12,
+  "reds": [
+    "red_zhangwuji",
+    "red_dongfang",
+    "red_dugu",
+    "red_saodi",
+    "red_wangchongyang",
+    "red_huangshang"
+  ],
+  "oranges": [
+    "orange_yangguo",
+    "orange_guojing",
+    "orange_linghuzhong",
+    "orange_qiaofeng",
+    "orange_zhangsanfeng",
+    "orange_fengqingyang",
+    "orange_huangyaoshi",
+    "orange_ouyangfeng",
+    "orange_hongqigong",
+    "orange_yideng",
+    "orange_zhoubotong",
+    "orange_miejueshitai"
+  ],
+  "note": "每俠客一份 .md + .json；招式原創名。"
+}

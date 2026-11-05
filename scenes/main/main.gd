@@ -1,10 +1,11 @@
 extends Control
-## 墨點俠村 v0.6 — 秘境／紫池／師門書院
+## 墨點俠村 v0.7 — 橙紅池／毒沼／前哨 stub
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
 const DungeonRunScene := preload("res://scenes/combat/dungeon_run.tscn")
 const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
+const _OutpostScript := preload("res://scripts/systems/OutpostSystem.gd")
 
 @onready var hud_label: Label = %HudLabel
 @onready var status_label: Label = %StatusLabel
@@ -36,6 +37,8 @@ const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 @onready var btn_shop_once: Button = %BtnShopOnce
 @onready var btn_dungeon: Button = %BtnDungeon
 @onready var btn_academy: Button = %BtnAcademy
+@onready var opt_zone: OptionButton = %OptZone
+@onready var btn_outpost: Button = %BtnOutpost
 
 var _dispatch: DispatchSystem
 var _village: Control
@@ -66,7 +69,7 @@ func _ready() -> void:
 		_dungeon_run.closed.connect(_on_dungeon_closed)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.6"
+		title_label.text = "墨點俠村 · v0.7"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -114,6 +117,11 @@ func _ready() -> void:
 		btn_dungeon.pressed.connect(_on_dungeon_pressed)
 	if btn_academy:
 		btn_academy.pressed.connect(_on_academy_pressed)
+	_setup_zone_options()
+	if opt_zone:
+		opt_zone.item_selected.connect(_on_zone_selected)
+	if btn_outpost:
+		btn_outpost.pressed.connect(_on_outpost_pressed)
 
 	_rebuild_buildings()
 	_rebuild_heroes()
@@ -384,8 +392,10 @@ func _refresh_dispatch_btn() -> void:
 		if bool(_selected[k]):
 			n += 1
 	btn_dispatch.disabled = n < 1 and not GameState.auto_dispatch
-	btn_dispatch.text = "出征亂山坡（已選 %d）" % n
+	var zname: String = str(GameState.get_zone(GameState.selected_zone).get("name", "野外"))
+	btn_dispatch.text = "出征%s（已選 %d）" % [zname, n]
 	_refresh_dungeon_btn()
+	_refresh_outpost_btn()
 
 func _on_hero_toggled(pressed: bool, hid: String) -> void:
 	if pressed:
@@ -407,7 +417,7 @@ func _on_dispatch_pressed() -> void:
 			ids.append(hid)
 	var ok := false
 	if ids.is_empty():
-		var res: Dictionary = _dispatch.dispatch_ready(int(spin_count.value), "luan_shan_po")
+		var res: Dictionary = _dispatch.dispatch_ready(int(spin_count.value), GameState.selected_zone)
 		if not bool(res.get("ok", false)):
 			GameState.push_report("派遣失敗：%s" % str(res.get("reason", "")))
 		else:
@@ -415,7 +425,7 @@ func _on_dispatch_pressed() -> void:
 		_selected.clear()
 		_rebuild_heroes()
 	else:
-		var res2: Dictionary = _dispatch.start_hunt(ids, "luan_shan_po")
+		var res2: Dictionary = _dispatch.start_hunt(ids, GameState.selected_zone)
 		if not bool(res2.get("ok", false)):
 			GameState.push_report("派遣失敗：%s" % str(res2.get("reason", "")))
 		else:
@@ -550,13 +560,14 @@ func _sync_bounty_option() -> void:
 	opt_bounty.select(0)
 
 func _refresh_gacha_shop() -> void:
+	_setup_zone_options()
 	if frag_label:
 		frag_label.text = "碎片 %d" % GameState.fragments
 	if btn_gacha:
 		var chk: Dictionary = GachaSystem.can_pull()
 		btn_gacha.disabled = not bool(chk.get("ok", false))
 		btn_gacha.text = "英雄帖（%d銀）" % GachaSystem.pull_cost()
-		btn_gacha.tooltip_text = str(chk.get("reason", "白／綠／藍／紫池；重覆轉碎片"))
+		btn_gacha.tooltip_text = str(chk.get("reason", "白→紅；橙／紅軟保底；重覆轉碎片")) + "｜紅保%d 橙保%d" % [GameState.pity_red, GameState.pity_orange]
 	if btn_shop_once:
 		btn_shop_once.disabled = not ShopSystem.forge_ready()
 		btn_shop_once.tooltip_text = "為在村俠客買一件更強裝" if ShopSystem.forge_ready() else "要先起鐵匠鋪"
@@ -665,5 +676,70 @@ func _on_academy_pressed() -> void:
 	var res: Dictionary = AcademySystem.assign_passive(hid, str(sk.get("id", "")))
 	if not bool(res.get("ok", false)):
 		GameState.push_report("書院失敗：%s" % str(res.get("reason", "")))
+	_rebuild_heroes()
+	_refresh_hud()
+
+func _setup_zone_options() -> void:
+	if opt_zone == null:
+		return
+	opt_zone.clear()
+	var keys: Array = GameState.zones.keys()
+	keys.sort()
+	var idx := 0
+	var select_i := 0
+	for kid in keys:
+		var z: Dictionary = GameState.zones[kid] as Dictionary
+		var label: String = str(z.get("name", kid))
+		var need: int = int(z.get("unlock_bounty_level", 1))
+		if BuildingSystem.building_level("bounty") < need:
+			label += "（鎖 Lv.%d）" % need
+		opt_zone.add_item(label)
+		opt_zone.set_item_metadata(idx, str(kid))
+		if str(kid) == GameState.selected_zone:
+			select_i = idx
+		idx += 1
+	if opt_zone.item_count > 0:
+		opt_zone.select(select_i)
+
+func _on_zone_selected(index: int) -> void:
+	if opt_zone == null:
+		return
+	var zid: String = str(opt_zone.get_item_metadata(index))
+	var z: Dictionary = GameState.get_zone(zid)
+	var need: int = int(z.get("unlock_bounty_level", 1))
+	if BuildingSystem.building_level("bounty") < need:
+		GameState.push_report("野外未解鎖：%s 要懸賞榜 Lv.%d" % [str(z.get("name", zid)), need])
+		_setup_zone_options()
+		return
+	GameState.selected_zone = zid
+	GameState.push_report("野外改為「%s」" % str(z.get("name", zid)))
+	_refresh_dispatch_btn()
+
+func _refresh_outpost_btn() -> void:
+	if btn_outpost == null:
+		return
+	var n: int = _selected_ids(99).size()
+	if not _OutpostScript.is_unlocked():
+		btn_outpost.disabled = true
+		btn_outpost.text = "前哨（鎖）"
+		btn_outpost.tooltip_text = "村長府＋懸賞榜達 Lv.2"
+		return
+	if n < 1:
+		btn_outpost.disabled = true
+		btn_outpost.text = "前哨"
+		btn_outpost.tooltip_text = "剔選在村俠客守一波山賊潮"
+	else:
+		var chk: Dictionary = _OutpostScript.can_defend(_selected_ids(6))
+		btn_outpost.disabled = not bool(chk.get("ok", false))
+		btn_outpost.text = "前哨（%d）" % n
+		btn_outpost.tooltip_text = str(chk.get("reason", "一波山賊潮 stub"))
+
+func _on_outpost_pressed() -> void:
+	var ids: Array = _selected_ids(6)
+	var res: Dictionary = _OutpostScript.run_wave(ids)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("前哨失敗：%s" % str(res.get("reason", "")))
+		return
+	_selected.clear()
 	_rebuild_heroes()
 	_refresh_hud()

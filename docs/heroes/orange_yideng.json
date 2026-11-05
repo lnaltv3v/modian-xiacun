@@ -1,0 +1,54 @@
+{
+  "id": "orange_yideng",
+  "name": "一登大師",
+  "canon": "一燈大師",
+  "weapon": "拳腳",
+  "rarity": "橙",
+  "base_power": 36,
+  "personality": "慈悲、沉穩、前朝帝王心性仍在；出手點到即止，除非救眾生。",
+  "background": "南帝出家後隱於石林。俠村醫館缺「一陽真氣」療傷法，故遠迎之。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "金紅袈裟、光頭、單指蓄光；慈眉。",
+    "palette_notes": "袈裟紅金＋指尖暖光。",
+    "signature_props": [
+      "袈裟",
+      "念珠",
+      "指光",
+      "蒲團影子"
+    ],
+    "fx_tier": "絕學級：指光療傷／殺傷雙形態、大招佛光罩。"
+  },
+  "skills": [
+    {
+      "id": "yi_yang_zhi",
+      "name": "一陽指墨光",
+      "desc": "可切治療或傷害形態。"
+    },
+    {
+      "id": "liu_mai_qi",
+      "name": "六脈餘氣",
+      "desc": "遠程氣勁連射（簡化）。"
+    },
+    {
+      "id": "ci_bei",
+      "name": "慈悲願",
+      "desc": "強療瀕死友方（冷卻長）。"
+    },
+    {
+      "id": "nan_di",
+      "name": "南帝遺澤",
+      "desc": "被動：醫館相關回復效果對全隊微增。"
+    }
+  ],
+  "growth": {
+    "focus": "治療與點穴",
+    "stat_bias": {
+      "hp": "中",
+      "atk": "中高",
+      "def": "中",
+      "spd": "中"
+    },
+    "notes": "珍稀輔助橙。"
+  }
+}

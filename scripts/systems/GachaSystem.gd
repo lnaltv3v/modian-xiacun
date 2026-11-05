@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GachaSystem
-## 英雄帖／簡易抽卡 — 白綠藍紫池；重覆轉碎片
+## 英雄帖／抽卡 — 白→紅；重覆轉碎片；紅／橙軟保底
 
 const POOL_PATH := "res://data/gacha/pool.json"
 
@@ -46,7 +46,14 @@ static func rarity_weights() -> Dictionary:
 	var w: Variant = _pool.get("weights", {})
 	if typeof(w) == TYPE_DICTIONARY:
 		return (w as Dictionary).duplicate(true)
-	return {"白": 50, "綠": 32, "藍": 13, "紫": 5}
+	return {"白": 45, "綠": 28, "藍": 14, "紫": 8, "橙": 4, "紅": 1}
+
+static func soft_pity() -> Dictionary:
+	ensure_loaded()
+	var sp: Variant = _pool.get("soft_pity", {})
+	if typeof(sp) == TYPE_DICTIONARY:
+		return (sp as Dictionary).duplicate(true)
+	return {"red_threshold": 120, "orange_threshold": 40}
 
 static func heroes_of_rarity(rarity: String) -> Array:
 	ensure_loaded()
@@ -59,7 +66,22 @@ static func heroes_of_rarity(rarity: String) -> Array:
 	return out
 
 static func _pick_rarity() -> String:
+	## Soft pity: force red / orange when counters hit thresholds
+	var sp: Dictionary = soft_pity()
+	var red_th: int = int(sp.get("red_threshold", 120))
+	var orange_th: int = int(sp.get("orange_threshold", 40))
+	if GameState.pity_red >= red_th and not heroes_of_rarity("紅").is_empty():
+		return "紅"
+	if GameState.pity_orange >= orange_th and not heroes_of_rarity("橙").is_empty():
+		return "橙"
+
 	var weights: Dictionary = rarity_weights()
+	## Soft nudge: near orange pity, double orange weight
+	if GameState.pity_orange >= int(orange_th * 0.75) and weights.has("橙"):
+		weights["橙"] = int(weights["橙"]) * 2
+	if GameState.pity_red >= int(red_th * 0.85) and weights.has("紅"):
+		weights["紅"] = maxi(1, int(weights["紅"]) * 3)
+
 	var total: int = 0
 	for k in weights.keys():
 		total += int(weights[k])
@@ -87,8 +109,18 @@ static func fragment_for(rarity: String) -> int:
 		return int((table as Dictionary).get(rarity, 5))
 	return 5
 
+static func _apply_pity_after(rarity: String) -> void:
+	GameState.pity_red += 1
+	GameState.pity_orange += 1
+	if rarity == "紅":
+		GameState.pity_red = 0
+		GameState.pity_orange = 0
+	elif rarity == "橙":
+		GameState.pity_orange = 0
+	GameState.gacha_pulls_total += 1
+
 static func pull_once() -> Dictionary:
-	## { ok, reason, result: new|dupe, hero, fragments_gained, rarity }
+	## { ok, reason, result: new|dupe, hero, fragments_gained, rarity, pity_forced }
 	var check: Dictionary = can_pull()
 	if not bool(check.get("ok", false)):
 		return {"ok": false, "reason": str(check.get("reason", "")), "result": "", "hero": {}, "fragments_gained": 0}
@@ -98,23 +130,34 @@ static func pull_once() -> Dictionary:
 		return {"ok": false, "reason": "扣銀失敗", "result": "", "hero": {}, "fragments_gained": 0}
 
 	var rarity: String = _pick_rarity()
+	var pity_forced: bool = false
+	var sp: Dictionary = soft_pity()
+	if rarity == "紅" and GameState.pity_red >= int(sp.get("red_threshold", 120)):
+		pity_forced = true
+	if rarity == "橙" and GameState.pity_orange >= int(sp.get("orange_threshold", 40)):
+		pity_forced = true
+
 	var candidates: Array = heroes_of_rarity(rarity)
 	if candidates.is_empty():
-		## fallback any
 		candidates = _pool.get("heroes", []) as Array
 	if candidates.is_empty():
-		GameState.add_silver(cost) ## refund
+		GameState.add_silver(cost)
 		return {"ok": false, "reason": "卡池空", "result": "", "hero": {}, "fragments_gained": 0}
 
 	var pick: Dictionary = (candidates[_rng.randi_range(0, candidates.size() - 1)] as Dictionary).duplicate(true)
 	var template_id: String = str(pick.get("template_id", ""))
 	var owned_idx: int = _find_owned_by_template(template_id)
 
+	_apply_pity_after(rarity)
+
 	if owned_idx >= 0:
 		var frags: int = fragment_for(rarity)
 		GameState.add_fragments(frags)
 		var owned_name: String = str((GameState.heroes[owned_idx] as Dictionary).get("name", template_id))
-		GameState.push_report("英雄帖：重覆「%s」（%s）→ 碎片＋%d" % [owned_name, rarity, frags])
+		var pity_txt: String = "（保底）" if pity_forced else ""
+		GameState.push_report("英雄帖%s：重覆「%s」（%s）→ 碎片＋%d｜紅保%d／橙保%d" % [
+			pity_txt, owned_name, rarity, frags, GameState.pity_red, GameState.pity_orange
+		])
 		return {
 			"ok": true,
 			"reason": "",
@@ -123,9 +166,9 @@ static func pull_once() -> Dictionary:
 			"fragments_gained": frags,
 			"rarity": rarity,
 			"template_id": template_id,
+			"pity_forced": pity_forced,
 		}
 
-	## Cap check — still allow but warn if over capacity (hunt village style often allows over)
 	var new_hero: Dictionary = {
 		"id": "gacha_%s_%d" % [template_id, Time.get_ticks_msec()],
 		"template_id": template_id,
@@ -149,7 +192,10 @@ static func pull_once() -> Dictionary:
 	new_hero = HeroSystem.normalize_hero(new_hero)
 	GameState.heroes.append(new_hero)
 	GameState.heroes_changed.emit()
-	GameState.push_report("英雄帖：新俠「%s」（%s）加入村莊！" % [str(new_hero.get("name", "")), rarity])
+	var pity_txt2: String = "（保底）" if pity_forced else ""
+	GameState.push_report("英雄帖%s：新俠「%s」（%s）加入！｜紅保%d／橙保%d" % [
+		pity_txt2, str(new_hero.get("name", "")), rarity, GameState.pity_red, GameState.pity_orange
+	])
 	return {
 		"ok": true,
 		"reason": "",
@@ -158,4 +204,5 @@ static func pull_once() -> Dictionary:
 		"fragments_gained": 0,
 		"rarity": rarity,
 		"template_id": template_id,
+		"pity_forced": pity_forced,
 	}

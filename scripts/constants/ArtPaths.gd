@@ -28,6 +28,9 @@ const MONSTER_ART := {
 	"wolf": "monster_wolf",
 	"boar": "monster_boar",
 	"bandit": "monster_bandit",
+	## v0.7 毒沼：暫複用既有怪剪影（色塊／後期換蛇蟒專圖）
+	"snake": "monster_wolf",
+	"python": "monster_boar",
 }
 
 static func hero_stem(hero_id: String) -> String:

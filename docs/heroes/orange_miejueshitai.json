@@ -1,0 +1,54 @@
+{
+  "id": "orange_miejueshitai",
+  "name": "滅絕師態",
+  "canon": "滅絕師太",
+  "weapon": "劍",
+  "rarity": "橙",
+  "base_power": 36,
+  "personality": "剛烈、護短門派、嫉惡如仇到近乎極端；對魔教零容忍。",
+  "background": "峨眉掌門，倚天劍意凌厲。俠村請其鎮魔教餘孽時一口答應——順便訓村中後輩「心要正、劍要狠」。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "尼袍、長劍、眉目嚴峻；劍勢直取中宮。",
+    "palette_notes": "青灰尼袍＋劍寒光＋硃砂戒疤。",
+    "signature_props": [
+      "戒刀／長劍",
+      "尼袍",
+      "頭巾",
+      "嚴正面孔"
+    ],
+    "fx_tier": "絕學級：劍氣直線、大招滅字斬（原創字形特效）。"
+  },
+  "skills": [
+    {
+      "id": "mie_jian",
+      "name": "滅劍三式",
+      "desc": "高傷連斬，對邪道額外傷害。"
+    },
+    {
+      "id": "e_mei_ci",
+      "name": "峨眉刺",
+      "desc": "突進刺擊，短暫封印治療。"
+    },
+    {
+      "id": "hu_men",
+      "name": "護門意志",
+      "desc": "為友方承擔一次致命傷害。"
+    },
+    {
+      "id": "jie_lv",
+      "name": "戒律如鐵",
+      "desc": "被動：對暗器／毒系敵人抗性提升。"
+    }
+  ],
+  "growth": {
+    "focus": "剛烈輸出與護短",
+    "stat_bias": {
+      "hp": "中",
+      "atk": "高",
+      "def": "中高",
+      "spd": "中"
+    },
+    "notes": "對魔教／刺客樓關卡加成。"
+  }
+}

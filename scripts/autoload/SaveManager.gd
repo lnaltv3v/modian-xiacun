@@ -2,7 +2,7 @@ extends Node
 ## JSON 存檔 — user://save_slot_0.json（含版本欄）
 
 const SAVE_PATH := "user://save_slot_0.json"
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
 
 func save_game() -> bool:
 	var data: Dictionary = {

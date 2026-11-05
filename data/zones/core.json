@@ -12,6 +12,7 @@
     "injury_chance": 0.18,
     "injury_amount": 8,
     "power_bonus_per": 0.35,
+    "unlock_bounty_level": 1,
     "enemies": [
       {
         "kind": "wolf",
@@ -32,5 +33,40 @@
     "enemy_count_min": 1,
     "enemy_count_max": 3,
     "desc": "開局獵場。野狼／野豬／山賊出沒，適合綠俠練膽。"
+  },
+  {
+    "id": "du_zhao",
+    "name": "毒沼",
+    "duration_sec": 12,
+    "base_silver": 18,
+    "base_fur": 1,
+    "base_wood": 0,
+    "base_iron": 1,
+    "stamina_cost": 24,
+    "satiety_cost": 16,
+    "injury_chance": 0.28,
+    "injury_amount": 12,
+    "power_bonus_per": 0.4,
+    "unlock_bounty_level": 2,
+    "enemies": [
+      {
+        "kind": "snake",
+        "weight": 55,
+        "name": "毒蛇"
+      },
+      {
+        "kind": "python",
+        "weight": 30,
+        "name": "巨蟒"
+      },
+      {
+        "kind": "bandit",
+        "weight": 15,
+        "name": "採藥仇家"
+      }
+    ],
+    "enemy_count_min": 2,
+    "enemy_count_max": 4,
+    "desc": "進階野外。毒蛇／巨蟒出沒；懸賞榜 Lv.2 解鎖。掉毒囊（以毛皮／鐵近似結算）。"
   }
 ]

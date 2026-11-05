@@ -1,0 +1,54 @@
+{
+  "id": "orange_zhoubotong",
+  "name": "周伯同",
+  "canon": "周伯通",
+  "weapon": "拳腳",
+  "rarity": "橙",
+  "base_power": 35,
+  "personality": "老頑童：貪玩、怕悶、打架當遊戲；心地不壞。",
+  "background": "全真老前輩，左右互搏玩出花。俠村練功場一建成，佢自己鑽進去：「借位玩兩日。」結果住咗半年。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "白髮童顏、雙臂各干各嘅；表情嬉笑。",
+    "palette_notes": "道袍淺色＋白髮＋雙影殘像。",
+    "signature_props": [
+      "雙殘影",
+      "道袍",
+      "頑童表情",
+      "無兵器"
+    ],
+    "fx_tier": "絕學級：左右分身連打、大招雙手互搏亂舞。"
+  },
+  "skills": [
+    {
+      "id": "zuo_you_bo",
+      "name": "左右互搏影",
+      "desc": "同時打兩個目標或雙倍攻速對單體。"
+    },
+    {
+      "id": "kong_ming_quan",
+      "name": "空明拳意",
+      "desc": "化勁＋反打。"
+    },
+    {
+      "id": "wan_tong",
+      "name": "老頑童",
+      "desc": "嘲諷敵人攻擊自己，降低其命中。"
+    },
+    {
+      "id": "hao_qi",
+      "name": "好玩之心",
+      "desc": "被動：戰鬥越久攻速越高（有上限）。"
+    }
+  ],
+  "growth": {
+    "focus": "趣味連打",
+    "stat_bias": {
+      "hp": "中",
+      "atk": "高",
+      "def": "中",
+      "spd": "極高"
+    },
+    "notes": "清雜兵快樂組。"
+  }
+}

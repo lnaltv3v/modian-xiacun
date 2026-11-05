@@ -1,0 +1,54 @@
+{
+  "id": "orange_zhangsanfeng",
+  "name": "張三風",
+  "canon": "張三丰",
+  "weapon": "拳腳",
+  "rarity": "橙",
+  "base_power": 40,
+  "personality": "仙風道骨、笑看勝負；指點後進如春風。極少動真怒。",
+  "background": "武當開山祖師，太極一出剛柔相濟。難得下山，只因俠村「宣紙墨點」勾起其書畫興致——順便教兩手防身。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "道袍、長鬚、太極圓轉姿勢；白髮如雪。",
+    "palette_notes": "道袍白／青＋鬚白＋太極陰陽特效（克制使用）。",
+    "signature_props": [
+      "拂塵（可選）",
+      "道袍",
+      "長鬚",
+      "太極圖背影"
+    ],
+    "fx_tier": "絕學級：圓轉氣場、大招陰陽環爆炸。"
+  },
+  "skills": [
+    {
+      "id": "tai_ji_quan",
+      "name": "太極圈手",
+      "desc": "化勁減傷並反彈部分傷害。"
+    },
+    {
+      "id": "mian_zhang",
+      "name": "綿掌三叠",
+      "desc": "三連柔掌，層層加力。"
+    },
+    {
+      "id": "chun_yang",
+      "name": "純陽指點",
+      "desc": "治療／強化單體友方。"
+    },
+    {
+      "id": "wu_dang_feng",
+      "name": "武當遺風",
+      "desc": "被動：隊伍內劍／拳腳職業微加暴擊。"
+    }
+  ],
+  "growth": {
+    "focus": "化勁輔助與反制",
+    "stat_bias": {
+      "hp": "高",
+      "atk": "中高",
+      "def": "高",
+      "spd": "中"
+    },
+    "notes": "團隊引擎。"
+  }
+}

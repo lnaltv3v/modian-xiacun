@@ -1,0 +1,20 @@
+{
+  "id": "qianshao",
+  "name": "前哨防衛",
+  "unlock_manor_level": 2,
+  "unlock_bounty_level": 2,
+  "wave": {
+    "enemy_kind": "bandit",
+    "enemy_name": "山賊潮",
+    "count_base": 5,
+    "count_per_manor": 2
+  },
+  "rewards": {
+    "silver_base": 40,
+    "iron_base": 2,
+    "fur_base": 1,
+    "power_bonus_per": 0.5
+  },
+  "fail_injury": 15,
+  "desc": "v0.7 stub：解鎖後一鍵結算一波山賊潮；後期再擴多波／塔防。"
+}

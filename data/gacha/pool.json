@@ -3,16 +3,25 @@
   "require_building": "manor",
   "require_level": 1,
   "weights": {
-    "白": 50,
-    "綠": 32,
-    "藍": 13,
-    "紫": 5
+    "白": 45,
+    "綠": 28,
+    "藍": 14,
+    "紫": 8,
+    "橙": 4,
+    "紅": 1
+  },
+  "soft_pity": {
+    "red_threshold": 120,
+    "orange_threshold": 40,
+    "note": "連續未出紅達 120 抽強制紅；未出橙達 40 抽抬升橙權重（v0.7 最小：達標直接出該階）"
   },
   "fragment_per_dupe": {
     "白": 5,
     "綠": 10,
     "藍": 25,
-    "紫": 60
+    "紫": 60,
+    "橙": 120,
+    "紅": 300
   },
   "heroes": [
     {
@@ -22,7 +31,8 @@
       "rarity": "白",
       "base_power": 8,
       "personality": "樸實",
-      "art_key": "hero_atie"
+      "art_key": "hero_atie",
+      "placeholder": false
     },
     {
       "template_id": "pool_w_jian",
@@ -31,7 +41,8 @@
       "rarity": "白",
       "base_power": 8,
       "personality": "寡言",
-      "art_key": "hero_aqing"
+      "art_key": "hero_aqing",
+      "placeholder": false
     },
     {
       "template_id": "pool_w_quan",
@@ -40,7 +51,8 @@
       "rarity": "白",
       "base_power": 7,
       "personality": "勤懇",
-      "art_key": "hero_aniu"
+      "art_key": "hero_aniu",
+      "placeholder": false
     },
     {
       "template_id": "pool_g_qiang",
@@ -49,7 +61,8 @@
       "rarity": "綠",
       "base_power": 11,
       "personality": "果敢",
-      "art_key": "hero_achang"
+      "art_key": "hero_achang",
+      "placeholder": false
     },
     {
       "template_id": "pool_g_gun",
@@ -58,7 +71,8 @@
       "rarity": "綠",
       "base_power": 12,
       "personality": "沉穩",
-      "art_key": "hero_dali"
+      "art_key": "hero_dali",
+      "placeholder": false
     },
     {
       "template_id": "pool_g_anqi",
@@ -67,7 +81,8 @@
       "rarity": "綠",
       "base_power": 10,
       "personality": "謹慎",
-      "art_key": "hero_azhen"
+      "art_key": "hero_azhen",
+      "placeholder": false
     },
     {
       "template_id": "pool_b_dao",
@@ -76,7 +91,8 @@
       "rarity": "藍",
       "base_power": 16,
       "personality": "倔強",
-      "art_key": "hero_atie"
+      "art_key": "hero_atie",
+      "placeholder": false
     },
     {
       "template_id": "pool_b_jian",
@@ -85,7 +101,8 @@
       "rarity": "藍",
       "base_power": 15,
       "personality": "清高",
-      "art_key": "hero_aqing"
+      "art_key": "hero_aqing",
+      "placeholder": false
     },
     {
       "template_id": "pool_b_qiang",
@@ -94,7 +111,8 @@
       "rarity": "藍",
       "base_power": 17,
       "personality": "傲骨",
-      "art_key": "hero_achang"
+      "art_key": "hero_achang",
+      "placeholder": false
     },
     {
       "template_id": "pool_p_weixiaobao",
@@ -117,8 +135,18 @@
       "placeholder": true
     },
     {
-      "template_id": "pool_p_linghuzhong",
-      "name": "令狐忠",
+      "template_id": "pool_p_miaorenfeng",
+      "name": "苗人風",
+      "weapon": "刀",
+      "rarity": "紫",
+      "base_power": 27,
+      "personality": "剛烈",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_p_yuanchengzhi",
+      "name": "袁承智",
       "weapon": "劍",
       "rarity": "紫",
       "base_power": 25,
@@ -127,22 +155,192 @@
       "placeholder": true
     },
     {
-      "template_id": "pool_p_yangguo",
-      "name": "楊菓",
-      "weapon": "長槍",
+      "template_id": "pool_p_diyun",
+      "name": "狄芸",
+      "weapon": "刀",
       "rarity": "紫",
-      "base_power": 27,
-      "personality": "倔強",
+      "base_power": 24,
+      "personality": "堅韌",
       "art_key": "",
       "placeholder": true
     },
     {
-      "template_id": "pool_p_zhangwuji",
+      "template_id": "pool_o_fengqingyang",
+      "name": "風青羊",
+      "weapon": "劍",
+      "rarity": "橙",
+      "base_power": 37,
+      "personality": "隱逸",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_guojing",
+      "name": "郭靚",
+      "weapon": "拳腳",
+      "rarity": "橙",
+      "base_power": 38,
+      "personality": "愚直",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_hongqigong",
+      "name": "洪喫公",
+      "weapon": "棍",
+      "rarity": "橙",
+      "base_power": 38,
+      "personality": "豪爽",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_huangyaoshi",
+      "name": "黃藥獅",
+      "weapon": "暗器",
+      "rarity": "橙",
+      "base_power": 36,
+      "personality": "奇傲",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_linghuzhong",
+      "name": "令狐忠",
+      "weapon": "劍",
+      "rarity": "橙",
+      "base_power": 35,
+      "personality": "瀟灑",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_miejueshitai",
+      "name": "滅絕師態",
+      "weapon": "劍",
+      "rarity": "橙",
+      "base_power": 36,
+      "personality": "剛烈",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_ouyangfeng",
+      "name": "歐陽峰",
+      "weapon": "棍",
+      "rarity": "橙",
+      "base_power": 37,
+      "personality": "狠辣",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_qiaofeng",
+      "name": "喬風",
+      "weapon": "拳腳",
+      "rarity": "橙",
+      "base_power": 39,
+      "personality": "豪邁",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_yangguo",
+      "name": "楊菓",
+      "weapon": "拳腳",
+      "rarity": "橙",
+      "base_power": 36,
+      "personality": "決烈",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_yideng",
+      "name": "一登大師",
+      "weapon": "拳腳",
+      "rarity": "橙",
+      "base_power": 36,
+      "personality": "慈悲",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_zhangsanfeng",
+      "name": "張三風",
+      "weapon": "拳腳",
+      "rarity": "橙",
+      "base_power": 40,
+      "personality": "仙風",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_o_zhoubotong",
+      "name": "周伯同",
+      "weapon": "拳腳",
+      "rarity": "橙",
+      "base_power": 35,
+      "personality": "頑皮",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_r_dongfang",
+      "name": "東方唔敗",
+      "weapon": "暗器",
+      "rarity": "紅",
+      "base_power": 52,
+      "personality": "孤傲",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_r_dugu",
+      "name": "獨孤求拜",
+      "weapon": "劍",
+      "rarity": "紅",
+      "base_power": 50,
+      "personality": "淡泊",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_r_huangshang",
+      "name": "黃裳",
+      "weapon": "暗器",
+      "rarity": "紅",
+      "base_power": 47,
+      "personality": "較真",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_r_saodi",
+      "name": "掃地僧",
+      "weapon": "棍",
+      "rarity": "紅",
+      "base_power": 51,
+      "personality": "謙遜",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_r_wangchongyang",
+      "name": "王重揚",
+      "weapon": "拳腳",
+      "rarity": "紅",
+      "base_power": 49,
+      "personality": "正氣",
+      "art_key": "",
+      "placeholder": true
+    },
+    {
+      "template_id": "pool_r_zhangwuji",
       "name": "張無記",
       "weapon": "拳腳",
-      "rarity": "紫",
-      "base_power": 28,
-      "personality": "溫和",
+      "rarity": "紅",
+      "base_power": 48,
+      "personality": "溫厚",
       "art_key": "",
       "placeholder": true
     }

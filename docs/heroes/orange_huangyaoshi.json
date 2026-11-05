@@ -1,0 +1,54 @@
+{
+  "id": "orange_huangyaoshi",
+  "name": "黃藥獅",
+  "canon": "黃藥師",
+  "weapon": "暗器",
+  "rarity": "橙",
+  "base_power": 36,
+  "personality": "奇傲、聰明絕頂、厭世俗禮教；對有才者惜，對偽善者毒。",
+  "background": "東海桃花島主，琴棋書畫毒皆精。俠村請其改進丹房配方，交換條件係：島上琴譜副本一份。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "青衫文士、執簫、袖藏石子；儒雅含殺氣。",
+    "palette_notes": "青綠衫＋桃花粉點（克制）＋簫褐。",
+    "signature_props": [
+      "玉簫",
+      "青衫",
+      "桃花瓣（特效）",
+      "棋子暗器"
+    ],
+    "fx_tier": "絕學級：音刃波、大招落英暗器雨。"
+  },
+  "skills": [
+    {
+      "id": "bi_hai_xiao",
+      "name": "碧海潮生曲影",
+      "desc": "音波範圍傷＋混亂機率。"
+    },
+    {
+      "id": "tan_zhi_shen",
+      "name": "彈指神通意",
+      "desc": "遠程破甲石子。"
+    },
+    {
+      "id": "qi_ju",
+      "name": "奇門布陣",
+      "desc": "地面陷阱區，敵進入減速。"
+    },
+    {
+      "id": "ao_gu",
+      "name": "傲骨文人",
+      "desc": "被動：對「偽君子／門派敵」傷害提升。"
+    }
+  ],
+  "growth": {
+    "focus": "法術型暗器",
+    "stat_bias": {
+      "hp": "中低",
+      "atk": "高",
+      "def": "中",
+      "spd": "中高"
+    },
+    "notes": "毒沼相性佳。"
+  }
+}

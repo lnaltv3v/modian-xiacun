@@ -24,7 +24,7 @@ func _run() -> void:
 	var names: PackedStringArray = PackedStringArray()
 	for p in purples:
 		names.append(str((p as Dictionary).get("name", "")))
-	for need in ["韋小保", "胡飛", "令狐忠"]:
+	for need in ["韋小保", "胡飛", "苗人風"]:
 		if not need in names:
 			ok = false
 			errors.append("missing purple %s in %s" % [need, "、".join(names)])

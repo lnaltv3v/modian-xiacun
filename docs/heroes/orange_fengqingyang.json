@@ -1,0 +1,54 @@
+{
+  "id": "orange_fengqingyang",
+  "name": "風青羊",
+  "canon": "風清揚",
+  "weapon": "劍",
+  "rarity": "橙",
+  "base_power": 37,
+  "personality": "隱逸、厭爭鬥；被逼出手時乾脆利落。對「有招無招」有執念。",
+  "background": "思過崖隱士，劍法已入無招之境。俠村英雄帖送到崖上，被風吹落三次——第四次佢自己下來：「煩。」",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "灰袍、清瘦、劍在鞘多過出；眼神銳。",
+    "palette_notes": "灰青袍＋白髮＋劍氣極簡白線。",
+    "signature_props": [
+      "灰袍",
+      "長劍",
+      "崖風披肩",
+      "簡陋草鞋"
+    ],
+    "fx_tier": "絕學級：無華一劍、大招殘影三段。"
+  },
+  "skills": [
+    {
+      "id": "wu_zhao_jian",
+      "name": "無招之劍",
+      "desc": "無法被預判格擋的一擊（機制上降敵格擋率）。"
+    },
+    {
+      "id": "si_guo_feng",
+      "name": "思過風",
+      "desc": "加速自身並清除減速。"
+    },
+    {
+      "id": "po_gang",
+      "name": "破罡一刺",
+      "desc": "對護盾／覇體額外傷害。"
+    },
+    {
+      "id": "yin_shi",
+      "name": "隱士之心",
+      "desc": "被動：脫戰回復加速。"
+    }
+  ],
+  "growth": {
+    "focus": "精準刺殺",
+    "stat_bias": {
+      "hp": "中",
+      "atk": "極高",
+      "def": "中",
+      "spd": "高"
+    },
+    "notes": "教令狐忠向上相容。"
+  }
+}

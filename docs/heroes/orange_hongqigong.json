@@ -1,0 +1,54 @@
+{
+  "id": "orange_hongqigong",
+  "name": "洪喫公",
+  "canon": "洪七公",
+  "weapon": "棍",
+  "rarity": "橙",
+  "base_power": 38,
+  "personality": "貪吃、豪爽、疾惡如仇；收徒看人品同廚藝。",
+  "background": "丐幫老前輩，打狗棒法聞名。俠村酒樓一開，佢聞香而至——條件係每日有叫化雞。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "老丐、打狗棒、綠袋；笑容可掬。",
+    "palette_notes": "丐褐＋綠袋＋棒木色。",
+    "signature_props": [
+      "打狗棒",
+      "綠袋",
+      "雞腿（待機彩蛋）",
+      "破衣"
+    ],
+    "fx_tier": "絕學級：棒影如狗躍、大招滿屏棒花。"
+  },
+  "skills": [
+    {
+      "id": "da_gou_bang",
+      "name": "打狗棒法影",
+      "desc": "控場連打，克制群匪。"
+    },
+    {
+      "id": "xiang_long_jie",
+      "name": "降龍半式",
+      "desc": "傳予後輩的半套重拳（棍尾也可砸）。"
+    },
+    {
+      "id": "jiao_hua_ji",
+      "name": "叫化雞氣",
+      "desc": "吃飽狀態：短時全屬性提升（需酒樓）。"
+    },
+    {
+      "id": "ji_e_ru_chou",
+      "name": "嫉惡如仇",
+      "desc": "被動：對山賊／叛軍傷害提升。"
+    }
+  ],
+  "growth": {
+    "focus": "控場與教學光環",
+    "stat_bias": {
+      "hp": "高",
+      "atk": "高",
+      "def": "中高",
+      "spd": "中"
+    },
+    "notes": "與郭靚互補。"
+  }
+}

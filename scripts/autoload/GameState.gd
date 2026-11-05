@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -42,6 +42,14 @@ var bounty_target: String = ""
 var auto_shop: bool = false
 ## 秘境演出中（鎖重複入場）
 var dungeon_busy: bool = false
+## 抽卡軟保底計數（未出紅／橙連續抽數）
+var pity_red: int = 0
+var pity_orange: int = 0
+var gacha_pulls_total: int = 0
+## 當前野外圖
+var selected_zone: String = "luan_shan_po"
+## 前哨成功次數（stub 統計）
+var outpost_clears: int = 0
 var _hunt_seq: int = 0
 var _gacha_seq: int = 0
 var _default_layout_buildings: Array = []
@@ -64,6 +72,11 @@ func _load_starter_data() -> void:
 	bounty_target = ""
 	auto_shop = false
 	dungeon_busy = false
+	pity_red = 0
+	pity_orange = 0
+	gacha_pulls_total = 0
+	selected_zone = "luan_shan_po"
+	outpost_clears = 0
 	_hunt_seq = 0
 	_gacha_seq = 0
 	silver = 120
@@ -267,6 +280,11 @@ func to_save_dict() -> Dictionary:
 		"fragments": fragments,
 		"bounty_target": bounty_target,
 		"auto_shop": auto_shop,
+		"pity_red": pity_red,
+		"pity_orange": pity_orange,
+		"gacha_pulls_total": gacha_pulls_total,
+		"selected_zone": selected_zone,
+		"outpost_clears": outpost_clears,
 		"hunt_seq": _hunt_seq,
 		"gacha_seq": _gacha_seq,
 	}
@@ -305,6 +323,11 @@ func load_from_dict(d: Dictionary) -> void:
 	fragments = int(d.get("fragments", 0))
 	bounty_target = str(d.get("bounty_target", ""))
 	auto_shop = bool(d.get("auto_shop", false))
+	pity_red = int(d.get("pity_red", 0))
+	pity_orange = int(d.get("pity_orange", 0))
+	gacha_pulls_total = int(d.get("gacha_pulls_total", 0))
+	selected_zone = str(d.get("selected_zone", "luan_shan_po"))
+	outpost_clears = int(d.get("outpost_clears", 0))
 	dungeon_busy = false
 	_hunt_seq = int(d.get("hunt_seq", _hunt_seq))
 	_gacha_seq = int(d.get("gacha_seq", _gacha_seq))

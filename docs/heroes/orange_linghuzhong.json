@@ -1,0 +1,54 @@
+{
+  "id": "orange_linghuzhong",
+  "name": "令狐忠",
+  "canon": "令狐沖",
+  "weapon": "劍",
+  "rarity": "橙",
+  "base_power": 35,
+  "personality": "瀟灑不羈、重義輕名；喝酒比練劍勤——但劍一出仍驚四座。",
+  "background": "華山棄徒出身，得隱世劍法真傳後笑傲江湖。俠村茶寮常客；接委託前要先問有冇好酒。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "青衫負劍、衣襟鬆散、笑意；劍勢隨意卻無破綻。",
+    "palette_notes": "青衫＋酒葫蘆褐＋劍光銀白。",
+    "signature_props": [
+      "酒葫蘆",
+      "青衫",
+      "長劍",
+      "散髮"
+    ],
+    "fx_tier": "絕學級：劍花連綿、大招無招劍網。"
+  },
+  "skills": [
+    {
+      "id": "xiao_ao_jian",
+      "name": "笑傲劍意",
+      "desc": "連斬提升攻速，可閃避一次攻擊。"
+    },
+    {
+      "id": "du_gu_jiu",
+      "name": "獨孤九式影",
+      "desc": "破兵器特效：對持械敵人額外傷害。"
+    },
+    {
+      "id": "zui_xian",
+      "name": "醉仙步",
+      "desc": "位移＋短暫無敵幀。"
+    },
+    {
+      "id": "yi_qi",
+      "name": "義氣相挺",
+      "desc": "被動：鄰近友方暴擊率微升。"
+    }
+  ],
+  "growth": {
+    "focus": "靈活劍客",
+    "stat_bias": {
+      "hp": "中",
+      "atk": "高",
+      "def": "中低",
+      "spd": "高"
+    },
+    "notes": "PvE 清場佳；生存靠走位。"
+  }
+}

@@ -65,6 +65,9 @@ func start_hunt(hero_ids: Array, zone_id: String = DEFAULT_ZONE) -> Dictionary:
 		return {"ok": false, "reason": "未知獵場"}
 	if BuildingSystem.building_level("bounty") < 1:
 		return {"ok": false, "reason": "懸賞榜未啟用"}
+	var need_bounty: int = int(zone.get("unlock_bounty_level", 1))
+	if BuildingSystem.building_level("bounty") < need_bounty:
+		return {"ok": false, "reason": "%s 要懸賞榜 Lv.%d" % [str(zone.get("name", zone_id)), need_bounty]}
 
 	var valid_ids: Array = []
 	for hid_v in hero_ids:
@@ -189,6 +192,14 @@ func _complete_hunt(hunt: Dictionary) -> void:
 			fur_gain += 1
 		if kind == "wolf" and _rng.randf() < 0.35:
 			fur_gain += 1
+		if kind == "snake":
+			fur_gain += 1  ## 毒囊近似毛皮
+			if _rng.randf() < 0.4:
+				iron_gain += 1
+		if kind == "python":
+			fur_gain += 2
+			if _rng.randf() < 0.55:
+				iron_gain += 1
 
 	## 懸賞目標額外賞
 	var bounty_bonus: Dictionary = BountySystem.calc_bonus(enemies)
@@ -292,4 +303,5 @@ func _try_auto_dispatch() -> void:
 	var ids: Array = []
 	for h in ready:
 		ids.append(str((h as Dictionary).get("id", "")))
-	start_hunt(ids, DEFAULT_ZONE)
+	var zid: String = GameState.selected_zone if GameState.selected_zone != "" else DEFAULT_ZONE
+	start_hunt(ids, zid)

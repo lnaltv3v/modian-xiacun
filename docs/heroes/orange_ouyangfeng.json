@@ -1,0 +1,54 @@
+{
+  "id": "orange_ouyangfeng",
+  "name": "歐陽峰",
+  "canon": "歐陽鋒",
+  "weapon": "棍",
+  "rarity": "橙",
+  "base_power": 37,
+  "personality": "狠辣、執拗、為達目的不擇手段；顛倒練法後神智時清時亂，戰力反而更怪。",
+  "background": "西域毒傑，白駝山主。俠村以「解毒需知毒」為由請其坐鎮醫館顧問——村民又敬又怕。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "白衣披髮、蛇杖、眼白可翻（狂態）；詭異。",
+    "palette_notes": "白衣＋蛇鱗綠＋毒紫霧（盤內梵紫）。",
+    "signature_props": [
+      "蛇杖",
+      "白衣",
+      "毒囊",
+      "披髮"
+    ],
+    "fx_tier": "絕學級：毒霧、逆行關節打擊、大招蟾震。"
+  },
+  "skills": [
+    {
+      "id": "ham_gong",
+      "name": "蛤蟆功影",
+      "desc": "蓄力彈射衝撞，擊退＋毒。"
+    },
+    {
+      "id": "she_zhang",
+      "name": "靈蛇杖法",
+      "desc": "棍技連打，附帶中毒。"
+    },
+    {
+      "id": "ni_yun",
+      "name": "逆運經脈",
+      "desc": "短時自傷換極高攻擊。"
+    },
+    {
+      "id": "xi_du",
+      "name": "西部毒王",
+      "desc": "被動：毒傷加深；己方醫館效率對其隊伍微升（設定向）。"
+    }
+  ],
+  "growth": {
+    "focus": "毒控與爆發",
+    "stat_bias": {
+      "hp": "中",
+      "atk": "高",
+      "def": "中",
+      "spd": "中"
+    },
+    "notes": "毒沼王牌；注意自傷風險。"
+  }
+}

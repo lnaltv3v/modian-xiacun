@@ -1,0 +1,54 @@
+{
+  "id": "red_wangchongyang",
+  "name": "王重揚",
+  "canon": "王重陽",
+  "weapon": "拳腳",
+  "rarity": "紅",
+  "base_power": 49,
+  "personality": "堂堂正正、先天下之憂；對後輩嚴而有溫。厭邪道害人，卻肯給改過機會。",
+  "background": "昔年論劍魁首，開宗立派後隱於終南。江湖尊為「中神」一檔。俠村重建需定海神針，故以英雄帖請出——答應條件只有一條：村中唔准欺壓弱小。",
+  "appearance": {
+    "resolution": 256,
+    "silhouette": "道袍寬袖、長鬚、雙拳蓄勁如岳；站姿中正。",
+    "palette_notes": "道袍青灰＋鬚白＋拳勢淡青氣。",
+    "signature_props": [
+      "道冠",
+      "長鬚",
+      "寬袖道袍",
+      "腰間玉牌"
+    ],
+    "fx_tier": "神話級：大招拳影如山岳疊嶂、入場青霞一閃。"
+  },
+  "skills": [
+    {
+      "id": "xian_tian_quan",
+      "name": "先天拳意",
+      "desc": "蓄力重拳，蓄滿則範圍爆炸傷害。"
+    },
+    {
+      "id": "jin_yan_jue",
+      "name": "金雁穿雲",
+      "desc": "高速近身連打，收尾挑飛。"
+    },
+    {
+      "id": "zhong_nan_qi",
+      "name": "終南正氣",
+      "desc": "提升全隊短暫攻擊；對邪毒類敵人額外傷害。"
+    },
+    {
+      "id": "lun_jian_ba",
+      "name": "論劍霸氣",
+      "desc": "被動：開場首擊必暴；對精英／Boss 傷害提升。"
+    }
+  ],
+  "growth": {
+    "focus": "正面剛猛輸出＋隊長光環",
+    "stat_bias": {
+      "hp": "高",
+      "atk": "高",
+      "def": "中高",
+      "spd": "中"
+    },
+    "notes": "萬金油紅階；教學向「正派標竿」。"
+  }
+}

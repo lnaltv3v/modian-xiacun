@@ -1,0 +1,54 @@
+{
+  "id": "orange_qiaofeng",
+  "name": "喬風",
+  "canon": "喬峰",
+  "weapon": "拳腳",
+  "rarity": "橙",
+  "base_power": 39,
+  "personality": "豪邁剛烈、恩怨分明；認準嘅理撞牆都唔讓。對兄弟可托生死。",
+  "background": "丐幫舊主，一掌鎮北地。身世糾葛令其浪跡，俠村以「真兄弟席」邀之——席上無人問出身，只問酒量。",
+  "appearance": {
+    "resolution": 128,
+    "silhouette": "高大、短褐、龍抓手勢；氣勢壓場。",
+    "palette_notes": "丐幫褐＋綠袋（可簡）＋拳勁土黄。",
+    "signature_props": [
+      "布袋",
+      "短褐",
+      "寬掌",
+      "項鍊骨飾（可選）"
+    ],
+    "fx_tier": "絕學級：擒龍抓；大招拋投震屏。"
+  },
+  "skills": [
+    {
+      "id": "xiang_long_zhuo",
+      "name": "擒龍神抓",
+      "desc": "抓住敵人砸地，強控。"
+    },
+    {
+      "id": "pai_yun_zhang",
+      "name": "排雲雙掌",
+      "desc": "雙掌推山，直線穿透。"
+    },
+    {
+      "id": "bei_ming_jie",
+      "name": "北地豪氣",
+      "desc": "短時提升全隊士氣（攻擊）。"
+    },
+    {
+      "id": "en_yuan",
+      "name": "恩怨分明",
+      "desc": "被動：對曾擊倒友方之敵傷害提升。"
+    }
+  ],
+  "growth": {
+    "focus": "剛猛控場",
+    "stat_bias": {
+      "hp": "高",
+      "atk": "極高",
+      "def": "中高",
+      "spd": "中"
+    },
+    "notes": "人類首領剋星。"
+  }
+}
