@@ -85,6 +85,14 @@
       "z": 6,
       "blit_x": 20,
       "blit_y": 147
+    },
+    {
+      "id": "academy",
+      "cx": 280,
+      "cy": 320,
+      "z": 6,
+      "blit_x": 200,
+      "blit_y": 232
     }
   ],
   "icon_size": {
@@ -92,12 +100,12 @@
     "h": 160
   },
   "placement_mode": "player_free",
-  "note": "buildings[] 預設拉開錨點（對齊 Pivot R2 spaced 預覽腳底錨換算）；正式位置存 GameState.building_placements（玩家拖放）。中央大片可建空地。academy 留待下一輪。",
+  "note": "buildings[] 預設拉開錨點（Pivot R4＝R3 spaced＋academy 280,320＋全棟加厚）；正式位置存 GameState.building_placements。中央大片可建空地。",
   "buildable_rect": {
     "x": 100,
     "y": 160,
     "w": 760,
     "h": 360
   },
-  "art_revision": "pivot_r2"
+  "art_revision": "pivot_r4"
 }

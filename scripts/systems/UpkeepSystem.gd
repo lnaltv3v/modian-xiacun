@@ -165,3 +165,37 @@ static func describe_rates() -> String:
 	var manor: int = BuildingSystem.building_level("manor")
 	var lodge_lv: int = maxi(inn, 1 if manor >= 1 else 0)
 	return "食客棧%d 住%d 醫館%d" % [inn, lodge_lv, clinic]
+
+static func describe_status() -> String:
+	## HUD 用：食住醫等級＋短缺提示
+	var base: String = describe_rates()
+	var inn: int = BuildingSystem.building_level("inn")
+	var clinic: int = BuildingSystem.building_level("clinic")
+	var tips: PackedStringArray = PackedStringArray()
+	if inn < 1:
+		tips.append("未建客棧＝唔供飯")
+	if clinic < 1:
+		tips.append("未建醫館＝難療傷")
+	if GameState.silver < 5 and inn >= 1:
+		tips.append("銀緊＝食停")
+	if GameState.wood < 3 and inn >= 1:
+		tips.append("木緊＝住停")
+	if tips.is_empty():
+		return base + " · 循環正常"
+	return base + " · " + "／".join(tips)
+
+static func hero_condition_label(hero: Dictionary) -> String:
+	## 單俠狀態短標：成／危／疲
+	if hero.is_empty():
+		return ""
+	var chance: float = party_success_chance([str(hero.get("id", ""))])
+	var pct: int = int(round(chance * 100.0))
+	var sat: float = float(hero.get("satiety", 100))
+	var inj: float = float(hero.get("injury", 0))
+	var stam: float = float(hero.get("stamina", 100))
+	var tag := "穩"
+	if inj >= 35.0 or sat < 35.0 or stam < 25.0:
+		tag = "危"
+	elif inj >= 15.0 or sat < 55.0 or stam < 45.0:
+		tag = "疲"
+	return "%s%d%%" % [tag, pct]

@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.9.8 — 橙／紫 Pivot 高密度＋attack 接入
+## 墨點俠村 v0.9.9 — academy Pivot R4＋食住醫／秘境前哨 UI 釐清（橙紫 art 見 v0.9.8）
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -92,7 +92,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.8"
+		title_label.text = "墨點俠村 · v0.9.9"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -290,7 +290,9 @@ func _hero_line(h: Dictionary) -> String:
 	var pas_txt: String = (" ·技%s" % pas) if pas != "" else ""
 	var rar: String = str(h.get("rarity", ""))
 	var rar_txt: String = ("[%s]" % rar) if rar != "" else ""
-	return "%s%s Lv%d · %s · 力%d%s%s · 體%.0f 飽%.0f 傷%.0f · XP%.0f/%d · %s" % [
+	var cond: String = UpkeepSystem.hero_condition_label(h)
+	var cond_txt: String = (" ·%s" % cond) if cond != "" else ""
+	return "%s%s Lv%d · %s · 力%d%s%s · 體%.0f 飽%.0f 傷%.0f%s · XP%.0f/%d · %s" % [
 		str(h.get("name", "")),
 		rar_txt,
 		int(h.get("level", 1)),
@@ -301,6 +303,7 @@ func _hero_line(h: Dictionary) -> String:
 		float(h.get("stamina", 0)),
 		float(h.get("satiety", 0)),
 		float(h.get("injury", 0)),
+		cond_txt,
 		float(h.get("xp", 0)),
 		int(h.get("xp_to_next", TrainingSystem.xp_to_next(int(h.get("level", 1))))),
 		st_cn,
@@ -404,10 +407,16 @@ func _refresh_hud() -> void:
 	]
 	hud_label.clip_text = false
 	_refresh_gacha_shop()
-	status_label.text = "%s　｜　練功+%.1f XP/s　｜　%s　｜　放＝自由放置（Esc 取消）" % [
-		UpkeepSystem.describe_rates(),
+	var sel_ids: Array = _selected_ids(99)
+	var party_txt := ""
+	if sel_ids.size() > 0:
+		var pch: float = UpkeepSystem.party_success_chance(sel_ids)
+		party_txt = "　｜　已選成功率 %d%%" % int(round(pch * 100.0))
+	status_label.text = "%s　｜　練功+%.1f XP/s　｜　%s%s　｜　放＝自由放置（Esc 取消）" % [
+		UpkeepSystem.describe_status(),
 		TrainingSystem.xp_per_sec(),
 		ResourceLoop.describe_loop(),
+		party_txt,
 	]
 	for hid in _hero_rows.keys():
 		var hero: Dictionary = HeroSystem.get_hero(str(hid))
@@ -628,7 +637,7 @@ func _refresh_tutorial() -> void:
 		3:
 			tutorial_label.text = "③ 等下方倒數完 → 俠客回村，收銀／毛皮。"
 		4:
-			tutorial_label.text = "④ 撳「英雄帖」抽一次，或興建／升級／放置另一座建築。"
+			tutorial_label.text = "④ 撳「英雄帖」抽一次，或興建醫館／貨棧／書院；之後可試秘境／前哨。"
 		_:
 			tutorial_label.text = "新手引導"
 
@@ -771,22 +780,39 @@ func _refresh_dungeon_btn() -> void:
 	if btn_dungeon == null:
 		return
 	var n: int = _selected_ids(99).size()
-	var chk: Dictionary = DungeonSystem.can_enter(_selected_ids(DungeonSystem.max_party())) if n > 0 else {"ok": false, "reason": "剔選最多5俠"}
-	if n < 1:
+	var waves_n: int = 3
+	var ddef: Dictionary = DungeonSystem.dungeon_def()
+	if not ddef.is_empty():
+		waves_n = maxi(1, (ddef.get("waves", []) as Array).size())
+	var chk: Dictionary = DungeonSystem.can_enter(_selected_ids(DungeonSystem.max_party())) if n > 0 else {"ok": false, "reason": "剔選 1～%d 俠入秘境（%d 波）" % [DungeonSystem.max_party(), waves_n]}
+	if GameState.dungeon_busy:
 		btn_dungeon.disabled = true
-		btn_dungeon.text = "秘境"
-		btn_dungeon.tooltip_text = "剔選 1～5 名在村俠客入亂山秘境"
+		btn_dungeon.text = "秘境進行中"
+		btn_dungeon.tooltip_text = "三波自動戰鬥未完"
+	elif n < 1:
+		btn_dungeon.disabled = true
+		btn_dungeon.text = "秘境·%d波" % waves_n
+		btn_dungeon.tooltip_text = "剔選 1～%d 名在村俠客 → 亂山秘境（%d 波自動戰鬥）" % [DungeonSystem.max_party(), waves_n]
 	elif n > DungeonSystem.max_party():
 		btn_dungeon.disabled = true
-		btn_dungeon.text = "秘境（最多5）"
-		btn_dungeon.tooltip_text = "最多 5 俠"
+		btn_dungeon.text = "秘境（最多%d）" % DungeonSystem.max_party()
+		btn_dungeon.tooltip_text = "最多 %d 俠" % DungeonSystem.max_party()
 	else:
-		btn_dungeon.disabled = not bool(chk.get("ok", false)) or GameState.dungeon_busy
-		btn_dungeon.text = "秘境（%d）" % n
-		btn_dungeon.tooltip_text = str(chk.get("reason", "三波自動戰鬥"))
+		btn_dungeon.disabled = not bool(chk.get("ok", false))
+		btn_dungeon.text = "秘境·%d波（%d）" % [waves_n, n] if bool(chk.get("ok", false)) else "秘境（未可）"
+		var tip: String = str(chk.get("reason", ""))
+		if tip == "":
+			tip = "亂山秘境 · %d 波自動戰鬥" % waves_n
+		btn_dungeon.tooltip_text = tip
 	if btn_academy:
+		var alv: int = BuildingSystem.building_level("academy")
 		btn_academy.disabled = not AcademySystem.academy_ready()
-		btn_academy.tooltip_text = "揀一名俠客後授被動技" if AcademySystem.academy_ready() else "先興建師門書院"
+		if AcademySystem.academy_ready():
+			btn_academy.text = "書院 Lv%d" % maxi(1, alv)
+			btn_academy.tooltip_text = "剔選一名俠客 → 授／輪換被動技"
+		else:
+			btn_academy.text = "書院（未建）"
+			btn_academy.tooltip_text = "左邊興建「師門書院」後可授被動技"
 
 func _on_dungeon_pressed() -> void:
 	var ids: Array = _selected_ids(DungeonSystem.max_party())
@@ -881,20 +907,34 @@ func _refresh_outpost_btn() -> void:
 	if btn_outpost == null:
 		return
 	var n: int = _selected_ids(99).size()
+	var wn: int = _OutpostScript.wave_count()
+	var need_m: int = 2
+	var need_b: int = 2
+	var odef: Dictionary = _OutpostScript.def()
+	if not odef.is_empty():
+		need_m = int(odef.get("unlock_manor_level", 2))
+		need_b = int(odef.get("unlock_bounty_level", 2))
+	var cur_m: int = BuildingSystem.building_level("manor")
+	var cur_b: int = BuildingSystem.building_level("bounty")
 	if not _OutpostScript.is_unlocked():
 		btn_outpost.disabled = true
 		btn_outpost.text = "前哨（鎖）"
-		btn_outpost.tooltip_text = "村長府＋懸賞榜達 Lv.2"
+		btn_outpost.tooltip_text = "解鎖：村長府 Lv.%d（而家%d）＋懸賞榜 Lv.%d（而家%d）→ 守 %d 波" % [
+			need_m, cur_m, need_b, cur_b, wn
+		]
 		return
 	if n < 1:
 		btn_outpost.disabled = true
-		btn_outpost.text = "前哨"
-		btn_outpost.tooltip_text = "剔選在村俠客守三波山賊／獸潮"
+		btn_outpost.text = "前哨·%d波" % wn
+		btn_outpost.tooltip_text = "剔選在村俠客守點（%d 波山賊／獸潮自動戰鬥）" % wn
 	else:
 		var chk: Dictionary = _OutpostScript.can_defend(_selected_ids(6))
 		btn_outpost.disabled = not bool(chk.get("ok", false))
-		btn_outpost.text = "前哨（%d）" % n
-		btn_outpost.tooltip_text = str(chk.get("reason", "三波山賊／獸潮"))
+		btn_outpost.text = "前哨·%d波（%d）" % [wn, n] if bool(chk.get("ok", false)) else "前哨（未可）"
+		var tip2: String = str(chk.get("reason", ""))
+		if tip2 == "":
+			tip2 = "前哨防衛 · %d 波" % wn
+		btn_outpost.tooltip_text = tip2
 
 func _refresh_arena_btn() -> void:
 	if btn_arena == null:
