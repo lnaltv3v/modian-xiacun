@@ -1,6 +1,6 @@
 extends RefCounted
 class_name OutpostSystem
-## 前哨防衛 stub（v0.7）— 解鎖後一波山賊潮結算；後期再擴
+## 前哨防衛（v0.8）— 三波山賊／獸潮結算；UI 接自動戰鬥演出
 
 const DATA_PATH := "res://data/outpost/core.json"
 
@@ -27,6 +27,13 @@ static func def() -> Dictionary:
 	ensure_loaded()
 	return _def.duplicate(true)
 
+static func wave_count() -> int:
+	ensure_loaded()
+	var waves: Array = _def.get("waves", []) as Array
+	if waves.is_empty() and _def.has("wave"):
+		return 1
+	return maxi(1, waves.size())
+
 static func is_unlocked() -> bool:
 	ensure_loaded()
 	var need_manor: int = int(_def.get("unlock_manor_level", 2))
@@ -52,45 +59,120 @@ static func can_defend(hero_ids: Array) -> Dictionary:
 			return {"ok": false, "reason": "%s 狀態唔適合守點" % str(h.get("name", ""))}
 	return {"ok": true, "reason": ""}
 
-static func run_wave(hero_ids: Array) -> Dictionary:
-	## 一波山賊潮結算 stub
+static func _wave_defs() -> Array:
+	ensure_loaded()
+	var waves: Array = _def.get("waves", []) as Array
+	if not waves.is_empty():
+		return waves
+	## 兼容舊單波 stub
+	if _def.has("wave"):
+		var w: Dictionary = (_def.get("wave", {}) as Dictionary).duplicate(true)
+		w["index"] = 1
+		w["label"] = str(w.get("enemy_name", "山賊潮"))
+		return [w]
+	return []
+
+static func _pick_enemies(wave: Dictionary, count: int) -> Array:
+	var mix: Array = wave.get("mix", []) as Array
+	if mix.is_empty():
+		var kind: String = str(wave.get("enemy_kind", "bandit"))
+		var nm: String = str(wave.get("enemy_name", kind))
+		var out0: Array = []
+		for _i in range(maxi(1, count)):
+			out0.append({"kind": kind, "name": nm})
+		return out0
+	var total_w: int = 0
+	for m in mix:
+		total_w += int((m as Dictionary).get("weight", 1))
+	var out: Array = []
+	for _j in range(maxi(1, count)):
+		var roll: int = _rng.randi_range(1, maxi(1, total_w))
+		var acc: int = 0
+		var chosen: Dictionary = mix[0] as Dictionary
+		for m2 in mix:
+			acc += int((m2 as Dictionary).get("weight", 1))
+			if roll <= acc:
+				chosen = m2 as Dictionary
+				break
+		out.append({
+			"kind": str(chosen.get("kind", "bandit")),
+			"name": str(chosen.get("name", chosen.get("kind", "敵"))),
+			"scale": 1.25 if bool(wave.get("boss", false)) and out.is_empty() else 1.0,
+		})
+	return out
+
+static func run_defense(hero_ids: Array) -> Dictionary:
+	## 同步結算最多三波；UI 再逐波自動戰鬥
 	var chk: Dictionary = can_defend(hero_ids)
 	if not bool(chk.get("ok", false)):
-		return {"ok": false, "reason": str(chk.get("reason", "")), "success": false, "rewards": {}}
+		return {"ok": false, "reason": str(chk.get("reason", "")), "success": false, "waves": [], "rewards": {}}
 
 	ensure_loaded()
-	var wave: Dictionary = _def.get("wave", {}) as Dictionary
-	var rewards_def: Dictionary = _def.get("rewards", {}) as Dictionary
-	var manor_lv: int = BuildingSystem.building_level("manor")
-	var count: int = int(wave.get("count_base", 5)) + manor_lv * int(wave.get("count_per_manor", 2))
-	var enemy_name: String = str(wave.get("enemy_name", "山賊潮"))
+	var ids: Array = []
+	for hid_v in hero_ids:
+		ids.append(str(hid_v))
 
 	var total_power: int = 0
-	for hid_v in hero_ids:
-		total_power += HeroSystem.power_of(HeroSystem.get_hero(str(hid_v)))
+	for hid in ids:
+		total_power += HeroSystem.power_of(HeroSystem.get_hero(str(hid)))
 
-	## 簡：戰力 vs 敵數×8
-	var need: int = count * 8
-	var success_chance: float = clampf(0.35 + float(total_power) / float(maxi(1, need)) * 0.55, 0.15, 0.95)
-	var success: bool = _rng.randf() <= success_chance
+	var manor_lv: int = BuildingSystem.building_level("manor")
+	var rewards_def: Dictionary = _def.get("rewards", {}) as Dictionary
+	var waves_out: Array = []
+	var cleared_all: bool = true
+	var waves_cleared: int = 0
+
+	for wv in _wave_defs():
+		var wd: Dictionary = wv as Dictionary
+		var count: int = int(wd.get("count_base", 5)) + manor_lv * int(wd.get("count_per_manor", 2))
+		var power_per: int = int(wd.get("power_per", 8))
+		var need: int = count * power_per
+		var success_chance: float = clampf(0.32 + float(total_power) / float(maxi(1, need)) * 0.55, 0.12, 0.95)
+		var success: bool = _rng.randf() <= success_chance
+		var enemies: Array = _pick_enemies(wd, mini(count, 4))
+		waves_out.append({
+			"index": int(wd.get("index", waves_out.size() + 1)),
+			"label": str(wd.get("label", "波次")),
+			"boss": bool(wd.get("boss", false)),
+			"enemy_name": str(wd.get("enemy_name", "")),
+			"enemy_count": count,
+			"enemies": enemies,
+			"party_power": total_power,
+			"enemy_power": need,
+			"success": success,
+			"success_chance": success_chance,
+		})
+		if success:
+			waves_cleared += 1
+		else:
+			cleared_all = false
+			break
 
 	var silver_gain: int = 0
 	var iron_gain: int = 0
 	var fur_gain: int = 0
-	if success:
-		silver_gain = int(round(float(rewards_def.get("silver_base", 40)) + float(total_power) * float(rewards_def.get("power_bonus_per", 0.5))))
-		iron_gain = int(rewards_def.get("iron_base", 2))
-		fur_gain = int(rewards_def.get("fur_base", 1))
+	var inj_amt: float = float(_def.get("fail_injury", 12))
+
+	if waves_cleared > 0:
+		silver_gain = int(round(float(rewards_def.get("silver_base", 35)) + float(total_power) * float(rewards_def.get("power_bonus_per", 0.45))))
+		silver_gain += waves_cleared * int(rewards_def.get("wave_clear_bonus_silver", 15))
+		iron_gain = int(rewards_def.get("iron_base", 1)) * waves_cleared
+		fur_gain = int(rewards_def.get("fur_base", 1)) * waves_cleared
+		if cleared_all:
+			silver_gain += int(rewards_def.get("full_clear_bonus_silver", 40))
+			iron_gain += int(rewards_def.get("full_clear_bonus_iron", 2))
 		GameState.add_silver(silver_gain)
 		if iron_gain > 0:
 			GameState.add_iron(iron_gain)
 		if fur_gain > 0:
 			GameState.add_fur(fur_gain)
-		for hid_x in hero_ids:
+		for hid_x in ids:
 			HeroSystem.mutate(str(hid_x), func(hd: Dictionary) -> void:
-				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - 20.0)
-				hd["satiety"] = maxf(0.0, float(hd.get("satiety", 100)) - 12.0)
-				var add_xp: float = 12.0 + float(BuildingSystem.building_level("training")) * 3.0
+				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - (16.0 + float(waves_cleared) * 4.0))
+				hd["satiety"] = maxf(0.0, float(hd.get("satiety", 100)) - (10.0 + float(waves_cleared) * 3.0))
+				if not cleared_all:
+					hd["injury"] = clampf(float(hd.get("injury", 0)) + inj_amt * 0.5, 0.0, 100.0)
+				var add_xp: float = 8.0 + float(waves_cleared) * 5.0 + float(BuildingSystem.building_level("training")) * 2.0
 				var lv: int = int(hd.get("level", 1))
 				var xp: float = float(hd.get("xp", 0)) + add_xp
 				var need_xp: float = float(TrainingSystem.xp_to_next(lv))
@@ -102,30 +184,66 @@ static func run_wave(hero_ids: Array) -> Dictionary:
 				hd["xp"] = xp
 				hd["xp_to_next"] = int(need_xp)
 			)
-		GameState.push_report("前哨得勝：擊退「%s」×%d（成功率 %.0f%%）＋銀%d 鐵%d" % [
-			enemy_name, count, success_chance * 100.0, silver_gain, iron_gain
-		])
 	else:
-		var inj: float = float(_def.get("fail_injury", 15))
-		for hid_f in hero_ids:
-			HeroSystem.mutate(str(hid_f), func(hd: Dictionary) -> void:
-				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - 30.0)
-				hd["injury"] = clampf(float(hd.get("injury", 0)) + inj, 0.0, 100.0)
-			)
-		silver_gain = int(round(float(rewards_def.get("silver_base", 40)) * 0.2))
+		silver_gain = int(round(float(rewards_def.get("silver_base", 35)) * 0.15))
 		GameState.add_silver(silver_gain)
-		GameState.push_report("前哨失利：不敵「%s」×%d（成功率僅 %.0f%%）；守軍受傷，殘銀＋%d" % [
-			enemy_name, count, success_chance * 100.0, silver_gain
-		])
+		for hid_f in ids:
+			HeroSystem.mutate(str(hid_f), func(hd: Dictionary) -> void:
+				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - 28.0)
+				hd["injury"] = clampf(float(hd.get("injury", 0)) + inj_amt, 0.0, 100.0)
+			)
 
-	GameState.outpost_clears += 1 if success else 0
+	var flavor: String
+	if cleared_all:
+		flavor = "前哨三波盡破！山賊／獸潮退散。"
+	elif waves_cleared > 0:
+		flavor = "前哨守住 %d／3 波後不敵撤返。" % waves_cleared
+	else:
+		flavor = "前哨首波即潰，守軍負傷。"
+
+	GameState.push_report("前哨「%s」%s 波%d／%d ＋銀%d 鐵%d 毛皮%d" % [
+		str(_def.get("name", "前哨")),
+		("全勝" if cleared_all else ("部分" if waves_cleared > 0 else "失利")),
+		waves_cleared,
+		wave_count(),
+		silver_gain,
+		iron_gain,
+		fur_gain,
+	])
+	if cleared_all:
+		GameState.outpost_clears += 1
 	GameState.heroes_changed.emit()
+
 	return {
 		"ok": true,
 		"reason": "",
-		"success": success,
-		"enemy_name": enemy_name,
-		"enemy_count": count,
-		"success_chance": success_chance,
-		"rewards": {"silver": silver_gain, "iron": iron_gain, "fur": fur_gain},
+		"success": cleared_all,
+		"cleared": cleared_all,
+		"waves_cleared": waves_cleared,
+		"waves": waves_out,
+		"heroes": ids.duplicate(),
+		"flavor": flavor,
+		"rewards": {"silver": silver_gain, "iron": iron_gain, "fur": fur_gain, "wood": 0, "flavor": flavor, "injured": []},
+	}
+
+## 兼容舊 API
+static func run_wave(hero_ids: Array) -> Dictionary:
+	var res: Dictionary = run_defense(hero_ids)
+	if not bool(res.get("ok", false)):
+		return res
+	var waves: Array = res.get("waves", []) as Array
+	var last: Dictionary = waves[waves.size() - 1] as Dictionary if waves.size() > 0 else {}
+	return {
+		"ok": true,
+		"reason": "",
+		"success": bool(res.get("cleared", false)),
+		"enemy_name": str(last.get("enemy_name", "山賊潮")),
+		"enemy_count": int(last.get("enemy_count", 0)),
+		"success_chance": float(last.get("success_chance", 0)),
+		"rewards": (res.get("rewards", {}) as Dictionary).duplicate(true),
+		"waves": waves,
+		"waves_cleared": int(res.get("waves_cleared", 0)),
+		"cleared": bool(res.get("cleared", false)),
+		"heroes": res.get("heroes", []),
+		"flavor": str(res.get("flavor", "")),
 	}

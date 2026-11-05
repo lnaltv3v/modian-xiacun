@@ -3,18 +3,48 @@
   "name": "前哨防衛",
   "unlock_manor_level": 2,
   "unlock_bounty_level": 2,
-  "wave": {
-    "enemy_kind": "bandit",
-    "enemy_name": "山賊潮",
-    "count_base": 5,
-    "count_per_manor": 2
-  },
+  "waves": [
+    {
+      "index": 1,
+      "label": "第一波 · 山賊斥候",
+      "enemy_kind": "bandit",
+      "enemy_name": "山賊斥候",
+      "count_base": 3,
+      "count_per_manor": 1,
+      "power_per": 7,
+      "mix": [{"kind": "bandit", "name": "山賊", "weight": 80}, {"kind": "wolf", "name": "惡狼", "weight": 20}]
+    },
+    {
+      "index": 2,
+      "label": "第二波 · 獸潮",
+      "enemy_kind": "wolf",
+      "enemy_name": "獸潮",
+      "count_base": 4,
+      "count_per_manor": 2,
+      "power_per": 8,
+      "mix": [{"kind": "wolf", "name": "野狼", "weight": 50}, {"kind": "boar", "name": "野豬", "weight": 35}, {"kind": "bandit", "name": "山賊", "weight": 15}]
+    },
+    {
+      "index": 3,
+      "label": "第三波 · 山賊頭目潮",
+      "enemy_kind": "bandit",
+      "enemy_name": "山賊頭目潮",
+      "count_base": 5,
+      "count_per_manor": 2,
+      "power_per": 10,
+      "boss": true,
+      "mix": [{"kind": "bandit", "name": "山賊頭目", "weight": 60}, {"kind": "boar", "name": "鐵背豬", "weight": 25}, {"kind": "wolf", "name": "蒼狼", "weight": 15}]
+    }
+  ],
   "rewards": {
-    "silver_base": 40,
-    "iron_base": 2,
+    "silver_base": 35,
+    "iron_base": 1,
     "fur_base": 1,
-    "power_bonus_per": 0.5
+    "power_bonus_per": 0.45,
+    "wave_clear_bonus_silver": 15,
+    "full_clear_bonus_silver": 40,
+    "full_clear_bonus_iron": 2
   },
-  "fail_injury": 15,
-  "desc": "v0.7 stub：解鎖後一鍵結算一波山賊潮；後期再擴多波／塔防。"
+  "fail_injury": 12,
+  "desc": "v0.8：三波山賊／獸潮防衛；自動戰鬥演出後結算。"
 }

@@ -31,6 +31,7 @@ static func normalize_hero(raw: Dictionary) -> Dictionary:
 	h["personality"] = str(h.get("personality", ""))
 	h["template_id"] = str(h.get("template_id", h.get("id", "")))
 	h["art_key"] = str(h.get("art_key", ""))
+	h["art_stem"] = str(h.get("art_stem", ""))
 	h["status"] = str(h.get("status", "idle"))
 	h["stamina"] = float(h.get("stamina", 100))
 	h["max_stamina"] = float(h.get("max_stamina", 100))
@@ -45,7 +46,11 @@ static func normalize_hero(raw: Dictionary) -> Dictionary:
 		h["equipment"] = (h["equipment"] as Dictionary).duplicate(true)
 	h["passive_id"] = str(h.get("passive_id", ""))
 	h["passive_name"] = str(h.get("passive_name", ""))
-	h["placeholder"] = bool(h.get("placeholder", false))
+	var has_stem: bool = str(h.get("art_stem", "")) != "" or str(h.get("art_key", "")) != ""
+	if has_stem:
+		h["placeholder"] = false
+	else:
+		h["placeholder"] = bool(h.get("placeholder", false))
 	return h
 
 static func weapon_from_string(s: String) -> int:

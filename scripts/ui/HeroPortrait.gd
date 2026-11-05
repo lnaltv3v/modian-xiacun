@@ -1,8 +1,8 @@
 extends Control
 class_name HeroPortrait
-## 村莊列表用俠客頭像：idle／hunting→walk；紫卡無圖時色塊＋兵種標
+## 村莊列表用俠客頭像：idle／hunting→walk；無圖時色塊＋兵種標；紅 256 縮到列表尺寸
 
-const SCALE := 1.5
+const TARGET_PX := 72.0
 
 const RARITY_COLOR := {
 	"白": Color(0.85, 0.82, 0.76),
@@ -18,6 +18,7 @@ var _sprite: AnimatedSprite2D
 var _placeholder: ColorRect
 var _weapon_lab: Label
 var _frame: int = 64
+var _disp_scale: float = 1.0
 
 func _ready() -> void:
 	_apply_size()
@@ -40,38 +41,36 @@ func _ready() -> void:
 		setup(hero_id)
 
 func _apply_size() -> void:
-	var px: float = float(_frame) * SCALE
-	custom_minimum_size = Vector2(px, px)
+	custom_minimum_size = Vector2(TARGET_PX, TARGET_PX)
 	if _sprite:
-		_sprite.position = Vector2(px * 0.5, px * 0.5)
-		_sprite.scale = Vector2(SCALE, SCALE)
+		_sprite.position = Vector2(TARGET_PX * 0.5, TARGET_PX * 0.5)
+		_sprite.scale = Vector2(_disp_scale, _disp_scale)
 	if _placeholder:
 		_placeholder.position = Vector2.ZERO
-		_placeholder.size = Vector2(px, px)
+		_placeholder.size = Vector2(TARGET_PX, TARGET_PX)
 	if _weapon_lab:
 		_weapon_lab.position = Vector2.ZERO
-		_weapon_lab.size = Vector2(px, px)
+		_weapon_lab.size = Vector2(TARGET_PX, TARGET_PX)
 
 static func frame_px() -> float:
-	return float(ArtPaths.FRAME_PREFERRED) * SCALE
+	return TARGET_PX
 
 func setup(id: String) -> void:
 	hero_id = id
 	_frame = ArtPaths.hero_frame_px(hero_id)
+	_disp_scale = ArtPaths.display_scale_for(hero_id, TARGET_PX)
 	_apply_size()
 	if _sprite == null:
 		return
 	var hero: Dictionary = HeroSystem.get_hero(hero_id)
-	var use_ph: bool = bool(hero.get("placeholder", false)) or str(hero.get("art_key", "")) == ""
-	## 有真實 idle 紋理則唔用 placeholder
 	var idle_path: String = ArtPaths.hero_idle(hero_id)
-	var has_tex: bool = ArtPaths.exists(idle_path) and str(hero.get("art_key", "")) != ""
-	if use_ph and not has_tex:
-		_show_placeholder(hero)
-	else:
+	var has_tex: bool = ArtPaths.exists(idle_path)
+	if has_tex:
 		_hide_placeholder()
 		_sprite.sprite_frames = ArtPaths.make_hero_frames(hero_id)
 		play_for_status("idle")
+	else:
+		_show_placeholder(hero)
 
 func _show_placeholder(hero: Dictionary) -> void:
 	if _sprite:

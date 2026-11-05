@@ -292,7 +292,8 @@
       "base_power": 52,
       "personality": "孤傲",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "red_dongfang"
     },
     {
       "template_id": "pool_r_dugu",
@@ -302,7 +303,8 @@
       "base_power": 50,
       "personality": "淡泊",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "red_dugu"
     },
     {
       "template_id": "pool_r_huangshang",
@@ -312,7 +314,8 @@
       "base_power": 47,
       "personality": "較真",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "red_huangshang"
     },
     {
       "template_id": "pool_r_saodi",
@@ -322,7 +325,8 @@
       "base_power": 51,
       "personality": "謙遜",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "red_saodi"
     },
     {
       "template_id": "pool_r_wangchongyang",
@@ -332,7 +336,8 @@
       "base_power": 49,
       "personality": "正氣",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "red_wangchongyang"
     },
     {
       "template_id": "pool_r_zhangwuji",
@@ -342,7 +347,8 @@
       "base_power": 48,
       "personality": "溫厚",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "red_zhangwuji"
     }
   ]
 }

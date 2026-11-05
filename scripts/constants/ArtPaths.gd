@@ -1,8 +1,9 @@
 extends RefCounted
 class_name ArtPaths
-## 美術路徑 — 優先 64×64（walk 256×64）；唔見先 fallback _prev_48（48×48／192×48）
+## 美術路徑 — 紅階優先 heroes/red/；再 64×64；唔見先 fallback _prev_48
 
 const HEROES_DIR := "res://assets/art/heroes/"
+const HEROES_RED_DIR := "res://assets/art/heroes/red/"
 const HEROES_FALLBACK_DIR := "res://assets/art/heroes/_prev_48/"
 const BUILDINGS_DIR := "res://assets/art/buildings/"
 const UI_DIR := "res://assets/art/ui/"
@@ -15,6 +16,23 @@ const FRAME_FALLBACK := 48
 const WALK_FRAMES := 4
 
 ## hero_id → 美術 stem（weapon_slug）
+
+## 紅階 template_id / 常用 id → red_* stem（見 tools/MANIFEST_red_heroes.md）
+const RED_ART := {
+	"pool_r_zhangwuji": "red_zhangwuji",
+	"pool_r_dongfang": "red_dongfang",
+	"pool_r_dugu": "red_dugu",
+	"pool_r_saodi": "red_saodi",
+	"pool_r_wangchongyang": "red_wangchongyang",
+	"pool_r_huangshang": "red_huangshang",
+	"red_zhangwuji": "red_zhangwuji",
+	"red_dongfang": "red_dongfang",
+	"red_dugu": "red_dugu",
+	"red_saodi": "red_saodi",
+	"red_wangchongyang": "red_wangchongyang",
+	"red_huangshang": "red_huangshang",
+}
+
 const HERO_ART := {
 	"hero_atie": "hero_dao_atie",
 	"hero_aqing": "hero_jian_aqing",
@@ -43,17 +61,64 @@ static func hero_stem(hero_id: String) -> String:
 		return str(HERO_ART.get(art_key, art_key))
 	return str(HERO_ART.get(hero_id, hero_id))
 
+static func red_stem_for(hero_id: String) -> String:
+	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
+	var art_stem: String = str(hero.get("art_stem", ""))
+	if art_stem != "":
+		return art_stem
+	var tid: String = str(hero.get("template_id", ""))
+	if RED_ART.has(tid):
+		return str(RED_ART[tid])
+	if RED_ART.has(hero_id):
+		return str(RED_ART[hero_id])
+	## gacha_pool_r_xxx_123 → pool_r_xxx
+	if tid == "" and hero_id.begins_with("gacha_"):
+		var rest: String = hero_id.substr(6)
+		var cut: int = rest.rfind("_")
+		if cut > 0:
+			var maybe: String = rest.substr(0, cut)
+			if RED_ART.has(maybe):
+				return str(RED_ART[maybe])
+	return ""
+
+static func _hero_path_candidates(hero_id: String, suffix: String) -> Array:
+	## 紅階優先 assets/art/heroes/red/；有檔先用，否則一般目錄／48 fallback
+	var stem: String = hero_stem(hero_id)
+	var red: String = red_stem_for(hero_id)
+	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
+	var hid: String = str(hero.get("id", hero_id))
+	var tid: String = str(hero.get("template_id", ""))
+	var out: Array = []
+	var seen: Dictionary = {}
+	for s in [red, str(hero.get("art_stem", "")), tid, hid, stem]:
+		var ss: String = str(s)
+		if ss == "" or seen.has(ss):
+			continue
+		seen[ss] = true
+		out.append(HEROES_RED_DIR + ss + suffix)
+	out.append(HEROES_DIR + stem + suffix)
+	out.append(HEROES_FALLBACK_DIR + stem + suffix)
+	return out
+
 static func hero_idle(hero_id: String) -> String:
-	return _first_existing([
-		HEROES_DIR + hero_stem(hero_id) + "_idle.png",
-		HEROES_FALLBACK_DIR + hero_stem(hero_id) + "_idle.png",
-	])
+	return _first_existing(_hero_path_candidates(hero_id, "_idle.png"))
 
 static func hero_walk(hero_id: String) -> String:
-	return _first_existing([
-		HEROES_DIR + hero_stem(hero_id) + "_walk.png",
-		HEROES_FALLBACK_DIR + hero_stem(hero_id) + "_walk.png",
-	])
+	return _first_existing(_hero_path_candidates(hero_id, "_walk.png"))
+
+static func has_red_art(hero_id: String) -> bool:
+	var red: String = red_stem_for(hero_id)
+	if red != "" and ResourceLoader.exists(HEROES_RED_DIR + red + "_idle.png"):
+		return true
+	for p in _hero_path_candidates(hero_id, "_idle.png"):
+		var s: String = str(p)
+		if s.begins_with(HEROES_RED_DIR) and ResourceLoader.exists(s):
+			return true
+	return false
+
+static func display_scale_for(hero_id: String, target_px: float = 72.0) -> float:
+	var fw: int = hero_frame_px(hero_id)
+	return target_px / float(maxi(1, fw))
 
 static func building_icon(building_id: String) -> String:
 	return BUILDINGS_DIR + building_id + ".png"
@@ -102,8 +167,9 @@ static func detect_frame(tex: Texture2D) -> int:
 	if tex == null:
 		return FRAME_PREFERRED
 	var h: int = tex.get_height()
-	if h >= FRAME_PREFERRED:
-		return FRAME_PREFERRED
+	## 用實際幀高（支援 64／96／128／256 紅階）
+	if h >= 32:
+		return h
 	if h >= FRAME_FALLBACK:
 		return FRAME_FALLBACK
 	return maxi(1, h)

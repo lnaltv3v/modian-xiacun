@@ -1,9 +1,10 @@
 extends Control
-## 墨點俠村 v0.7 — 橙紅池／毒沼／前哨 stub
+## 墨點俠村 v0.8 — 短自動戰鬥／紅階圖／前哨三波
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
 const DungeonRunScene := preload("res://scenes/combat/dungeon_run.tscn")
+const AutoCombatScene := preload("res://scenes/combat/auto_combat.tscn")
 const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 const _OutpostScript := preload("res://scripts/systems/OutpostSystem.gd")
 
@@ -44,9 +45,14 @@ var _dispatch: DispatchSystem
 var _village: Control
 var _hunt_result: Control
 var _dungeon_run: Control
+var _auto_combat: Control
 var _selected: Dictionary = {}
 var _hero_rows: Dictionary = {}
 var _craft_hero_id: String = ""
+var _battle_queue: Array = []
+var _battle_final: Dictionary = {}
+var _battle_mode: String = ""
+var _rng_ui := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_dispatch = DispatchSystem.new()
@@ -68,8 +74,14 @@ func _ready() -> void:
 	if _dungeon_run.has_signal("closed"):
 		_dungeon_run.closed.connect(_on_dungeon_closed)
 
+	_auto_combat = AutoCombatScene.instantiate()
+	add_child(_auto_combat)
+	if _auto_combat.has_signal("finished"):
+		_auto_combat.finished.connect(_on_auto_combat_finished)
+	_rng_ui.randomize()
+
 	if title_label:
-		title_label.text = "墨點俠村 · v0.7"
+		title_label.text = "墨點俠村 · v0.8"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -472,12 +484,25 @@ func _on_hunt_finished(rewards: Dictionary) -> void:
 	_rebuild_heroes()
 	_refresh_hud()
 	_refresh_hunts()
-	## 結果演出
 	var enemies: Array = rewards.get("enemies", []) as Array
 	if enemies.size() > 0:
 		var kind: String = str((enemies[0] as Dictionary).get("kind", "wolf"))
 		_set_tex(monster_preview, ArtPaths.monster_attack(kind))
-	if _hunt_result and _hunt_result.has_method("show_result"):
+	## v0.8 短自動戰鬥＋結算摘要
+	if _auto_combat and _auto_combat.has_method("play"):
+		_battle_mode = "hunt"
+		_battle_queue.clear()
+		_battle_final = rewards.duplicate(true)
+		_auto_combat.play({
+			"title": "野外 · %s" % str(rewards.get("zone_name", "獵場")),
+			"heroes": rewards.get("heroes", []),
+			"enemies": enemies,
+			"success": bool(rewards.get("success", true)),
+			"duration": _rng_ui.randf_range(3.5, 6.5),
+			"summary": rewards,
+			"show_summary": true,
+		})
+	elif _hunt_result and _hunt_result.has_method("show_result"):
 		_hunt_result.show_result(rewards)
 	if GameState.tutorial_step == 3:
 		GameState.tutorial_step = 0
@@ -624,7 +649,7 @@ func _refresh_dungeon_btn() -> void:
 	else:
 		btn_dungeon.disabled = not bool(chk.get("ok", false)) or GameState.dungeon_busy
 		btn_dungeon.text = "秘境（%d）" % n
-		btn_dungeon.tooltip_text = str(chk.get("reason", "三波簡演出"))
+		btn_dungeon.tooltip_text = str(chk.get("reason", "三波自動戰鬥"))
 	if btn_academy:
 		btn_academy.disabled = not AcademySystem.academy_ready()
 		btn_academy.tooltip_text = "揀一名俠客後授被動技" if AcademySystem.academy_ready() else "先興建師門書院"
@@ -639,10 +664,13 @@ func _on_dungeon_pressed() -> void:
 	_selected.clear()
 	_rebuild_heroes()
 	_refresh_hud()
-	if _dungeon_run and _dungeon_run.has_method("play_run"):
-		_dungeon_run.play_run(res)
-	else:
-		GameState.dungeon_busy = false
+	_start_wave_battles(
+		"dungeon",
+		str(res.get("dungeon_name", "秘境")),
+		res.get("waves", []) as Array,
+		res.get("heroes", ids),
+		(res.get("rewards", {}) as Dictionary).duplicate(true)
+	)
 
 func _on_dungeon_closed(_rewards: Dictionary) -> void:
 	GameState.dungeon_busy = false
@@ -727,19 +755,88 @@ func _refresh_outpost_btn() -> void:
 	if n < 1:
 		btn_outpost.disabled = true
 		btn_outpost.text = "前哨"
-		btn_outpost.tooltip_text = "剔選在村俠客守一波山賊潮"
+		btn_outpost.tooltip_text = "剔選在村俠客守三波山賊／獸潮"
 	else:
 		var chk: Dictionary = _OutpostScript.can_defend(_selected_ids(6))
 		btn_outpost.disabled = not bool(chk.get("ok", false))
 		btn_outpost.text = "前哨（%d）" % n
-		btn_outpost.tooltip_text = str(chk.get("reason", "一波山賊潮 stub"))
+		btn_outpost.tooltip_text = str(chk.get("reason", "三波山賊／獸潮"))
 
 func _on_outpost_pressed() -> void:
 	var ids: Array = _selected_ids(6)
-	var res: Dictionary = _OutpostScript.run_wave(ids)
+	var res: Dictionary = _OutpostScript.run_defense(ids)
 	if not bool(res.get("ok", false)):
 		GameState.push_report("前哨失敗：%s" % str(res.get("reason", "")))
 		return
 	_selected.clear()
 	_rebuild_heroes()
 	_refresh_hud()
+	var rewards: Dictionary = (res.get("rewards", {}) as Dictionary).duplicate(true)
+	rewards["flavor"] = str(res.get("flavor", rewards.get("flavor", "")))
+	rewards["injured"] = rewards.get("injured", [])
+	_start_wave_battles(
+		"outpost",
+		"前哨防衛",
+		res.get("waves", []) as Array,
+		res.get("heroes", ids),
+		rewards
+	)
+
+func _start_wave_battles(mode: String, title: String, waves: Array, hero_ids: Array, final_rewards: Dictionary) -> void:
+	_battle_mode = mode
+	_battle_final = final_rewards.duplicate(true)
+	_battle_queue.clear()
+	for wv in waves:
+		var w: Dictionary = (wv as Dictionary).duplicate(true)
+		w["_title"] = "%s · %s" % [title, str(w.get("label", "波次"))]
+		w["_heroes"] = hero_ids.duplicate()
+		_battle_queue.append(w)
+	if _battle_queue.is_empty():
+		_on_wave_battles_done()
+		return
+	_play_next_wave_battle()
+
+func _play_next_wave_battle() -> void:
+	if _battle_queue.is_empty():
+		_on_wave_battles_done()
+		return
+	if _auto_combat == null or not _auto_combat.has_method("play"):
+		_battle_queue.clear()
+		_on_wave_battles_done()
+		return
+	var w: Dictionary = _battle_queue.pop_front() as Dictionary
+	var is_last: bool = _battle_queue.is_empty()
+	var summary: Dictionary = {}
+	if is_last:
+		summary = _battle_final.duplicate(true)
+	_auto_combat.play({
+		"title": str(w.get("_title", "交戰")),
+		"heroes": w.get("_heroes", []),
+		"enemies": w.get("enemies", []),
+		"success": bool(w.get("success", true)),
+		"duration": _rng_ui.randf_range(3.2, 5.8),
+		"summary": summary,
+		"show_summary": is_last,
+	})
+
+func _on_auto_combat_finished(_summary: Dictionary) -> void:
+	if _battle_mode == "hunt":
+		_battle_mode = ""
+		_rebuild_heroes()
+		_refresh_hud()
+		return
+	if not _battle_queue.is_empty():
+		_play_next_wave_battle()
+		return
+	_on_wave_battles_done()
+
+func _on_wave_battles_done() -> void:
+	var mode: String = _battle_mode
+	_battle_mode = ""
+	_battle_queue.clear()
+	if mode == "dungeon":
+		GameState.dungeon_busy = false
+	_rebuild_heroes()
+	_refresh_hud()
+	_refresh_hunts()
+
