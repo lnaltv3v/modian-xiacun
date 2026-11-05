@@ -7,13 +7,13 @@ signal place_cancelled
 
 const LAYOUT_PATH := "res://data/buildings/layout.json"
 ## 兩棟建築中心最短距離（設計座標），避免疊太歪
-const MIN_SEPARATION := 96.0
-## 可建區（預設對齊 village_v2 buildings_pad 平坦地皮；可被 layout.json 覆寫）
-var BUILDABLE := Rect2(130, 232, 700, 268)
+const MIN_SEPARATION := 120.0
+## 可建區（預設對齊 Pivot R2 pad；可被 layout.json 覆寫）
+var BUILDABLE := Rect2(100, 160, 760, 360)
 
 var _layout: Dictionary = {}
 var _design := Vector2(960, 540)
-var _icon_off := Vector2(-64, -72)
+var _icon_off := Vector2(-80, -88)
 var _layer_root: Node2D
 var _buildings_root: Node2D
 var _overlay_root: Node2D
@@ -63,8 +63,8 @@ func _load_layout() -> void:
 	var br: Dictionary = _layout.get("buildable_rect", {}) as Dictionary
 	if not br.is_empty():
 		BUILDABLE = Rect2(
-			float(br.get("x", 130)), float(br.get("y", 232)),
-			float(br.get("w", 700)), float(br.get("h", 268))
+			float(br.get("x", 100)), float(br.get("y", 160)),
+			float(br.get("w", 760)), float(br.get("h", 360))
 		)
 
 func _build_world() -> void:
@@ -170,7 +170,7 @@ func _add_building_icon(bid: String) -> void:
 	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	btn.z_index = 5
 	var tex: Texture2D = ArtPaths.load_tex(ArtPaths.building_icon(bid))
-	var sz := Vector2(128, 128)
+	var sz := Vector2(160, 160)
 	if tex != null:
 		btn.texture_normal = tex
 		sz = tex.get_size()

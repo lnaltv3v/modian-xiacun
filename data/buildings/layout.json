@@ -33,58 +33,58 @@
     {
       "id": "manor",
       "cx": 480,
-      "cy": 210,
+      "cy": 165,
       "z": 5,
-      "blit_x": 416,
-      "blit_y": 138
+      "blit_x": 400,
+      "blit_y": 77
     },
     {
       "id": "inn",
-      "cx": 220,
-      "cy": 280,
+      "cx": 140,
+      "cy": 445,
       "z": 5,
-      "blit_x": 156,
-      "blit_y": 208
+      "blit_x": 60,
+      "blit_y": 357
     },
     {
       "id": "forge",
-      "cx": 740,
-      "cy": 280,
+      "cx": 860,
+      "cy": 235,
       "z": 5,
-      "blit_x": 676,
-      "blit_y": 208
+      "blit_x": 780,
+      "blit_y": 147
     },
     {
       "id": "clinic",
-      "cx": 160,
-      "cy": 380,
+      "cx": 340,
+      "cy": 458,
       "z": 6,
-      "blit_x": 96,
-      "blit_y": 308
+      "blit_x": 260,
+      "blit_y": 370
     },
     {
       "id": "training",
-      "cx": 800,
-      "cy": 380,
+      "cx": 840,
+      "cy": 445,
       "z": 6,
-      "blit_x": 736,
-      "blit_y": 308
+      "blit_x": 760,
+      "blit_y": 357
     },
     {
       "id": "bounty",
-      "cx": 480,
-      "cy": 360,
+      "cx": 620,
+      "cy": 458,
       "z": 7,
-      "blit_x": 416,
-      "blit_y": 288
+      "blit_x": 540,
+      "blit_y": 370
     },
     {
       "id": "warehouse",
-      "cx": 480,
-      "cy": 450,
+      "cx": 100,
+      "cy": 235,
       "z": 6,
-      "blit_x": 416,
-      "blit_y": 378
+      "blit_x": 20,
+      "blit_y": 147
     }
   ],
   "icon_size": {
@@ -92,12 +92,12 @@
     "h": 160
   },
   "placement_mode": "player_free",
-  "note": "buildings[] 只係示範／預設錨點；正式位置存 GameState.building_placements（玩家拖放）。可建區對齊 village_v2 buildings_pad 平坦地皮。",
+  "note": "buildings[] 預設拉開錨點（對齊 Pivot R2 spaced 預覽腳底錨換算）；正式位置存 GameState.building_placements（玩家拖放）。中央大片可建空地。academy 留待下一輪。",
   "buildable_rect": {
-    "x": 130,
-    "y": 232,
-    "w": 700,
-    "h": 268
+    "x": 100,
+    "y": 160,
+    "w": 760,
+    "h": 360
   },
-  "art_revision": "pivot_r1"
+  "art_revision": "pivot_r2"
 }

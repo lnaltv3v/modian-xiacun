@@ -20,7 +20,7 @@
 
 ## 美術／場景
 - 俠客 idle／walk（48×48；walk 192×48 sheet）→ `ArtPaths` + `HeroPortrait` SpriteFrames
-- 建築錨點：`data/buildings/layout.json`（設計 960×540；圖示錨 cx-48, cy-56）
+- 建築錨點：`data/buildings/layout.json`（設計 960×540；圖示錨 cx-80, cy-88（160×160））
 - 分層 z：ground→hills→buildings_pad→建築→fg
 - 怪物圖預留戰鬥結果卡
 
