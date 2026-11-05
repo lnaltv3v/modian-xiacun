@@ -1,9 +1,10 @@
 extends RefCounted
 class_name ArtPaths
-## 美術路徑 — 紅階優先 heroes/red/；再 64×64；唔見先 fallback _prev_48
+## 美術路徑 — 紅 heroes/red/ → 橙 heroes/orange/ → 綠 64 → _prev_48
 
 const HEROES_DIR := "res://assets/art/heroes/"
 const HEROES_RED_DIR := "res://assets/art/heroes/red/"
+const HEROES_ORANGE_DIR := "res://assets/art/heroes/orange/"
 const HEROES_FALLBACK_DIR := "res://assets/art/heroes/_prev_48/"
 const BUILDINGS_DIR := "res://assets/art/buildings/"
 const UI_DIR := "res://assets/art/ui/"
@@ -15,9 +16,7 @@ const FRAME_PREFERRED := 64
 const FRAME_FALLBACK := 48
 const WALK_FRAMES := 4
 
-## hero_id → 美術 stem（weapon_slug）
-
-## 紅階 template_id / 常用 id → red_* stem（見 tools/MANIFEST_red_heroes.md）
+## 紅階 template_id / 常用 id → red_* stem
 const RED_ART := {
 	"pool_r_zhangwuji": "red_zhangwuji",
 	"pool_r_dongfang": "red_dongfang",
@@ -33,6 +32,34 @@ const RED_ART := {
 	"red_huangshang": "red_huangshang",
 }
 
+## 橙階 template_id / id → orange_* stem（檔未到亦可預約路徑）
+const ORANGE_ART := {
+	"pool_o_yangguo": "orange_yangguo",
+	"pool_o_guojing": "orange_guojing",
+	"pool_o_linghuzhong": "orange_linghuzhong",
+	"pool_o_qiaofeng": "orange_qiaofeng",
+	"pool_o_zhangsanfeng": "orange_zhangsanfeng",
+	"pool_o_fengqingyang": "orange_fengqingyang",
+	"pool_o_huangyaoshi": "orange_huangyaoshi",
+	"pool_o_ouyangfeng": "orange_ouyangfeng",
+	"pool_o_hongqigong": "orange_hongqigong",
+	"pool_o_yideng": "orange_yideng",
+	"pool_o_zhoubotong": "orange_zhoubotong",
+	"pool_o_miejueshitai": "orange_miejueshitai",
+	"orange_yangguo": "orange_yangguo",
+	"orange_guojing": "orange_guojing",
+	"orange_linghuzhong": "orange_linghuzhong",
+	"orange_qiaofeng": "orange_qiaofeng",
+	"orange_zhangsanfeng": "orange_zhangsanfeng",
+	"orange_fengqingyang": "orange_fengqingyang",
+	"orange_huangyaoshi": "orange_huangyaoshi",
+	"orange_ouyangfeng": "orange_ouyangfeng",
+	"orange_hongqigong": "orange_hongqigong",
+	"orange_yideng": "orange_yideng",
+	"orange_zhoubotong": "orange_zhoubotong",
+	"orange_miejueshitai": "orange_miejueshitai",
+}
+
 const HERO_ART := {
 	"hero_atie": "hero_dao_atie",
 	"hero_aqing": "hero_jian_aqing",
@@ -46,58 +73,94 @@ const MONSTER_ART := {
 	"wolf": "monster_wolf",
 	"boar": "monster_boar",
 	"bandit": "monster_bandit",
-	## v0.7 毒沼：暫複用既有怪剪影（色塊／後期換蛇蟒專圖）
 	"snake": "monster_wolf",
 	"python": "monster_boar",
 }
 
 static func hero_stem(hero_id: String) -> String:
-	## 抽卡俠客用 art_key 指向開局六綠俠美術
+	## 抽卡白／綠／藍用 art_key 指向開局六綠俠美術
 	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
 	var art_key: String = str(hero.get("art_key", ""))
 	if art_key != "" and HERO_ART.has(art_key):
 		return str(HERO_ART[art_key])
 	if art_key != "" and art_key.begins_with("hero_"):
 		return str(HERO_ART.get(art_key, art_key))
-	return str(HERO_ART.get(hero_id, hero_id))
+	return str(HERO_ART.get(hero_id, ""))
+
+static func _stem_from_gacha_id(hero_id: String, table: Dictionary) -> String:
+	if not hero_id.begins_with("gacha_"):
+		return ""
+	var rest: String = hero_id.substr(6)
+	var cut: int = rest.rfind("_")
+	if cut <= 0:
+		return ""
+	var maybe: String = rest.substr(0, cut)
+	if table.has(maybe):
+		return str(table[maybe])
+	return ""
 
 static func red_stem_for(hero_id: String) -> String:
 	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
 	var art_stem: String = str(hero.get("art_stem", ""))
-	if art_stem != "":
+	if art_stem.begins_with("red_"):
 		return art_stem
+	if art_stem != "" and RED_ART.has(art_stem):
+		return str(RED_ART[art_stem])
 	var tid: String = str(hero.get("template_id", ""))
 	if RED_ART.has(tid):
 		return str(RED_ART[tid])
 	if RED_ART.has(hero_id):
 		return str(RED_ART[hero_id])
-	## gacha_pool_r_xxx_123 → pool_r_xxx
-	if tid == "" and hero_id.begins_with("gacha_"):
-		var rest: String = hero_id.substr(6)
-		var cut: int = rest.rfind("_")
-		if cut > 0:
-			var maybe: String = rest.substr(0, cut)
-			if RED_ART.has(maybe):
-				return str(RED_ART[maybe])
+	var from_gacha: String = _stem_from_gacha_id(hero_id, RED_ART)
+	if from_gacha != "":
+		return from_gacha
+	if art_stem != "" and art_stem.begins_with("red"):
+		return art_stem
 	return ""
 
+static func orange_stem_for(hero_id: String) -> String:
+	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
+	var art_stem: String = str(hero.get("art_stem", ""))
+	if art_stem.begins_with("orange_"):
+		return art_stem
+	if art_stem != "" and ORANGE_ART.has(art_stem):
+		return str(ORANGE_ART[art_stem])
+	var tid: String = str(hero.get("template_id", ""))
+	if ORANGE_ART.has(tid):
+		return str(ORANGE_ART[tid])
+	if ORANGE_ART.has(hero_id):
+		return str(ORANGE_ART[hero_id])
+	return _stem_from_gacha_id(hero_id, ORANGE_ART)
+
 static func _hero_path_candidates(hero_id: String, suffix: String) -> Array:
-	## 紅階優先 assets/art/heroes/red/；有檔先用，否則一般目錄／48 fallback
+	## 紅目錄 → 橙目錄 → 一般 64 → 48 fallback
 	var stem: String = hero_stem(hero_id)
 	var red: String = red_stem_for(hero_id)
-	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
-	var hid: String = str(hero.get("id", hero_id))
-	var tid: String = str(hero.get("template_id", ""))
+	var orange: String = orange_stem_for(hero_id)
 	var out: Array = []
 	var seen: Dictionary = {}
-	for s in [red, str(hero.get("art_stem", "")), tid, hid, stem]:
-		var ss: String = str(s)
-		if ss == "" or seen.has(ss):
-			continue
-		seen[ss] = true
-		out.append(HEROES_RED_DIR + ss + suffix)
-	out.append(HEROES_DIR + stem + suffix)
-	out.append(HEROES_FALLBACK_DIR + stem + suffix)
+	if red != "":
+		var rp: String = HEROES_RED_DIR + red + suffix
+		if not seen.has(rp):
+			seen[rp] = true
+			out.append(rp)
+	if orange != "":
+		var op: String = HEROES_ORANGE_DIR + orange + suffix
+		if not seen.has(op):
+			seen[op] = true
+			out.append(op)
+	if stem != "":
+		var gp: String = HEROES_DIR + stem + suffix
+		var fp: String = HEROES_FALLBACK_DIR + stem + suffix
+		if not seen.has(gp):
+			seen[gp] = true
+			out.append(gp)
+		if not seen.has(fp):
+			seen[fp] = true
+			out.append(fp)
+	## 萬一全空，仍畀一個可診斷路徑
+	if out.is_empty():
+		out.append(HEROES_DIR + hero_id + suffix)
 	return out
 
 static func hero_idle(hero_id: String) -> String:
@@ -110,10 +173,12 @@ static func has_red_art(hero_id: String) -> bool:
 	var red: String = red_stem_for(hero_id)
 	if red != "" and ResourceLoader.exists(HEROES_RED_DIR + red + "_idle.png"):
 		return true
-	for p in _hero_path_candidates(hero_id, "_idle.png"):
-		var s: String = str(p)
-		if s.begins_with(HEROES_RED_DIR) and ResourceLoader.exists(s):
-			return true
+	return false
+
+static func has_orange_art(hero_id: String) -> bool:
+	var orange: String = orange_stem_for(hero_id)
+	if orange != "" and ResourceLoader.exists(HEROES_ORANGE_DIR + orange + "_idle.png"):
+		return true
 	return false
 
 static func display_scale_for(hero_id: String, target_px: float = 72.0) -> float:
@@ -167,7 +232,7 @@ static func detect_frame(tex: Texture2D) -> int:
 	if tex == null:
 		return FRAME_PREFERRED
 	var h: int = tex.get_height()
-	## 用實際幀高（支援 64／96／128／256 紅階）
+	## 用實際幀高（支援 64／96／128／256）
 	if h >= 32:
 		return h
 	if h >= FRAME_FALLBACK:
@@ -193,10 +258,8 @@ static func make_hero_frames(hero_id: String) -> SpriteFrames:
 	if walk_tex != null:
 		var w: int = walk_tex.get_width()
 		var h: int = walk_tex.get_height()
-		fw = detect_frame(walk_tex) if idle_tex == null else fw
-		## walk sheet 高度即幀高；闊度用幀高（方幀）或 detect
-		var fh: int = h
-		fw = fh if fh > 0 else fw
+		var fh: int = h if h > 0 else fw
+		fw = fh
 		var count: int = mini(WALK_FRAMES, int(w / maxi(1, fw)))
 		for i in range(maxi(1, count)):
 			var at := AtlasTexture.new()

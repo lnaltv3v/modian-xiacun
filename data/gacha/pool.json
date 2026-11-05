@@ -172,7 +172,8 @@
       "base_power": 37,
       "personality": "隱逸",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_fengqingyang"
     },
     {
       "template_id": "pool_o_guojing",
@@ -182,7 +183,8 @@
       "base_power": 38,
       "personality": "愚直",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_guojing"
     },
     {
       "template_id": "pool_o_hongqigong",
@@ -192,7 +194,8 @@
       "base_power": 38,
       "personality": "豪爽",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_hongqigong"
     },
     {
       "template_id": "pool_o_huangyaoshi",
@@ -202,7 +205,8 @@
       "base_power": 36,
       "personality": "奇傲",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_huangyaoshi"
     },
     {
       "template_id": "pool_o_linghuzhong",
@@ -212,7 +216,8 @@
       "base_power": 35,
       "personality": "瀟灑",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_linghuzhong"
     },
     {
       "template_id": "pool_o_miejueshitai",
@@ -222,7 +227,8 @@
       "base_power": 36,
       "personality": "剛烈",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_miejueshitai"
     },
     {
       "template_id": "pool_o_ouyangfeng",
@@ -232,7 +238,8 @@
       "base_power": 37,
       "personality": "狠辣",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_ouyangfeng"
     },
     {
       "template_id": "pool_o_qiaofeng",
@@ -242,7 +249,8 @@
       "base_power": 39,
       "personality": "豪邁",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_qiaofeng"
     },
     {
       "template_id": "pool_o_yangguo",
@@ -252,7 +260,8 @@
       "base_power": 36,
       "personality": "決烈",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_yangguo"
     },
     {
       "template_id": "pool_o_yideng",
@@ -262,7 +271,8 @@
       "base_power": 36,
       "personality": "慈悲",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_yideng"
     },
     {
       "template_id": "pool_o_zhangsanfeng",
@@ -272,7 +282,8 @@
       "base_power": 40,
       "personality": "仙風",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_zhangsanfeng"
     },
     {
       "template_id": "pool_o_zhoubotong",
@@ -282,7 +293,8 @@
       "base_power": 35,
       "personality": "頑皮",
       "art_key": "",
-      "placeholder": true
+      "placeholder": false,
+      "art_stem": "orange_zhoubotong"
     },
     {
       "template_id": "pool_r_dongfang",

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "name": "比武台",
+  "require_building": "training",
+  "require_level": 1,
+  "stamina_cost": 12,
+  "xp_winner": 18,
+  "xp_loser": 8,
+  "note": "stub：依附練功場；完整 UI／自動戰鬥演出後補"
+}

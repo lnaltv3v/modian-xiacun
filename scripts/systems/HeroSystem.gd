@@ -46,8 +46,8 @@ static func normalize_hero(raw: Dictionary) -> Dictionary:
 		h["equipment"] = (h["equipment"] as Dictionary).duplicate(true)
 	h["passive_id"] = str(h.get("passive_id", ""))
 	h["passive_name"] = str(h.get("passive_name", ""))
-	var has_stem: bool = str(h.get("art_stem", "")) != "" or str(h.get("art_key", "")) != ""
-	if has_stem:
+	## art_key（綠白複用圖）→ 非 placeholder；art_stem 只係路徑預約，檔未到可仍 placeholder
+	if str(h.get("art_key", "")) != "":
 		h["placeholder"] = false
 	else:
 		h["placeholder"] = bool(h.get("placeholder", false))

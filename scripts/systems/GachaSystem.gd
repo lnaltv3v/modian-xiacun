@@ -185,7 +185,8 @@ static func pull_once() -> Dictionary:
 		"injury": 0,
 		"art_key": str(pick.get("art_key", "")),
 		"art_stem": str(pick.get("art_stem", "")),
-		"placeholder": bool(pick.get("placeholder", false)) and str(pick.get("art_stem", "")) == "" and str(pick.get("art_key", "")) == "",
+		## art_stem 可預約；placeholder 跟 pool（橙未出圖仍 true；紅 false）
+		"placeholder": false if str(pick.get("art_key", "")) != "" else bool(pick.get("placeholder", false)),
 		"equipment": {},
 		"passive_id": "",
 		"passive_name": "",

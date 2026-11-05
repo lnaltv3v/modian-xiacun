@@ -170,3 +170,39 @@ static func sell_inventory_at(inv_index: int) -> Dictionary:
 	GameState.add_silver(gain)
 	GameState.push_report("賣出「%s」＋銀%d" % [str(item.get("name", "")), gain])
 	return {"ok": true, "reason": "", "silver": gain}
+
+
+static var _autosell_cd: float = 0.0
+
+static func warehouse_ready() -> bool:
+	return BuildingSystem.building_level("warehouse") >= 1
+
+static func auto_sell_fur(max_batches: int = 3) -> Dictionary:
+	## 貨棧自動把毛皮打梱出售（跟 hide_bundle 配方）
+	## 回傳 { ok, sold_batches, silver, fur_spent, reason }
+	if not warehouse_ready():
+		return {"ok": false, "sold_batches": 0, "silver": 0, "fur_spent": 0, "reason": "未建貨棧"}
+	var recipe: Dictionary = get_recipe("hide_bundle")
+	if recipe.is_empty():
+		return {"ok": false, "sold_batches": 0, "silver": 0, "fur_spent": 0, "reason": "冇毛皮梱配方"}
+	var cost: Dictionary = recipe.get("cost", {}) as Dictionary
+	var fur_each: int = int(cost.get("fur", 5))
+	var silver_each: int = int((recipe.get("result", {}) as Dictionary).get("silver", 18))
+	if fur_each <= 0 or silver_each <= 0:
+		return {"ok": false, "sold_batches": 0, "silver": 0, "fur_spent": 0, "reason": "配方異常"}
+	var lv: int = BuildingSystem.building_level("warehouse")
+	var cap: int = maxi(1, mini(max_batches, 1 + lv))
+	var sold: int = 0
+	var silver_gain: int = 0
+	var fur_spent: int = 0
+	while sold < cap and GameState.fur >= fur_each:
+		if not GameState.try_spend(0, 0, fur_each, 0):
+			break
+		GameState.add_silver(silver_each)
+		sold += 1
+		silver_gain += silver_each
+		fur_spent += fur_each
+	if sold <= 0:
+		return {"ok": false, "sold_batches": 0, "silver": 0, "fur_spent": 0, "reason": "毛皮唔夠（要≥%d）" % fur_each}
+	GameState.push_report("貨棧自動販售：毛皮梱×%d → 銀＋%d" % [sold, silver_gain])
+	return {"ok": true, "sold_batches": sold, "silver": silver_gain, "fur_spent": fur_spent, "reason": ""}

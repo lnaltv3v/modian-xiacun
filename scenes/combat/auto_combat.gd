@@ -93,12 +93,32 @@ func _spawn_sides() -> void:
 		var spr := AnimatedSprite2D.new()
 		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		spr.centered = true
-		spr.sprite_frames = ArtPaths.make_hero_frames(hid)
-		if spr.sprite_frames.has_animation("walk"):
+		var idle_ok: bool = ArtPaths.exists(ArtPaths.hero_idle(hid))
+		if idle_ok:
+			spr.sprite_frames = ArtPaths.make_hero_frames(hid)
+			if spr.sprite_frames.has_animation("walk"):
+				spr.play("walk")
+			elif spr.sprite_frames.has_animation("idle"):
+				spr.play("idle")
+		else:
+			## 無圖：用單色方塊代理（橙／紫未出圖時）
+			var frames := SpriteFrames.new()
+			frames.remove_animation("default")
+			frames.add_animation("idle")
+			frames.set_animation_loop("idle", true)
+			var img := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+			var hero: Dictionary = HeroSystem.get_hero(hid)
+			var rarity: String = str(hero.get("rarity", "紫"))
+			var col := Color(0.85, 0.45, 0.15) if rarity == "橙" else (Color(0.75, 0.15, 0.12) if rarity == "紅" else Color(0.45, 0.28, 0.65))
+			img.fill(col)
+			var tex := ImageTexture.create_from_image(img)
+			frames.add_frame("idle", tex)
+			frames.add_animation("walk")
+			frames.set_animation_loop("walk", true)
+			frames.add_frame("walk", tex)
+			spr.sprite_frames = frames
 			spr.play("walk")
-		elif spr.sprite_frames.has_animation("idle"):
-			spr.play("idle")
-		var ds: float = ArtPaths.display_scale_for(hid, 88.0)
+		var ds: float = ArtPaths.display_scale_for(hid, 88.0) if idle_ok else (88.0 / 32.0)
 		spr.scale = Vector2(ds, ds)
 		spr.position = Vector2(left_x - 80.0, mid_y + float(hi) * 36.0 - float(hero_ids.size() - 1) * 18.0)
 		spr.set_meta("home", Vector2(left_x + 40.0 + float(hi) * 22.0, mid_y + float(hi) * 36.0 - float(hero_ids.size() - 1) * 18.0))

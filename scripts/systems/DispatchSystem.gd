@@ -13,6 +13,7 @@ var _ui_tick_accum: float = 0.0
 var _recover_accum: float = 0.0
 var _recover_pending: float = 0.0
 var _shop_accum: float = 0.0
+var _warehouse_accum: float = 0.0
 
 func _ready() -> void:
 	_rng.randomize()
@@ -30,6 +31,11 @@ func _process(delta: float) -> void:
 		if GameState.auto_shop and _shop_accum >= 2.0:
 			_shop_accum = 0.0
 			ShopSystem.auto_buy_for_idle(1)
+		_warehouse_accum += _recover_pending
+		if _warehouse_accum >= 4.0:
+			_warehouse_accum = 0.0
+			if CraftSystem.warehouse_ready() and GameState.fur >= 5:
+				CraftSystem.auto_sell_fur(2)
 		_recover_pending = 0.0
 		_recover_accum = 0.0
 	resolve_due_hunts()
