@@ -1,6 +1,6 @@
 extends RefCounted
 class_name ArtPaths
-## 美術路徑 — 紅 → 橙 → 紫 → 綠 64 → _prev_48
+## 美術路徑 — 紅256 → 橙128 → 紫96 → 綠64 → _prev_48；idle／walk／attack
 
 const HEROES_DIR := "res://assets/art/heroes/"
 const HEROES_RED_DIR := "res://assets/art/heroes/red/"
@@ -16,6 +16,7 @@ const TILES_DIR := "res://assets/art/tiles/"
 const FRAME_PREFERRED := 64
 const FRAME_FALLBACK := 48
 const WALK_FRAMES := 4
+const ATTACK_FRAMES := 4
 
 ## 紅階 template_id / 常用 id → red_* stem
 const RED_ART := {
@@ -229,6 +230,9 @@ static func hero_idle(hero_id: String) -> String:
 static func hero_walk(hero_id: String) -> String:
 	return _first_existing(_hero_path_candidates(hero_id, "_walk.png"))
 
+static func hero_attack(hero_id: String) -> String:
+	return _first_existing(_hero_path_candidates(hero_id, "_attack.png"))
+
 static func has_red_art(hero_id: String) -> bool:
 	var red: String = red_stem_for(hero_id)
 	if red != "" and ResourceLoader.exists(HEROES_RED_DIR + red + "_idle.png"):
@@ -371,7 +375,7 @@ static func detect_frame(tex: Texture2D) -> int:
 		return FRAME_FALLBACK
 	return maxi(1, h)
 
-## 由 idle + walk sheet 組 SpriteFrames（idle / walk）；幀闊跟實際解像
+## 由 idle + walk（＋可選 attack）組 SpriteFrames；幀闊跟實際解像
 static func make_hero_frames(hero_id: String) -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
@@ -400,6 +404,24 @@ static func make_hero_frames(hero_id: String) -> SpriteFrames:
 			frames.add_frame("walk", at)
 	elif idle_tex != null:
 		frames.add_frame("walk", idle_tex)
+
+	## attack sheet：有正式檔先加 anim（紅階 Pivot）；否則戰鬥繼續用 walk
+	var atk_path: String = hero_attack(hero_id)
+	var atk_tex: Texture2D = load_tex(atk_path) if exists(atk_path) else null
+	if atk_tex != null:
+		frames.add_animation("attack")
+		frames.set_animation_speed("attack", 8.0)
+		frames.set_animation_loop("attack", true)
+		var aw: int = atk_tex.get_width()
+		var ah: int = atk_tex.get_height()
+		var afh: int = ah if ah > 0 else fw
+		var afw: int = afh
+		var acount: int = mini(ATTACK_FRAMES, int(aw / maxi(1, afw)))
+		for i in range(maxi(1, acount)):
+			var aat := AtlasTexture.new()
+			aat.atlas = atk_tex
+			aat.region = Rect2(i * afw, 0, afw, afh)
+			frames.add_frame("attack", aat)
 	return frames
 
 static func hero_frame_px(hero_id: String) -> int:

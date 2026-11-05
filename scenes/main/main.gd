@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.9.5 — 比武台可玩對決／庫存裝用賣／裝備替換回庫
+## 墨點俠村 v0.9.6 — 紅六人獵魔村密度 Pivot／attack sheet／建築 Pivot R1
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -92,7 +92,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.5"
+		title_label.text = "墨點俠村 · v0.9.6"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()

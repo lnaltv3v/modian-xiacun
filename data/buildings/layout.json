@@ -26,8 +26,8 @@
     }
   ],
   "icon_anchor_offset": {
-    "x": -64,
-    "y": -72
+    "x": -80,
+    "y": -88
   },
   "buildings": [
     {
@@ -88,8 +88,8 @@
     }
   ],
   "icon_size": {
-    "w": 128,
-    "h": 128
+    "w": 160,
+    "h": 160
   },
   "placement_mode": "player_free",
   "note": "buildings[] 只係示範／預設錨點；正式位置存 GameState.building_placements（玩家拖放）。可建區對齊 village_v2 buildings_pad 平坦地皮。",
@@ -99,5 +99,5 @@
     "w": 700,
     "h": 268
   },
-  "art_revision": "village_v2"
+  "art_revision": "pivot_r1"
 }

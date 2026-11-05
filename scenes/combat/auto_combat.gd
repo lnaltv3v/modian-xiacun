@@ -229,20 +229,27 @@ func _begin_fight() -> void:
 	if phase_label:
 		var mode: String = str(_cfg.get("battle_mode", ""))
 		phase_label.text = "切磋中…" if mode == "arena" else "交鋒中…"
-	## heroes: prefer walk as "attack" loop (no attack sheet yet); pulse scale
+	## heroes: prefer attack sheet；無則 walk；pulse scale
 	for n in _hero_nodes:
 		var spr: AnimatedSprite2D = n as AnimatedSprite2D
 		if spr and spr.sprite_frames:
-			if spr.sprite_frames.has_animation("walk"):
+			if spr.sprite_frames.has_animation("attack") and spr.sprite_frames.get_frame_count("attack") > 0:
+				spr.play("attack")
+				spr.speed_scale = 1.15
+			elif spr.sprite_frames.has_animation("walk"):
 				spr.play("walk")
 				spr.speed_scale = 1.35
 	for n_e in _enemy_nodes:
 		if not bool(n_e.get_meta("duelist", false)):
 			continue
 		var spr_e: AnimatedSprite2D = n_e as AnimatedSprite2D
-		if spr_e and spr_e.sprite_frames and spr_e.sprite_frames.has_animation("walk"):
-			spr_e.play("walk")
-			spr_e.speed_scale = 1.35
+		if spr_e and spr_e.sprite_frames:
+			if spr_e.sprite_frames.has_animation("attack") and spr_e.sprite_frames.get_frame_count("attack") > 0:
+				spr_e.play("attack")
+				spr_e.speed_scale = 1.15
+			elif spr_e.sprite_frames.has_animation("walk"):
+				spr_e.play("walk")
+				spr_e.speed_scale = 1.35
 
 func _process(delta: float) -> void:
 	if not _playing or _phase != "fight":

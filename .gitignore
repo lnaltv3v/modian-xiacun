@@ -29,3 +29,6 @@ Thumbs.db
 # Local saves (runtime)
 user://
 *.sav
+
+# Art generation intermediates
+assets/art/**/_gen_raw/
