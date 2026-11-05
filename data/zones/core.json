@@ -6,11 +6,31 @@
     "base_silver": 12,
     "base_fur": 2,
     "base_wood": 1,
+    "base_iron": 0,
     "stamina_cost": 18,
     "satiety_cost": 12,
     "injury_chance": 0.18,
     "injury_amount": 8,
     "power_bonus_per": 0.35,
-    "desc": "開局獵場。野狼出沒，適合綠俠練膽。"
+    "enemies": [
+      {
+        "kind": "wolf",
+        "weight": 50,
+        "name": "野狼"
+      },
+      {
+        "kind": "boar",
+        "weight": 30,
+        "name": "野豬"
+      },
+      {
+        "kind": "bandit",
+        "weight": 20,
+        "name": "山賊"
+      }
+    ],
+    "enemy_count_min": 1,
+    "enemy_count_max": 3,
+    "desc": "開局獵場。野狼／野豬／山賊出沒，適合綠俠練膽。"
   }
 ]

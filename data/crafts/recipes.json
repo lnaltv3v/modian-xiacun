@@ -1,0 +1,38 @@
+[
+  {
+    "id": "leather_armor",
+    "name": "粗皮甲",
+    "desc": "毛皮製成。裝備後戰力＋3。",
+    "cost": { "fur": 4, "wood": 1, "iron": 0, "silver": 0 },
+    "result": { "kind": "equip", "slot": "armor", "power": 3, "item_id": "leather_armor" },
+    "require_building": "forge",
+    "require_level": 1
+  },
+  {
+    "id": "wound_salve",
+    "name": "傷藥",
+    "desc": "即時減傷勢 25；多餘可賣銀。",
+    "cost": { "fur": 1, "wood": 0, "iron": 0, "silver": 5 },
+    "result": { "kind": "consumable", "injury": -25, "sell_silver": 8, "item_id": "wound_salve" },
+    "require_building": "clinic",
+    "require_level": 1
+  },
+  {
+    "id": "iron_blade",
+    "name": "鐵刃",
+    "desc": "鐵＋木。裝備武器位，戰力＋5。",
+    "cost": { "fur": 0, "wood": 2, "iron": 3, "silver": 10 },
+    "result": { "kind": "equip", "slot": "weapon", "power": 5, "item_id": "iron_blade" },
+    "require_building": "forge",
+    "require_level": 1
+  },
+  {
+    "id": "hide_bundle",
+    "name": "毛皮梱",
+    "desc": "貨棧打包出售：毛皮換銀。",
+    "cost": { "fur": 5, "wood": 0, "iron": 0, "silver": 0 },
+    "result": { "kind": "sell", "silver": 18, "item_id": "hide_bundle" },
+    "require_building": "warehouse",
+    "require_level": 1
+  }
+]

@@ -1,6 +1,6 @@
 extends RefCounted
 class_name HeroSystem
-## 俠客系統 — 六兵種、體力／飽食／傷勢
+## 俠客系統 — 六兵種、體力／飽食／傷勢、裝備
 
 enum WeaponType {
 	DAO,
@@ -34,6 +34,10 @@ static func normalize_hero(raw: Dictionary) -> Dictionary:
 	h["max_stamina"] = float(h.get("max_stamina", 100))
 	h["satiety"] = float(h.get("satiety", 100))
 	h["injury"] = float(h.get("injury", 0))
+	if not h.has("equipment") or typeof(h["equipment"]) != TYPE_DICTIONARY:
+		h["equipment"] = {}
+	else:
+		h["equipment"] = (h["equipment"] as Dictionary).duplicate(true)
 	return h
 
 static func weapon_from_string(s: String) -> int:
@@ -75,7 +79,6 @@ static func find_idle_heroes(limit: int = -1) -> Array:
 				break
 	return result
 
-## 在村、體力夠、傷勢未重
 static func find_ready_heroes(limit: int = -1) -> Array:
 	var result: Array = []
 	for h in GameState.heroes:
@@ -115,12 +118,33 @@ static func mutate(hero_id: String, mutator: Callable) -> void:
 	GameState.heroes[idx] = normalize_hero(hd)
 	GameState.heroes_changed.emit()
 
+static func equip_item(hero_id: String, slot: String, item: Dictionary) -> void:
+	mutate(hero_id, func(hd: Dictionary) -> void:
+		var eq: Dictionary = {}
+		if hd.has("equipment") and typeof(hd["equipment"]) == TYPE_DICTIONARY:
+			eq = (hd["equipment"] as Dictionary).duplicate(true)
+		eq[slot] = item.duplicate(true)
+		hd["equipment"] = eq
+	)
+
+static func equipment_power(hero: Dictionary) -> int:
+	var total: int = 0
+	var eq: Variant = hero.get("equipment", {})
+	if typeof(eq) != TYPE_DICTIONARY:
+		return 0
+	for slot in (eq as Dictionary).keys():
+		var it: Variant = (eq as Dictionary)[slot]
+		if typeof(it) == TYPE_DICTIONARY:
+			total += int((it as Dictionary).get("power", 0))
+	return total
+
 static func power_of(hero: Dictionary) -> int:
 	var level: int = int(hero.get("level", 1))
 	var base: int = int(hero.get("base_power", 10))
 	var forge: int = ResourceLoop.forge_bonus_power()
+	var gear: int = equipment_power(hero)
 	var injury: float = float(hero.get("injury", 0))
-	var raw: float = float(base + (level - 1) * 3 + forge)
+	var raw: float = float(base + (level - 1) * 3 + forge + gear)
 	var factor: float = clampf(1.0 - injury / 120.0, 0.4, 1.0)
 	return int(maxi(1, int(round(raw * factor))))
 

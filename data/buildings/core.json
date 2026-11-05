@@ -27,7 +27,7 @@
     "max_level": 8,
     "base_cost_silver": 60,
     "base_cost_wood": 30,
-    "desc": "打造裝備，提升俠客戰力（v0.1 給固定戰力加成）。"
+    "desc": "打造裝備（皮甲／鐵刃），提升俠客戰力。"
   },
   {
     "id": "clinic",
@@ -37,7 +37,7 @@
     "max_level": 8,
     "base_cost_silver": 55,
     "base_cost_wood": 20,
-    "desc": "療傷回體，加快體力／傷勢恢復。"
+    "desc": "療傷回體；可製傷藥。"
   },
   {
     "id": "training",
@@ -47,7 +47,7 @@
     "max_level": 8,
     "base_cost_silver": 70,
     "base_cost_wood": 35,
-    "desc": "修煉升級（v0.2 接經驗）。"
+    "desc": "修煉升級（後期接經驗）。"
   },
   {
     "id": "bounty",
@@ -58,5 +58,15 @@
     "base_cost_silver": 40,
     "base_cost_wood": 15,
     "desc": "發布委託，解鎖／強化獵場收益。"
+  },
+  {
+    "id": "warehouse",
+    "name": "貨棧",
+    "start_level": 0,
+    "unlocked": false,
+    "max_level": 8,
+    "base_cost_silver": 45,
+    "base_cost_wood": 30,
+    "desc": "製作商店鏈：打包毛皮換銀、存放道具。"
   }
 ]

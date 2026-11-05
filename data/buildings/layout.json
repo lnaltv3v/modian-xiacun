@@ -1,18 +1,96 @@
 {
-  "design_size": { "w": 960, "h": 540 },
+  "design_size": {
+    "w": 960,
+    "h": 540
+  },
   "layers": [
-    { "id": "ground", "path": "res://assets/art/tiles/village_ground.png", "z": 0 },
-    { "id": "hills", "path": "res://assets/art/tiles/village_hills.png", "z": 1 },
-    { "id": "buildings_pad", "path": "res://assets/art/tiles/village_buildings_pad.png", "z": 2 },
-    { "id": "fg", "path": "res://assets/art/tiles/village_fg.png", "z": 10 }
+    {
+      "id": "ground",
+      "path": "res://assets/art/tiles/village_ground.png",
+      "z": 0
+    },
+    {
+      "id": "hills",
+      "path": "res://assets/art/tiles/village_hills.png",
+      "z": 1
+    },
+    {
+      "id": "buildings_pad",
+      "path": "res://assets/art/tiles/village_buildings_pad.png",
+      "z": 2
+    },
+    {
+      "id": "fg",
+      "path": "res://assets/art/tiles/village_fg.png",
+      "z": 10
+    }
   ],
-  "icon_anchor_offset": { "x": -48, "y": -56 },
+  "icon_anchor_offset": {
+    "x": -64,
+    "y": -72
+  },
   "buildings": [
-    { "id": "manor", "cx": 480, "cy": 210, "z": 5 },
-    { "id": "inn", "cx": 220, "cy": 280, "z": 5 },
-    { "id": "forge", "cx": 740, "cy": 280, "z": 5 },
-    { "id": "clinic", "cx": 160, "cy": 380, "z": 6 },
-    { "id": "training", "cx": 800, "cy": 380, "z": 6 },
-    { "id": "bounty", "cx": 480, "cy": 360, "z": 7 }
-  ]
+    {
+      "id": "manor",
+      "cx": 480,
+      "cy": 210,
+      "z": 5,
+      "blit_x": 416,
+      "blit_y": 138
+    },
+    {
+      "id": "inn",
+      "cx": 220,
+      "cy": 280,
+      "z": 5,
+      "blit_x": 156,
+      "blit_y": 208
+    },
+    {
+      "id": "forge",
+      "cx": 740,
+      "cy": 280,
+      "z": 5,
+      "blit_x": 676,
+      "blit_y": 208
+    },
+    {
+      "id": "clinic",
+      "cx": 160,
+      "cy": 380,
+      "z": 6,
+      "blit_x": 96,
+      "blit_y": 308
+    },
+    {
+      "id": "training",
+      "cx": 800,
+      "cy": 380,
+      "z": 6,
+      "blit_x": 736,
+      "blit_y": 308
+    },
+    {
+      "id": "bounty",
+      "cx": 480,
+      "cy": 360,
+      "z": 7,
+      "blit_x": 416,
+      "blit_y": 288
+    },
+    {
+      "id": "warehouse",
+      "cx": 480,
+      "cy": 450,
+      "z": 6,
+      "blit_x": 416,
+      "blit_y": 378
+    }
+  ],
+  "icon_size": {
+    "w": 128,
+    "h": 128
+  },
+  "placement_mode": "player_free",
+  "note": "buildings[] 只係示範／預設錨點；正式位置存 GameState.building_placements（玩家拖放）。"
 }

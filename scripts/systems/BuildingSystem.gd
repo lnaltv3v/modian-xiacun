@@ -58,8 +58,7 @@ static func building_name(building_id: String) -> String:
 static func sorted_building_ids() -> Array:
 	var ids: Array = GameState.buildings.keys()
 	ids.sort()
-	## 固定顯示順序
-	var preferred := ["manor", "inn", "forge", "clinic", "training", "bounty"]
+	var preferred := ["manor", "inn", "forge", "clinic", "training", "bounty", "warehouse"]
 	var out: Array = []
 	for p in preferred:
 		if GameState.buildings.has(p):

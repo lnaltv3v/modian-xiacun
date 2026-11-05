@@ -1,6 +1,6 @@
 extends Node
 class_name DispatchSystem
-## 派遣出征／回村（支援倒數、離線結算、自動再出征）
+## 派遣出征／回村（倒數、離線結算、自動再出征、戰鬥結果模擬）
 
 signal hunt_started(hunt: Dictionary)
 signal hunt_finished(rewards: Dictionary)
@@ -16,9 +16,7 @@ var _recover_pending: float = 0.0
 func _ready() -> void:
 	_rng.randomize()
 	set_process(true)
-	## 讀檔後先結算過期出征
 	call_deferred("resolve_due_hunts")
-
 
 func _process(delta: float) -> void:
 	_recover_pending += delta
@@ -53,7 +51,6 @@ func resolve_due_hunts() -> void:
 		GameState.hunts_changed.emit()
 
 func start_hunt(hero_ids: Array, zone_id: String = DEFAULT_ZONE) -> Dictionary:
-	## 回傳 { ok: bool, reason: String, hunt: Dictionary }
 	if hero_ids.is_empty():
 		return {"ok": false, "reason": "未揀俠客"}
 	var zone: Dictionary = GameState.get_zone(zone_id)
@@ -72,7 +69,6 @@ func start_hunt(hero_ids: Array, zone_id: String = DEFAULT_ZONE) -> Dictionary:
 			return {"ok": false, "reason": "%s 而家派唔到（狀態／體力／傷勢）" % str(hero.get("name", hid))}
 		valid_ids.append(hid)
 
-	## 容量只限「在村駐紮」；出征中唔佔額外席（簡化）
 	var now: float = Time.get_unix_time_from_system()
 	var duration: float = float(zone.get("duration_sec", 8))
 	var hunt: Dictionary = {
@@ -108,6 +104,36 @@ func seconds_left(hunt: Dictionary) -> float:
 	var now: float = Time.get_unix_time_from_system()
 	return maxf(0.0, float(hunt.get("return_at", now)) - now)
 
+func _pick_enemies(zone: Dictionary, party_size: int) -> Array:
+	var pool: Array = zone.get("enemies", []) as Array
+	if pool.is_empty():
+		pool = [
+			{"kind": "wolf", "weight": 50, "name": "野狼"},
+			{"kind": "boar", "weight": 30, "name": "野豬"},
+			{"kind": "bandit", "weight": 20, "name": "山賊"},
+		]
+	var amin: int = int(zone.get("enemy_count_min", 1))
+	var amax: int = int(zone.get("enemy_count_max", 3))
+	var count: int = clampi(_rng.randi_range(amin, amax), 1, maxi(1, party_size + 1))
+	var total_w: int = 0
+	for e in pool:
+		total_w += int((e as Dictionary).get("weight", 1))
+	var out: Array = []
+	for _i in range(count):
+		var roll: int = _rng.randi_range(1, maxi(1, total_w))
+		var acc: int = 0
+		var chosen: Dictionary = pool[0] as Dictionary
+		for e2 in pool:
+			acc += int((e2 as Dictionary).get("weight", 1))
+			if roll <= acc:
+				chosen = e2 as Dictionary
+				break
+		out.append({
+			"kind": str(chosen.get("kind", "wolf")),
+			"name": str(chosen.get("name", chosen.get("kind", "敵"))),
+		})
+	return out
+
 func _complete_hunt(hunt: Dictionary) -> void:
 	var zone_id: String = str(hunt.get("zone_id", DEFAULT_ZONE))
 	var zone: Dictionary = GameState.get_zone(zone_id)
@@ -138,12 +164,22 @@ func _complete_hunt(hunt: Dictionary) -> void:
 		if got_hurt:
 			injured_names.append(str(hero.get("name", hid)))
 
+	var enemies: Array = _pick_enemies(zone, maxi(1, hero_ids.size()))
 	var mult: float = ResourceLoop.bounty_reward_mult()
 	var n: int = maxi(1, hero_ids.size())
 	var silver_gain: int = int(round((float(zone.get("base_silver", 10)) + float(total_power) * power_bonus_per) * mult))
 	var fur_gain: int = int(round(float(zone.get("base_fur", 1)) * float(n) * mult))
 	var wood_gain: int = int(round(float(zone.get("base_wood", 0)) * mult))
-	## 至少有少少收穫
+	var iron_gain: int = int(round(float(zone.get("base_iron", 0)) * mult))
+	## 山賊較易掉鐵；野豬多毛皮
+	for ev in enemies:
+		var kind: String = str((ev as Dictionary).get("kind", ""))
+		if kind == "bandit" and _rng.randf() < 0.55:
+			iron_gain += 1
+		if kind == "boar":
+			fur_gain += 1
+		if kind == "wolf" and _rng.randf() < 0.35:
+			fur_gain += 1
 	silver_gain = maxi(1, silver_gain)
 	fur_gain = maxi(0, fur_gain)
 
@@ -151,28 +187,36 @@ func _complete_hunt(hunt: Dictionary) -> void:
 	GameState.add_fur(fur_gain)
 	if wood_gain > 0:
 		GameState.add_wood(wood_gain)
+	if iron_gain > 0:
+		GameState.add_iron(iron_gain)
+
+	var enemy_names: PackedStringArray = PackedStringArray()
+	for ev2 in enemies:
+		enemy_names.append(str((ev2 as Dictionary).get("name", "")))
 
 	var rewards: Dictionary = {
 		"silver": silver_gain,
 		"fur": fur_gain,
 		"wood": wood_gain,
+		"iron": iron_gain,
 		"heroes": hero_ids.duplicate(),
 		"zone_id": zone_id,
 		"zone_name": str(hunt.get("zone_name", zone_id)),
 		"injured": injured_names,
+		"enemies": enemies,
+		"flavor": "擊退「%s」！" % "、".join(enemy_names),
 	}
 	var injure_txt: String = ""
 	if injured_names.size() > 0:
 		injure_txt = "；受傷：%s" % "、".join(injured_names)
-	GameState.push_report("回村「%s」＋銀%d 毛皮%d 木%d%s" % [
-		str(rewards["zone_name"]), silver_gain, fur_gain, wood_gain, injure_txt
+	var iron_txt: String = (" 鐵%d" % iron_gain) if iron_gain > 0 else ""
+	GameState.push_report("回村「%s」撃退%s ＋銀%d 毛皮%d 木%d%s%s" % [
+		str(rewards["zone_name"]), "、".join(enemy_names), silver_gain, fur_gain, wood_gain, iron_txt, injure_txt
 	])
 	hunt_finished.emit(rewards)
 
 func _try_auto_dispatch() -> void:
-	## 有空位出征就自動派 ready 俠（每次最多 2 人，保持簡單）
 	if not GameState.active_hunts.is_empty():
-		## 允許多隊；若已有 ≥2 隊就唔再自動派，避免洗板
 		if GameState.active_hunts.size() >= 2:
 			return
 	var ready: Array = HeroSystem.find_ready_heroes(2)

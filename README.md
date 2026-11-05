@@ -9,24 +9,20 @@
 ```bash
 /workspace/tools/godot/godot --path /workspace/modian-xiacun
 /workspace/tools/godot/godot --headless --path /workspace/modian-xiacun --quit-after 3
-/workspace/tools/godot/godot --headless --path /workspace/modian-xiacun res://scenes/dev/smoke_v01.tscn
+/workspace/tools/godot/godot --headless --path /workspace/modian-xiacun res://scenes/dev/smoke_v02.tscn
 ```
 
-## v0.1 點玩
-1. 左邊升級建築（客棧提高駐紮／恢復；醫館加速恢復）
-2. 右邊剔選俠客（或調人數），按「出征亂山坡」
-3. 等倒數回村收銀／毛皮；可勾「自動再出征」
-4. 存檔／讀檔；離線期間到期出征會喺讀檔或返回時結算
-5. 中間村莊圖可點建築圖示升級（layout.json 錨點）
+## v0.2 點玩
+1. 左邊興建／升級建築；「放」＝自由放置（點村莊地面），亦可拖建築改位
+2. 貨棧／鐵匠／醫館解鎖後可製作（皮甲、傷藥、鐵刃、毛皮梱）
+3. 點俠客名作製作目標；裝備加戰力
+4. 出征亂山坡 → 回村有狼／野豬／山賊結果卡
+5. 存檔含資源、庫存、建築放置
 
-## 目錄
-```
-modian-xiacun/
-  data/heroes|buildings|zones/
-  assets/art/heroes|buildings|monsters|ui|tiles|_preview/
-  scenes/main|village|ui|combat/
-  scripts/autoload|systems|constants|ui|dev/
-```
+## 美術
+- 綠俠／怪：**64×64**（walk 256×64）；舊 48 在 `_prev_48/`
+- 建築圖示：**128×128** HD
+- 稀有階梯：綠64 → 紫96 → 橙128 → 紅256
 
 ## 備註
 私人開發中。勿與 `yinlou-defense`、`wuxia-inn` 混目錄。目標平台含 **iOS**（後期 export）。

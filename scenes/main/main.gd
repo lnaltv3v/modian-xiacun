@@ -1,7 +1,8 @@
 extends Control
-## 墨點俠村 v0.1 — 村莊核心循環 UI
+## 墨點俠村 v0.2 — 核心循環＋製作鏈＋戰鬥結果＋自由放置
 
 const VillageScene := preload("res://scenes/village/village.tscn")
+const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
 const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 
 @onready var hud_label: Label = %HudLabel
@@ -19,12 +20,18 @@ const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 @onready var icon_silver: TextureRect = %IconSilver
 @onready var icon_wood: TextureRect = %IconWood
 @onready var icon_fur: TextureRect = %IconFur
+@onready var icon_iron: TextureRect = %IconIron
 @onready var monster_preview: TextureRect = %MonsterPreview
+@onready var craft_box: VBoxContainer = %CraftBox
+@onready var inv_label: Label = %InvLabel
+@onready var title_label: Label = %Title
 
 var _dispatch: DispatchSystem
 var _village: Control
-var _selected: Dictionary = {}  ## hero_id -> bool
-var _hero_rows: Dictionary = {}  ## hero_id -> { check, portrait, label }
+var _hunt_result: Control
+var _selected: Dictionary = {}
+var _hero_rows: Dictionary = {}
+var _craft_hero_id: String = ""
 
 func _ready() -> void:
 	_dispatch = DispatchSystem.new()
@@ -35,6 +42,12 @@ func _ready() -> void:
 	village_host.add_child(_village)
 	_village.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_village.building_clicked.connect(_on_building_clicked)
+
+	_hunt_result = HuntResultScene.instantiate()
+	add_child(_hunt_result)
+
+	if title_label:
+		title_label.text = "墨點俠村 · v0.2"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -49,9 +62,10 @@ func _ready() -> void:
 
 	GameState.resources_changed.connect(_refresh_hud)
 	GameState.heroes_changed.connect(_on_heroes_changed)
-	GameState.buildings_changed.connect(_rebuild_buildings)
+	GameState.buildings_changed.connect(_on_buildings_changed)
 	GameState.hunts_changed.connect(_refresh_hunts)
 	GameState.reports_changed.connect(_refresh_reports)
+	GameState.inventory_changed.connect(_refresh_craft)
 	_dispatch.hunt_tick.connect(_refresh_hunts)
 	_dispatch.hunt_finished.connect(_on_hunt_finished)
 
@@ -66,6 +80,7 @@ func _ready() -> void:
 
 	_rebuild_buildings()
 	_rebuild_heroes()
+	_refresh_craft()
 	_refresh_hud()
 	_refresh_hunts()
 	_refresh_reports()
@@ -74,13 +89,15 @@ func _setup_resource_icons() -> void:
 	_set_tex(icon_silver, ArtPaths.ICON_SILVER)
 	_set_tex(icon_wood, ArtPaths.ICON_WOOD)
 	_set_tex(icon_fur, ArtPaths.ICON_FUR)
+	_set_tex(icon_iron, ArtPaths.ICON_IRON)
 
 func _setup_monster_reserve() -> void:
-	## 預留戰鬥結果卡：先顯示亂山坡狼 idle
 	_set_tex(monster_preview, ArtPaths.monster_idle("wolf"))
-	monster_preview.tooltip_text = "戰鬥結果卡預留（狼／野豬／山賊）"
+	monster_preview.tooltip_text = "亂山坡敵人（狼／野豬／山賊）"
 
 func _set_tex(node: TextureRect, path: String) -> void:
+	if node == null:
+		return
 	var tex: Texture2D = ArtPaths.load_tex(path)
 	if tex != null:
 		node.texture = tex
@@ -92,6 +109,10 @@ func _on_heroes_changed() -> void:
 	else:
 		_refresh_hud()
 
+func _on_buildings_changed() -> void:
+	_rebuild_buildings()
+	_refresh_craft()
+
 func _rebuild_buildings() -> void:
 	for c in buildings_box.get_children():
 		c.queue_free()
@@ -99,10 +120,10 @@ func _rebuild_buildings() -> void:
 		var bid: String = str(bid_v)
 		var b: Dictionary = GameState.buildings[bid] as Dictionary
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
+		row.add_theme_constant_override("separation", 6)
 
 		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(32, 32)
+		icon.custom_minimum_size = Vector2(28, 28)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -115,7 +136,7 @@ func _rebuild_buildings() -> void:
 		var info := Label.new()
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
-		info.add_theme_font_size_override("font_size", 14)
+		info.add_theme_font_size_override("font_size", 12)
 		var cost: Dictionary = BuildingSystem.get_upgrade_cost(bid)
 		var max_lv: int = BuildingSystem.max_level(bid)
 		if lv >= max_lv:
@@ -127,6 +148,12 @@ func _rebuild_buildings() -> void:
 		info.tooltip_text = str(b.get("desc", ""))
 		row.add_child(info)
 
+		var btn_place := Button.new()
+		btn_place.text = "放"
+		btn_place.tooltip_text = "自由放置：點村莊地面"
+		btn_place.pressed.connect(_on_place_building.bind(bid))
+		row.add_child(btn_place)
+
 		var btn := Button.new()
 		btn.text = "升級" if lv > 0 or bool(b.get("unlocked", false)) else "興建"
 		btn.disabled = not BuildingSystem.can_upgrade(bid)
@@ -135,7 +162,6 @@ func _rebuild_buildings() -> void:
 		buildings_box.add_child(row)
 
 func _rebuild_heroes() -> void:
-	## 保留選取
 	var prev_sel: Dictionary = _selected.duplicate()
 	_selected.clear()
 	_hero_rows.clear()
@@ -146,7 +172,7 @@ func _rebuild_heroes() -> void:
 		var h: Dictionary = h_v as Dictionary
 		var hid: String = str(h.get("id", ""))
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
+		row.add_theme_constant_override("separation", 6)
 		row.custom_minimum_size = Vector2(0, HeroPortraitScript.frame_px())
 
 		var portrait: Control = HeroPortraitScript.new()
@@ -166,8 +192,13 @@ func _rebuild_heroes() -> void:
 		var lab := Label.new()
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lab.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
-		lab.add_theme_font_size_override("font_size", 13)
+		lab.add_theme_font_size_override("font_size", 12)
 		lab.text = _hero_line(h)
+		lab.gui_input.connect(func(ev: InputEvent) -> void:
+			if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
+				_craft_hero_id = hid
+				_refresh_craft()
+		)
 		row.add_child(lab)
 
 		heroes_box.add_child(row)
@@ -176,33 +207,83 @@ func _rebuild_heroes() -> void:
 func _hero_line(h: Dictionary) -> String:
 	var st: String = str(h.get("status", "idle"))
 	var st_cn := "在村" if st == "idle" else ("出征" if st == "hunting" else st)
-	return "%s · %s · 力%d · 體%.0f 飽%.0f 傷%.0f · %s" % [
+	var gear: int = HeroSystem.equipment_power(h)
+	var gear_txt: String = (" 裝+%d" % gear) if gear > 0 else ""
+	return "%s · %s · 力%d%s · 體%.0f 傷%.0f · %s" % [
 		str(h.get("name", "")),
 		str(h.get("weapon", "")),
 		HeroSystem.power_of(h),
+		gear_txt,
 		float(h.get("stamina", 0)),
-		float(h.get("satiety", 0)),
 		float(h.get("injury", 0)),
 		st_cn,
 	]
 
+func _refresh_craft() -> void:
+	for c in craft_box.get_children():
+		c.queue_free()
+	var target_name: String = "（點俠客名作目標）"
+	if _craft_hero_id != "":
+		var th: Dictionary = HeroSystem.get_hero(_craft_hero_id)
+		if not th.is_empty():
+			target_name = str(th.get("name", _craft_hero_id))
+	var head := Label.new()
+	head.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
+	head.add_theme_font_size_override("font_size", 12)
+	head.text = "製作目標：%s" % target_name
+	craft_box.add_child(head)
+
+	for rv in CraftSystem.all_recipes():
+		var recipe: Dictionary = rv as Dictionary
+		var rid: String = str(recipe.get("id", ""))
+		var cost: Dictionary = recipe.get("cost", {}) as Dictionary
+		var row := HBoxContainer.new()
+		var lab := Label.new()
+		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lab.add_theme_color_override("font_color", Color(0.101961, 0.0823529, 0.0627451, 1))
+		lab.add_theme_font_size_override("font_size", 11)
+		lab.text = "%s（毛%d 木%d 鐵%d 銀%d）" % [
+			str(recipe.get("name", rid)),
+			int(cost.get("fur", 0)),
+			int(cost.get("wood", 0)),
+			int(cost.get("iron", 0)),
+			int(cost.get("silver", 0)),
+		]
+		lab.tooltip_text = str(recipe.get("desc", ""))
+		row.add_child(lab)
+		var btn := Button.new()
+		btn.text = "製"
+		var chk: Dictionary = CraftSystem.can_craft(rid)
+		btn.disabled = not bool(chk.get("ok", false))
+		btn.tooltip_text = str(chk.get("reason", ""))
+		btn.pressed.connect(_on_craft.bind(rid))
+		row.add_child(btn)
+		craft_box.add_child(row)
+
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("庫存 %d 件" % GameState.inventory.size())
+	for i in range(mini(6, GameState.inventory.size())):
+		var it: Dictionary = GameState.inventory[i] as Dictionary
+		lines.append("· %s" % str(it.get("name", "?")))
+	inv_label.text = "\n".join(lines)
+
 func _refresh_hud() -> void:
-	hud_label.text = "銀兩 %d　　木材 %d　　毛皮 %d　　駐紮 %d／%d　　在村 %d　出征 %d" % [
+	hud_label.text = "銀 %d　木 %d　毛皮 %d　鐵 %d　駐紮 %d／%d　在村 %d　出征 %d" % [
 		GameState.silver,
 		GameState.wood,
 		GameState.fur,
+		GameState.iron,
 		GameState.hero_count(),
 		GameState.hero_capacity(),
 		GameState.idle_hero_count(),
 		GameState.hunting_hero_count(),
 	]
-	status_label.text = "恢復：體+%.1f/s 飽+%.1f/s 傷-%.1f/s　｜　%s" % [
+	status_label.text = "恢復：體+%.1f/s 飽+%.1f/s 傷-%.1f/s　｜　%s　｜　建築可拖放" % [
 		GameState.recovery_stamina_per_sec(),
 		GameState.recovery_satiety_per_sec(),
 		GameState.recovery_injury_per_sec(),
 		ResourceLoop.describe_loop(),
 	]
-	## 輕量更新俠客文字／動畫，唔拆行
 	for hid in _hero_rows.keys():
 		var hero: Dictionary = HeroSystem.get_hero(str(hid))
 		if hero.is_empty():
@@ -222,6 +303,7 @@ func _refresh_hud() -> void:
 				chk.button_pressed = false
 				_selected.erase(hid)
 	_refresh_dispatch_btn()
+	_refresh_craft()
 
 func _refresh_hunts() -> void:
 	if GameState.active_hunts.is_empty():
@@ -257,6 +339,8 @@ func _refresh_dispatch_btn() -> void:
 func _on_hero_toggled(pressed: bool, hid: String) -> void:
 	if pressed:
 		_selected[hid] = true
+		_craft_hero_id = hid
+		_refresh_craft()
 	else:
 		_selected.erase(hid)
 	_refresh_dispatch_btn()
@@ -271,7 +355,6 @@ func _on_dispatch_pressed() -> void:
 		if bool(_selected[hid]):
 			ids.append(hid)
 	if ids.is_empty():
-		## 無選取則按 spin 派 ready
 		var res: Dictionary = _dispatch.dispatch_ready(int(spin_count.value), "luan_shan_po")
 		if not bool(res.get("ok", false)):
 			GameState.push_report("派遣失敗：%s" % str(res.get("reason", "")))
@@ -297,17 +380,35 @@ func _on_upgrade(building_id: String) -> void:
 		GameState.push_report("資源唔夠或已滿級：%s" % name_cn)
 	_rebuild_buildings()
 
+func _on_place_building(building_id: String) -> void:
+	if _village and _village.has_method("begin_place"):
+		_village.begin_place(building_id)
+
 func _on_building_clicked(building_id: String) -> void:
 	_on_upgrade(building_id)
 
-func _on_hunt_finished(_rewards: Dictionary) -> void:
+func _on_craft(recipe_id: String) -> void:
+	var res: Dictionary = CraftSystem.craft(recipe_id, _craft_hero_id)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("製作失敗：%s" % str(res.get("reason", "")))
+	_refresh_hud()
+	_rebuild_heroes()
+
+func _on_hunt_finished(rewards: Dictionary) -> void:
 	_rebuild_heroes()
 	_refresh_hud()
 	_refresh_hunts()
+	## 結果演出
+	var enemies: Array = rewards.get("enemies", []) as Array
+	if enemies.size() > 0:
+		var kind: String = str((enemies[0] as Dictionary).get("kind", "wolf"))
+		_set_tex(monster_preview, ArtPaths.monster_attack(kind))
+	if _hunt_result and _hunt_result.has_method("show_result"):
+		_hunt_result.show_result(rewards)
 
 func _on_save_pressed() -> void:
 	if SaveManager.save_game():
-		GameState.push_report("已存檔 v%d（user://save_slot_0.json）" % SaveManager.SAVE_VERSION)
+		GameState.push_report("已存檔 v%d（含放置／庫存）" % SaveManager.SAVE_VERSION)
 	else:
 		GameState.push_report("存檔失敗。")
 
@@ -318,6 +419,7 @@ func _on_load_pressed() -> void:
 		_selected.clear()
 		_rebuild_buildings()
 		_rebuild_heroes()
+		_refresh_craft()
 		_refresh_hud()
 		_refresh_hunts()
 		_refresh_reports()
