@@ -7,7 +7,11 @@
     "level": 1,
     "base_power": 12,
     "personality": "忠厚",
-    "status": "idle"
+    "status": "idle",
+    "stamina": 100,
+    "max_stamina": 100,
+    "satiety": 100,
+    "injury": 0
   },
   {
     "id": "hero_aqing",
@@ -17,7 +21,11 @@
     "level": 1,
     "base_power": 11,
     "personality": "冷靜",
-    "status": "idle"
+    "status": "idle",
+    "stamina": 100,
+    "max_stamina": 100,
+    "satiety": 100,
+    "injury": 0
   },
   {
     "id": "hero_achang",
@@ -27,7 +35,11 @@
     "level": 1,
     "base_power": 13,
     "personality": "豪邁",
-    "status": "idle"
+    "status": "idle",
+    "stamina": 100,
+    "max_stamina": 100,
+    "satiety": 100,
+    "injury": 0
   },
   {
     "id": "hero_dali",
@@ -37,7 +49,11 @@
     "level": 1,
     "base_power": 14,
     "personality": "慈悲",
-    "status": "idle"
+    "status": "idle",
+    "stamina": 100,
+    "max_stamina": 100,
+    "satiety": 100,
+    "injury": 0
   },
   {
     "id": "hero_azhen",
@@ -47,7 +63,11 @@
     "level": 1,
     "base_power": 10,
     "personality": "機敏",
-    "status": "idle"
+    "status": "idle",
+    "stamina": 100,
+    "max_stamina": 100,
+    "satiety": 100,
+    "injury": 0
   },
   {
     "id": "hero_aniu",
@@ -57,6 +77,10 @@
     "level": 1,
     "base_power": 12,
     "personality": "直率",
-    "status": "idle"
+    "status": "idle",
+    "stamina": 100,
+    "max_stamina": 100,
+    "satiety": 100,
+    "injury": 0
   }
 ]

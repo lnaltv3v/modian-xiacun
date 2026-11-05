@@ -1,12 +1,14 @@
 extends Node
-## JSON 存檔骨架 — user://save_slot_0.json
+## JSON 存檔 — user://save_slot_0.json（含版本欄）
 
 const SAVE_PATH := "user://save_slot_0.json"
+const SAVE_VERSION := 2
 
 func save_game() -> bool:
 	var data: Dictionary = {
-		"version": 1,
+		"version": SAVE_VERSION,
 		"saved_at": Time.get_datetime_string_from_system(),
+		"saved_unix": Time.get_unix_time_from_system(),
 		"state": GameState.to_save_dict(),
 	}
 	var json: String = JSON.stringify(data, "\t")
@@ -27,6 +29,9 @@ func load_game() -> bool:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return false
 	var d: Dictionary = parsed as Dictionary
+	var ver: int = int(d.get("version", 0))
+	if ver < 1:
+		push_warning("SaveManager: unknown save version %d" % ver)
 	if d.has("state") and d["state"] is Dictionary:
 		GameState.load_from_dict(d["state"] as Dictionary)
 		return true
@@ -34,3 +39,7 @@ func load_game() -> bool:
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
+
+func clear_save() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(SAVE_PATH)

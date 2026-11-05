@@ -1,30 +1,56 @@
 extends Node
-## 墨點俠村 — 全域遊戲狀態（銀兩、建材、俠客、建築）
+## 墨點俠村 — 全域遊戲狀態（資源、俠客、建築、出征、回報）
 
 signal resources_changed
 signal heroes_changed
 signal buildings_changed
-
-var silver: int = 100
-var wood: int = 50
-var heroes: Array = []  # Array[Dictionary]
-var buildings: Dictionary = {}  # id -> { level, unlocked }
+signal hunts_changed
+signal reports_changed
 
 const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
+const ZONES_PATH := "res://data/zones/core.json"
+const SAVE_VERSION := 2
+
+## 最低出征體力
+const MIN_STAMINA_TO_HUNT := 20
+
+var silver: int = 120
+var wood: int = 60
+var fur: int = 0
+var heroes: Array = []
+var buildings: Dictionary = {}
+## 進行中出征：{ id, zone_id, zone_name, hero_ids, started_at, return_at }
+var active_hunts: Array = []
+var auto_dispatch: bool = false
+## 最近回報字串（新→舊，最多 12 條）
+var reports: Array = []
+var zones: Dictionary = {}
+var _hunt_seq: int = 0
 
 func _ready() -> void:
 	_load_starter_data()
-	resources_changed.emit()
-	heroes_changed.emit()
-	buildings_changed.emit()
+	_emit_all()
 
 func _load_starter_data() -> void:
+	heroes.clear()
+	buildings.clear()
+	zones.clear()
+	active_hunts.clear()
+	reports.clear()
+	auto_dispatch = false
+	_hunt_seq = 0
+	silver = 120
+	wood = 60
+	fur = 0
+
 	var heroes_data: Variant = _read_json(STARTER_HEROES_PATH)
 	if heroes_data is Array:
-		heroes = (heroes_data as Array).duplicate(true)
+		for h in heroes_data as Array:
+			heroes.append(HeroSystem.normalize_hero(h as Dictionary))
 	elif heroes_data is Dictionary and (heroes_data as Dictionary).has("heroes"):
-		heroes = ((heroes_data as Dictionary)["heroes"] as Array).duplicate(true)
+		for h in (heroes_data as Dictionary)["heroes"] as Array:
+			heroes.append(HeroSystem.normalize_hero(h as Dictionary))
 
 	var buildings_data: Variant = _read_json(CORE_BUILDINGS_PATH)
 	if buildings_data is Array:
@@ -33,6 +59,16 @@ func _load_starter_data() -> void:
 	elif buildings_data is Dictionary and (buildings_data as Dictionary).has("buildings"):
 		for b in (buildings_data as Dictionary)["buildings"] as Array:
 			_register_building(b as Dictionary)
+
+	var zones_data: Variant = _read_json(ZONES_PATH)
+	if zones_data is Array:
+		for z in zones_data as Array:
+			var zd: Dictionary = z as Dictionary
+			zones[str(zd.get("id", ""))] = zd.duplicate(true)
+	elif zones_data is Dictionary and (zones_data as Dictionary).has("zones"):
+		for z in (zones_data as Dictionary)["zones"] as Array:
+			var zd2: Dictionary = z as Dictionary
+			zones[str(zd2.get("id", ""))] = zd2.duplicate(true)
 
 func _register_building(b: Dictionary) -> void:
 	var bid: String = str(b.get("id", ""))
@@ -43,8 +79,10 @@ func _register_building(b: Dictionary) -> void:
 		"name": str(b.get("name", bid)),
 		"level": int(b.get("start_level", 0)),
 		"unlocked": bool(b.get("unlocked", false)),
+		"max_level": int(b.get("max_level", 8)),
 		"base_cost_silver": int(b.get("base_cost_silver", 50)),
 		"base_cost_wood": int(b.get("base_cost_wood", 20)),
+		"desc": str(b.get("desc", "")),
 	}
 
 func _read_json(path: String) -> Variant:
@@ -54,8 +92,14 @@ func _read_json(path: String) -> Variant:
 	var f: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if f == null:
 		return null
-	var text: String = f.get_as_text()
-	return JSON.parse_string(text)
+	return JSON.parse_string(f.get_as_text())
+
+func _emit_all() -> void:
+	resources_changed.emit()
+	heroes_changed.emit()
+	buildings_changed.emit()
+	hunts_changed.emit()
+	reports_changed.emit()
 
 func add_silver(amount: int) -> void:
 	silver = maxi(0, silver + amount)
@@ -65,11 +109,16 @@ func add_wood(amount: int) -> void:
 	wood = maxi(0, wood + amount)
 	resources_changed.emit()
 
-func try_spend(silver_cost: int, wood_cost: int = 0) -> bool:
-	if silver < silver_cost or wood < wood_cost:
+func add_fur(amount: int) -> void:
+	fur = maxi(0, fur + amount)
+	resources_changed.emit()
+
+func try_spend(silver_cost: int, wood_cost: int = 0, fur_cost: int = 0) -> bool:
+	if silver < silver_cost or wood < wood_cost or fur < fur_cost:
 		return false
 	silver -= silver_cost
 	wood -= wood_cost
+	fur -= fur_cost
 	resources_changed.emit()
 	return true
 
@@ -83,21 +132,82 @@ func idle_hero_count() -> int:
 			n += 1
 	return n
 
+func hunting_hero_count() -> int:
+	var n: int = 0
+	for h in heroes:
+		if str((h as Dictionary).get("status", "idle")) == "hunting":
+			n += 1
+	return n
+
+func hero_capacity() -> int:
+	## 村長府給基礎席位，客棧每級 +2
+	var manor_lv: int = BuildingSystem.building_level("manor")
+	var inn_lv: int = BuildingSystem.building_level("inn")
+	return 4 + manor_lv * 2 + inn_lv * 2
+
+func recovery_stamina_per_sec() -> float:
+	return 1.5 + float(BuildingSystem.building_level("clinic")) * 1.2
+
+func recovery_satiety_per_sec() -> float:
+	return 0.8 + float(BuildingSystem.building_level("inn")) * 0.9
+
+func recovery_injury_per_sec() -> float:
+	return 0.4 + float(BuildingSystem.building_level("clinic")) * 0.8
+
+func push_report(msg: String) -> void:
+	var stamp: String = Time.get_time_string_from_system()
+	reports.push_front("[%s] %s" % [stamp, msg])
+	while reports.size() > 12:
+		reports.pop_back()
+	reports_changed.emit()
+
+func next_hunt_id() -> String:
+	_hunt_seq += 1
+	return "hunt_%d" % _hunt_seq
+
+func get_zone(zone_id: String) -> Dictionary:
+	if zones.has(zone_id):
+		return (zones[zone_id] as Dictionary).duplicate(true)
+	return {}
+
 func to_save_dict() -> Dictionary:
 	return {
 		"silver": silver,
 		"wood": wood,
+		"fur": fur,
 		"heroes": heroes.duplicate(true),
 		"buildings": buildings.duplicate(true),
+		"active_hunts": active_hunts.duplicate(true),
+		"auto_dispatch": auto_dispatch,
+		"reports": reports.duplicate(true),
+		"hunt_seq": _hunt_seq,
 	}
 
 func load_from_dict(d: Dictionary) -> void:
 	silver = int(d.get("silver", silver))
 	wood = int(d.get("wood", wood))
+	fur = int(d.get("fur", fur))
 	if d.has("heroes"):
-		heroes = (d["heroes"] as Array).duplicate(true)
+		heroes.clear()
+		for h in d["heroes"] as Array:
+			heroes.append(HeroSystem.normalize_hero(h as Dictionary))
 	if d.has("buildings"):
-		buildings = (d["buildings"] as Dictionary).duplicate(true)
-	resources_changed.emit()
-	heroes_changed.emit()
-	buildings_changed.emit()
+		## 合併模板欄位（desc／max_level），保留存檔等級
+		var saved: Dictionary = (d["buildings"] as Dictionary).duplicate(true)
+		for bid in buildings.keys():
+			if saved.has(bid):
+				var cur: Dictionary = buildings[bid] as Dictionary
+				var s: Dictionary = saved[bid] as Dictionary
+				cur["level"] = int(s.get("level", cur.get("level", 0)))
+				cur["unlocked"] = bool(s.get("unlocked", cur.get("unlocked", false)))
+				buildings[bid] = cur
+		for bid2 in saved.keys():
+			if not buildings.has(bid2):
+				buildings[bid2] = (saved[bid2] as Dictionary).duplicate(true)
+	if d.has("active_hunts"):
+		active_hunts = (d["active_hunts"] as Array).duplicate(true)
+	auto_dispatch = bool(d.get("auto_dispatch", false))
+	if d.has("reports"):
+		reports = (d["reports"] as Array).duplicate(true)
+	_hunt_seq = int(d.get("hunt_seq", _hunt_seq))
+	_emit_all()

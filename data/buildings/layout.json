@@ -1,0 +1,18 @@
+{
+  "design_size": { "w": 960, "h": 540 },
+  "layers": [
+    { "id": "ground", "path": "res://assets/art/tiles/village_ground.png", "z": 0 },
+    { "id": "hills", "path": "res://assets/art/tiles/village_hills.png", "z": 1 },
+    { "id": "buildings_pad", "path": "res://assets/art/tiles/village_buildings_pad.png", "z": 2 },
+    { "id": "fg", "path": "res://assets/art/tiles/village_fg.png", "z": 10 }
+  ],
+  "icon_anchor_offset": { "x": -48, "y": -56 },
+  "buildings": [
+    { "id": "manor", "cx": 480, "cy": 210, "z": 5 },
+    { "id": "inn", "cx": 220, "cy": 280, "z": 5 },
+    { "id": "forge", "cx": 740, "cy": 280, "z": 5 },
+    { "id": "clinic", "cx": 160, "cy": 380, "z": 6 },
+    { "id": "training", "cx": 800, "cy": 380, "z": 6 },
+    { "id": "bounty", "cx": 480, "cy": 360, "z": 7 }
+  ]
+}

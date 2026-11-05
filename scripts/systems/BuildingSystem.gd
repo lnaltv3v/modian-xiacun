@@ -17,8 +17,17 @@ static func get_upgrade_cost(building_id: String) -> Dictionary:
 		"wood": int(ceil(base_w * mult)),
 	}
 
+static func max_level(building_id: String) -> int:
+	if not GameState.buildings.has(building_id):
+		return 0
+	return int((GameState.buildings[building_id] as Dictionary).get("max_level", 8))
+
 static func can_upgrade(building_id: String) -> bool:
 	if not GameState.buildings.has(building_id):
+		return false
+	var b: Dictionary = GameState.buildings[building_id] as Dictionary
+	var level: int = int(b.get("level", 0))
+	if level >= max_level(building_id):
 		return false
 	var cost: Dictionary = get_upgrade_cost(building_id)
 	return GameState.silver >= int(cost.silver) and GameState.wood >= int(cost.wood)
@@ -40,3 +49,22 @@ static func building_level(building_id: String) -> int:
 	if not GameState.buildings.has(building_id):
 		return 0
 	return int((GameState.buildings[building_id] as Dictionary).get("level", 0))
+
+static func building_name(building_id: String) -> String:
+	if not GameState.buildings.has(building_id):
+		return building_id
+	return str((GameState.buildings[building_id] as Dictionary).get("name", building_id))
+
+static func sorted_building_ids() -> Array:
+	var ids: Array = GameState.buildings.keys()
+	ids.sort()
+	## 固定顯示順序
+	var preferred := ["manor", "inn", "forge", "clinic", "training", "bounty"]
+	var out: Array = []
+	for p in preferred:
+		if GameState.buildings.has(p):
+			out.append(p)
+	for id in ids:
+		if not out.has(id):
+			out.append(id)
+	return out

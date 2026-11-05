@@ -25,3 +25,28 @@
 - `assets/art/ui/` HUD、按鈕、圖示
 - `assets/art/monsters/` 敵人／妖物
 - `assets/art/tiles/` 地面／村景 tile
+
+## 稀有度視覺階梯
+- 白／綠：簡剪影、少飾物
+- 藍／紫：多一層飾物同配色識別
+- 橙／紅：最華麗——鮮明特徵、細節密度、金邊／硃紅點綴；一眼聯想影射人物（唔抄立繪）
+
+- 技能／攻擊特效：稀有愈高愈誇張（紅階入場＋大招要有明顯演出）
+
+## P1 檔名對照
+| hero_id | 美術 stem |
+|---------|-----------|
+| hero_atie | hero_dao_atie |
+| hero_aqing | hero_jian_aqing |
+| hero_achang | hero_qiang_achang |
+| hero_dali | hero_gun_dali |
+| hero_azhen | hero_anqi_azhen |
+| hero_aniu | hero_quan_aniu |
+
+Walk sheet：192×48（4×48）。建築錨點見 `data/buildings/layout.json`。
+
+## 解像／密度（Lemon 最高標準）
+- 角色原生幀：**最少 64×64**；橙／紅目標 **96×96** 細節密度
+- 早期 48×48 只當原型，正式版要升級
+- 建築圖示：96×96 或 128×128；村莊底仍 960×540 但紋理加厚
+- 顯示整數倍 Nearest；唔用柔邊放大充解像

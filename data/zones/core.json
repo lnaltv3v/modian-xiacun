@@ -1,0 +1,16 @@
+[
+  {
+    "id": "luan_shan_po",
+    "name": "亂山坡",
+    "duration_sec": 8,
+    "base_silver": 12,
+    "base_fur": 2,
+    "base_wood": 1,
+    "stamina_cost": 18,
+    "satiety_cost": 12,
+    "injury_chance": 0.18,
+    "injury_amount": 8,
+    "power_bonus_per": 0.35,
+    "desc": "開局獵場。野狼出沒，適合綠俠練膽。"
+  }
+]

@@ -1,48 +1,184 @@
-extends RefCounted
+extends Node
 class_name DispatchSystem
-## 派遣出征／回村
+## 派遣出征／回村（支援倒數、離線結算、自動再出征）
 
-signal dispatch_started(hero_ids: Array)
-signal dispatch_finished(rewards: Dictionary)
+signal hunt_started(hunt: Dictionary)
+signal hunt_finished(rewards: Dictionary)
+signal hunt_tick
 
-var _pending_ids: Array = []
-var _timer: SceneTreeTimer = null
+const DEFAULT_ZONE := "luan_shan_po"
 
-func dispatch_idle(count: int = 1, duration_sec: float = 3.0, tree: SceneTree = null) -> bool:
-	var idle: Array = HeroSystem.find_idle_heroes(count)
-	if idle.is_empty():
-		return false
-	_pending_ids.clear()
-	for h in idle:
-		var hd: Dictionary = h as Dictionary
-		var hid: String = str(hd.get("id", ""))
-		_pending_ids.append(hid)
-		HeroSystem.set_status(hid, "dispatch")
-	dispatch_started.emit(_pending_ids.duplicate())
-	if tree == null:
-		_finish_dispatch()
-		return true
-	_timer = tree.create_timer(duration_sec)
-	_timer.timeout.connect(_finish_dispatch, CONNECT_ONE_SHOT)
-	return true
+var _rng := RandomNumberGenerator.new()
+var _ui_tick_accum: float = 0.0
+var _recover_accum: float = 0.0
+var _recover_pending: float = 0.0
 
-func _finish_dispatch() -> void:
+func _ready() -> void:
+	_rng.randomize()
+	set_process(true)
+	## 讀檔後先結算過期出征
+	call_deferred("resolve_due_hunts")
+
+
+func _process(delta: float) -> void:
+	_recover_pending += delta
+	_recover_accum += delta
+	if _recover_accum >= 0.5:
+		HeroSystem.apply_village_recovery(_recover_pending)
+		_recover_pending = 0.0
+		_recover_accum = 0.0
+	resolve_due_hunts()
+	if GameState.auto_dispatch:
+		_try_auto_dispatch()
+	_ui_tick_accum += delta
+	if _ui_tick_accum >= 0.25:
+		_ui_tick_accum = 0.0
+		hunt_tick.emit()
+
+func resolve_due_hunts() -> void:
+	if GameState.active_hunts.is_empty():
+		return
+	var now: float = Time.get_unix_time_from_system()
+	var remain: Array = []
+	var finished_any: bool = false
+	for hunt_v in GameState.active_hunts:
+		var hunt: Dictionary = hunt_v as Dictionary
+		if float(hunt.get("return_at", now + 9999.0)) <= now:
+			_complete_hunt(hunt)
+			finished_any = true
+		else:
+			remain.append(hunt)
+	if finished_any:
+		GameState.active_hunts = remain
+		GameState.hunts_changed.emit()
+
+func start_hunt(hero_ids: Array, zone_id: String = DEFAULT_ZONE) -> Dictionary:
+	## 回傳 { ok: bool, reason: String, hunt: Dictionary }
+	if hero_ids.is_empty():
+		return {"ok": false, "reason": "未揀俠客"}
+	var zone: Dictionary = GameState.get_zone(zone_id)
+	if zone.is_empty():
+		return {"ok": false, "reason": "未知獵場"}
+	if BuildingSystem.building_level("bounty") < 1:
+		return {"ok": false, "reason": "懸賞榜未啟用"}
+
+	var valid_ids: Array = []
+	for hid_v in hero_ids:
+		var hid: String = str(hid_v)
+		var hero: Dictionary = HeroSystem.get_hero(hid)
+		if hero.is_empty():
+			return {"ok": false, "reason": "俠客不存在：%s" % hid}
+		if not HeroSystem.can_hunt(hero):
+			return {"ok": false, "reason": "%s 而家派唔到（狀態／體力／傷勢）" % str(hero.get("name", hid))}
+		valid_ids.append(hid)
+
+	## 容量只限「在村駐紮」；出征中唔佔額外席（簡化）
+	var now: float = Time.get_unix_time_from_system()
+	var duration: float = float(zone.get("duration_sec", 8))
+	var hunt: Dictionary = {
+		"id": GameState.next_hunt_id(),
+		"zone_id": zone_id,
+		"zone_name": str(zone.get("name", zone_id)),
+		"hero_ids": valid_ids.duplicate(),
+		"started_at": now,
+		"return_at": now + duration,
+		"duration": duration,
+	}
+	for hid2 in valid_ids:
+		HeroSystem.set_status(str(hid2), "hunting")
+	GameState.active_hunts.append(hunt)
+	GameState.hunts_changed.emit()
+	var names: PackedStringArray = PackedStringArray()
+	for hid3 in valid_ids:
+		names.append(str(HeroSystem.get_hero(str(hid3)).get("name", hid3)))
+	GameState.push_report("出征「%s」：%s（約 %.0f 秒）" % [
+		str(hunt["zone_name"]), "、".join(names), duration
+	])
+	hunt_started.emit(hunt)
+	return {"ok": true, "reason": "", "hunt": hunt}
+
+func dispatch_ready(count: int = 1, zone_id: String = DEFAULT_ZONE) -> Dictionary:
+	var ready: Array = HeroSystem.find_ready_heroes(count)
+	var ids: Array = []
+	for h in ready:
+		ids.append(str((h as Dictionary).get("id", "")))
+	return start_hunt(ids, zone_id)
+
+func seconds_left(hunt: Dictionary) -> float:
+	var now: float = Time.get_unix_time_from_system()
+	return maxf(0.0, float(hunt.get("return_at", now)) - now)
+
+func _complete_hunt(hunt: Dictionary) -> void:
+	var zone_id: String = str(hunt.get("zone_id", DEFAULT_ZONE))
+	var zone: Dictionary = GameState.get_zone(zone_id)
+	var hero_ids: Array = hunt.get("hero_ids", []) as Array
 	var total_power: int = 0
-	for hid in _pending_ids:
-		for h in GameState.heroes:
-			var hd: Dictionary = h as Dictionary
-			if str(hd.get("id", "")) == str(hid):
-				total_power += HeroSystem.power_of(hd)
-				HeroSystem.set_status(str(hid), "idle")
-				break
-	var silver_gain: int = 8 + int(total_power / 2.0)
-	var wood_gain: int = 3 + int(total_power / 4.0)
+	var injured_names: PackedStringArray = PackedStringArray()
+
+	var stamina_cost: float = float(zone.get("stamina_cost", 18))
+	var satiety_cost: float = float(zone.get("satiety_cost", 12))
+	var injury_chance: float = float(zone.get("injury_chance", 0.15))
+	var injury_amount: float = float(zone.get("injury_amount", 8))
+	var power_bonus_per: float = float(zone.get("power_bonus_per", 0.35))
+
+	for hid_v in hero_ids:
+		var hid: String = str(hid_v)
+		var hero: Dictionary = HeroSystem.get_hero(hid)
+		if hero.is_empty():
+			continue
+		total_power += HeroSystem.power_of(hero)
+		var got_hurt: bool = _rng.randf() < injury_chance
+		HeroSystem.mutate(hid, func(hd: Dictionary) -> void:
+			hd["status"] = "idle"
+			hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - stamina_cost)
+			hd["satiety"] = maxf(0.0, float(hd.get("satiety", 100)) - satiety_cost)
+			if got_hurt:
+				hd["injury"] = clampf(float(hd.get("injury", 0)) + injury_amount, 0.0, 100.0)
+		)
+		if got_hurt:
+			injured_names.append(str(hero.get("name", hid)))
+
+	var mult: float = ResourceLoop.bounty_reward_mult()
+	var n: int = maxi(1, hero_ids.size())
+	var silver_gain: int = int(round((float(zone.get("base_silver", 10)) + float(total_power) * power_bonus_per) * mult))
+	var fur_gain: int = int(round(float(zone.get("base_fur", 1)) * float(n) * mult))
+	var wood_gain: int = int(round(float(zone.get("base_wood", 0)) * mult))
+	## 至少有少少收穫
+	silver_gain = maxi(1, silver_gain)
+	fur_gain = maxi(0, fur_gain)
+
 	GameState.add_silver(silver_gain)
-	GameState.add_wood(wood_gain)
+	GameState.add_fur(fur_gain)
+	if wood_gain > 0:
+		GameState.add_wood(wood_gain)
+
 	var rewards: Dictionary = {
 		"silver": silver_gain,
+		"fur": fur_gain,
 		"wood": wood_gain,
-		"heroes": _pending_ids.duplicate(),
+		"heroes": hero_ids.duplicate(),
+		"zone_id": zone_id,
+		"zone_name": str(hunt.get("zone_name", zone_id)),
+		"injured": injured_names,
 	}
-	_pending_ids.clear()
-	dispatch_finished.emit(rewards)
+	var injure_txt: String = ""
+	if injured_names.size() > 0:
+		injure_txt = "；受傷：%s" % "、".join(injured_names)
+	GameState.push_report("回村「%s」＋銀%d 毛皮%d 木%d%s" % [
+		str(rewards["zone_name"]), silver_gain, fur_gain, wood_gain, injure_txt
+	])
+	hunt_finished.emit(rewards)
+
+func _try_auto_dispatch() -> void:
+	## 有空位出征就自動派 ready 俠（每次最多 2 人，保持簡單）
+	if not GameState.active_hunts.is_empty():
+		## 允許多隊；若已有 ≥2 隊就唔再自動派，避免洗板
+		if GameState.active_hunts.size() >= 2:
+			return
+	var ready: Array = HeroSystem.find_ready_heroes(2)
+	if ready.is_empty():
+		return
+	var ids: Array = []
+	for h in ready:
+		ids.append(str((h as Dictionary).get("id", "")))
+	start_hunt(ids, DEFAULT_ZONE)

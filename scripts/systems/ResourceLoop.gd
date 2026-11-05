@@ -6,13 +6,13 @@ static func describe_loop() -> String:
 	return "建築服務俠客 → 俠客變強 → 派遣帶回資源 → 升級村莊"
 
 static func inn_bonus_silver_per_tick() -> int:
-	var lv: int = BuildingSystem.building_level("inn")
-	return lv * 1
+	return BuildingSystem.building_level("inn") * 1
 
 static func forge_bonus_power() -> int:
-	var lv: int = BuildingSystem.building_level("forge")
-	return lv * 2
+	return BuildingSystem.building_level("forge") * 2
 
 static func training_bonus_xp() -> int:
-	var lv: int = BuildingSystem.building_level("training")
-	return lv * 5
+	return BuildingSystem.building_level("training") * 5
+
+static func bounty_reward_mult() -> float:
+	return 1.0 + float(BuildingSystem.building_level("bounty")) * 0.08
