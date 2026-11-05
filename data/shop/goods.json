@@ -1,0 +1,38 @@
+[
+  {
+    "id": "shop_wood_blade",
+    "name": "木刃",
+    "desc": "兵器鋪入門刀。武器位＋2。",
+    "cost_silver": 25,
+    "slot": "weapon",
+    "power": 2,
+    "require_forge_level": 1
+  },
+  {
+    "id": "shop_cloth_armor",
+    "name": "布甲",
+    "desc": "兵器鋪粗布甲。防具位＋2。",
+    "cost_silver": 20,
+    "slot": "armor",
+    "power": 2,
+    "require_forge_level": 1
+  },
+  {
+    "id": "shop_iron_saber",
+    "name": "鐵刀",
+    "desc": "兵器鋪鐵刀。武器位＋4。",
+    "cost_silver": 55,
+    "slot": "weapon",
+    "power": 4,
+    "require_forge_level": 2
+  },
+  {
+    "id": "shop_leather_vest",
+    "name": "皮背心",
+    "desc": "兵器鋪皮背心。防具位＋4。",
+    "cost_silver": 45,
+    "slot": "armor",
+    "power": 4,
+    "require_forge_level": 2
+  }
+]

@@ -1,4 +1,4 @@
-# 墨點俠村（Ink Hero Village）· v0.4
+# 墨點俠村（Ink Hero Village）· v0.5
 
 武俠墨點風格村莊經營＋俠客養成。玩法跟足《獵魔村物語》核心循環（建築→養俠→派遣→資源→再升級）。
 
@@ -18,10 +18,10 @@ Headless 煙測（唔開窗）：
 
 ```bash
 /workspace/tools/godot/godot --headless --path /workspace/modian-xiacun --quit-after 2
-/workspace/tools/godot/godot --headless --path /workspace/modian-xiacun res://scenes/dev/smoke_v03.tscn
+/workspace/tools/godot/godot --headless --path /workspace/modian-xiacun res://scenes/dev/smoke_v05.tscn
 ```
 
-> **Web／HTML5 export**：而家未裝 Godot export templates，暫時未打出 `export/web/`。裝好 4.3 templates 後可用 `export_presets.cfg`（見下）再出。  
+> **Web／HTML5**：`tools/export_web.sh` → `export/web/`（`python3 -m http.server 8877`）  
 > **iOS**：後期里程碑，要 Mac＋Apple 帳先 export。
 
 ## 試玩流程（新手 3 步）
@@ -60,7 +60,8 @@ Headless 煙測（唔開窗）：
 
 - v0.1 核心循環
 - v0.2 製作鏈＋戰鬥結果＋自由放置＋64 art
-- **v0.4** 放置 UX 打磨＋新手引導＋試玩說明（本版）
+- v0.4 放置 UX＋新手引導＋食住醫／練功／Web
+- **v0.5** 英雄帖／懸賞／兵器鋪（本版）
 
 私人開發中。勿與 `yinlou-defense`、`wuxia-inn` 混目錄。
 
@@ -69,3 +70,9 @@ Headless 煙測（唔開窗）：
 - 飽食／傷勢影響出征成功率（失敗收益大減）
 - 練功場：在村閒置攞 XP，滿則升級
 - Web：`tools/export_web.sh` → `export/web/`（`python3 -m http.server 8877`）
+
+## v0.5 英雄帖／懸賞／兵器鋪
+- **英雄帖**：白／綠／藍池抽卡（權重可調）；重覆轉碎片；存檔含碎片
+- **懸賞榜**：指定野狼／山賊，出征擊中額外賞
+- **兵器鋪**：鐵匠鋪開後可銀購裝；「自動買裝」／「買一次」
+- smoke：`res://scenes/dev/smoke_v05.tscn`

@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -34,7 +34,14 @@ var inventory: Array = []
 var building_placements: Dictionary = {}
 ## 新手引導：0=完成／跳過；1=興建客棧；2=派遣；3=等回村
 var tutorial_step: int = 1
+## 英雄帖碎片（重覆轉換）
+var fragments: int = 0
+## 懸賞目標 id："" / wolf / bandit
+var bounty_target: String = ""
+## 兵器鋪自動買裝
+var auto_shop: bool = false
 var _hunt_seq: int = 0
+var _gacha_seq: int = 0
 var _default_layout_buildings: Array = []
 
 func _ready() -> void:
@@ -51,7 +58,11 @@ func _load_starter_data() -> void:
 	building_placements.clear()
 	auto_dispatch = false
 	tutorial_step = 1
+	fragments = 0
+	bounty_target = ""
+	auto_shop = false
 	_hunt_seq = 0
+	_gacha_seq = 0
 	silver = 120
 	wood = 60
 	fur = 0
@@ -165,6 +176,10 @@ func add_iron(amount: int) -> void:
 	iron = maxi(0, iron + amount)
 	resources_changed.emit()
 
+func add_fragments(amount: int) -> void:
+	fragments = maxi(0, fragments + amount)
+	resources_changed.emit()
+
 func try_spend(silver_cost: int, wood_cost: int = 0, fur_cost: int = 0, iron_cost: int = 0) -> bool:
 	if silver < silver_cost or wood < wood_cost or fur < fur_cost or iron < iron_cost:
 		return false
@@ -246,7 +261,11 @@ func to_save_dict() -> Dictionary:
 		"inventory": inventory.duplicate(true),
 		"building_placements": building_placements.duplicate(true),
 		"tutorial_step": tutorial_step,
+		"fragments": fragments,
+		"bounty_target": bounty_target,
+		"auto_shop": auto_shop,
 		"hunt_seq": _hunt_seq,
+		"gacha_seq": _gacha_seq,
 	}
 
 func load_from_dict(d: Dictionary) -> void:
@@ -280,5 +299,9 @@ func load_from_dict(d: Dictionary) -> void:
 	if d.has("building_placements"):
 		building_placements = (d["building_placements"] as Dictionary).duplicate(true)
 	tutorial_step = int(d.get("tutorial_step", 0))
+	fragments = int(d.get("fragments", 0))
+	bounty_target = str(d.get("bounty_target", ""))
+	auto_shop = bool(d.get("auto_shop", false))
 	_hunt_seq = int(d.get("hunt_seq", _hunt_seq))
+	_gacha_seq = int(d.get("gacha_seq", _gacha_seq))
 	_emit_all()

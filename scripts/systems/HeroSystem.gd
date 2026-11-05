@@ -29,6 +29,8 @@ static func normalize_hero(raw: Dictionary) -> Dictionary:
 	h["level"] = int(h.get("level", 1))
 	h["base_power"] = int(h.get("base_power", 10))
 	h["personality"] = str(h.get("personality", ""))
+	h["template_id"] = str(h.get("template_id", h.get("id", "")))
+	h["art_key"] = str(h.get("art_key", ""))
 	h["status"] = str(h.get("status", "idle"))
 	h["stamina"] = float(h.get("stamina", 100))
 	h["max_stamina"] = float(h.get("max_stamina", 100))

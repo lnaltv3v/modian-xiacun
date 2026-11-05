@@ -12,6 +12,7 @@ var _rng := RandomNumberGenerator.new()
 var _ui_tick_accum: float = 0.0
 var _recover_accum: float = 0.0
 var _recover_pending: float = 0.0
+var _shop_accum: float = 0.0
 
 func _ready() -> void:
 	_rng.randomize()
@@ -25,6 +26,10 @@ func _process(delta: float) -> void:
 	if _recover_accum >= 0.5:
 		UpkeepSystem.tick(_recover_pending)
 		TrainingSystem.tick(_recover_pending)
+		_shop_accum += _recover_pending
+		if GameState.auto_shop and _shop_accum >= 2.0:
+			_shop_accum = 0.0
+			ShopSystem.auto_buy_for_idle(1)
 		_recover_pending = 0.0
 		_recover_accum = 0.0
 	resolve_due_hunts()
@@ -185,6 +190,13 @@ func _complete_hunt(hunt: Dictionary) -> void:
 		if kind == "wolf" and _rng.randf() < 0.35:
 			fur_gain += 1
 
+	## 懸賞目標額外賞
+	var bounty_bonus: Dictionary = BountySystem.calc_bonus(enemies)
+	if int(bounty_bonus.get("hits", 0)) > 0:
+		silver_gain += int(bounty_bonus.get("silver", 0))
+		fur_gain += int(bounty_bonus.get("fur", 0))
+		iron_gain += int(bounty_bonus.get("iron", 0))
+
 	var enemy_names: PackedStringArray = PackedStringArray()
 	for ev2 in enemies:
 		enemy_names.append(str((ev2 as Dictionary).get("name", "")))
@@ -255,14 +267,18 @@ func _complete_hunt(hunt: Dictionary) -> void:
 		"success": success,
 		"success_chance": success_chance,
 		"flavor": flavor,
+		"bounty_bonus": bounty_bonus,
 	}
 	var injure_txt: String = ""
 	if injured_names.size() > 0:
 		injure_txt = "；受傷：%s" % "、".join(injured_names)
 	var iron_txt: String = (" 鐵%d" % iron_gain) if iron_gain > 0 else ""
 	var result_word: String = "得勝" if success else "失利"
-	GameState.push_report("回村「%s」%s vs %s ＋銀%d 毛皮%d 木%d%s%s" % [
-		str(rewards["zone_name"]), result_word, "、".join(enemy_names), silver_gain, fur_gain, wood_gain, iron_txt, injure_txt
+	var bounty_txt: String = ""
+	if int(bounty_bonus.get("hits", 0)) > 0:
+		bounty_txt = "；懸賞「%s」×%d" % [str(bounty_bonus.get("target_name", "")), int(bounty_bonus.get("hits", 0))]
+	GameState.push_report("回村「%s」%s vs %s ＋銀%d 毛皮%d 木%d%s%s%s" % [
+		str(rewards["zone_name"]), result_word, "、".join(enemy_names), silver_gain, fur_gain, wood_gain, iron_txt, injure_txt, bounty_txt
 	])
 	hunt_finished.emit(rewards)
 

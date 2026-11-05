@@ -31,6 +31,13 @@ const MONSTER_ART := {
 }
 
 static func hero_stem(hero_id: String) -> String:
+	## 抽卡俠客用 art_key 指向開局六綠俠美術
+	var hero: Dictionary = HeroSystem.get_hero(hero_id) if hero_id != "" else {}
+	var art_key: String = str(hero.get("art_key", ""))
+	if art_key != "" and HERO_ART.has(art_key):
+		return str(HERO_ART[art_key])
+	if art_key != "" and art_key.begins_with("hero_"):
+		return str(HERO_ART.get(art_key, art_key))
 	return str(HERO_ART.get(hero_id, hero_id))
 
 static func hero_idle(hero_id: String) -> String:

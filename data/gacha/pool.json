@@ -1,0 +1,98 @@
+{
+  "pull_cost_silver": 40,
+  "require_building": "manor",
+  "require_level": 1,
+  "weights": {
+    "白": 55,
+    "綠": 35,
+    "藍": 10
+  },
+  "fragment_per_dupe": {
+    "白": 5,
+    "綠": 10,
+    "藍": 25
+  },
+  "heroes": [
+    {
+      "template_id": "pool_w_dao",
+      "name": "白衣刀客",
+      "weapon": "刀",
+      "rarity": "白",
+      "base_power": 8,
+      "personality": "樸實",
+      "art_key": "hero_atie"
+    },
+    {
+      "template_id": "pool_w_jian",
+      "name": "白衣劍客",
+      "weapon": "劍",
+      "rarity": "白",
+      "base_power": 8,
+      "personality": "寡言",
+      "art_key": "hero_aqing"
+    },
+    {
+      "template_id": "pool_w_quan",
+      "name": "白衣拳手",
+      "weapon": "拳腳",
+      "rarity": "白",
+      "base_power": 7,
+      "personality": "勤懇",
+      "art_key": "hero_aniu"
+    },
+    {
+      "template_id": "pool_g_qiang",
+      "name": "青衫槍客",
+      "weapon": "長槍",
+      "rarity": "綠",
+      "base_power": 11,
+      "personality": "果敢",
+      "art_key": "hero_achang"
+    },
+    {
+      "template_id": "pool_g_gun",
+      "name": "青衫棍僧",
+      "weapon": "棍",
+      "rarity": "綠",
+      "base_power": 12,
+      "personality": "沉穩",
+      "art_key": "hero_dali"
+    },
+    {
+      "template_id": "pool_g_anqi",
+      "name": "青衫暗衛",
+      "weapon": "暗器",
+      "rarity": "綠",
+      "base_power": 10,
+      "personality": "謹慎",
+      "art_key": "hero_azhen"
+    },
+    {
+      "template_id": "pool_b_dao",
+      "name": "藍鋒刀客",
+      "weapon": "刀",
+      "rarity": "藍",
+      "base_power": 16,
+      "personality": "倔強",
+      "art_key": "hero_atie"
+    },
+    {
+      "template_id": "pool_b_jian",
+      "name": "藍鋒劍客",
+      "weapon": "劍",
+      "rarity": "藍",
+      "base_power": 15,
+      "personality": "清高",
+      "art_key": "hero_aqing"
+    },
+    {
+      "template_id": "pool_b_qiang",
+      "name": "藍鋒槍將",
+      "weapon": "長槍",
+      "rarity": "藍",
+      "base_power": 17,
+      "personality": "傲骨",
+      "art_key": "hero_achang"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.3-playable — 放置 UX＋新手引導＋試玩打磨
+## 墨點俠村 v0.5 — 英雄帖／懸賞／兵器鋪
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -28,6 +28,11 @@ const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
 @onready var tutorial_banner: ColorRect = %TutorialBanner
 @onready var tutorial_label: Label = %TutorialLabel
 @onready var btn_skip_tutorial: Button = %BtnSkipTutorial
+@onready var btn_gacha: Button = %BtnGacha
+@onready var frag_label: Label = %FragLabel
+@onready var opt_bounty: OptionButton = %OptBounty
+@onready var chk_auto_shop: CheckBox = %ChkAutoShop
+@onready var btn_shop_once: Button = %BtnShopOnce
 
 var _dispatch: DispatchSystem
 var _village: Control
@@ -52,7 +57,7 @@ func _ready() -> void:
 	add_child(_hunt_result)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.4"
+		title_label.text = "墨點俠村 · v0.5"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -85,6 +90,17 @@ func _ready() -> void:
 	btn_load.pressed.connect(_on_load_pressed)
 	if btn_skip_tutorial:
 		btn_skip_tutorial.pressed.connect(_on_skip_tutorial)
+
+	_setup_bounty_options()
+	if btn_gacha:
+		btn_gacha.pressed.connect(_on_gacha_pressed)
+	if opt_bounty:
+		opt_bounty.item_selected.connect(_on_bounty_selected)
+	if chk_auto_shop:
+		chk_auto_shop.toggled.connect(_on_auto_shop_toggled)
+		chk_auto_shop.button_pressed = GameState.auto_shop
+	if btn_shop_once:
+		btn_shop_once.pressed.connect(_on_shop_once_pressed)
 
 	_rebuild_buildings()
 	_rebuild_heroes()
@@ -281,16 +297,18 @@ func _refresh_craft() -> void:
 	inv_label.text = "\n".join(lines)
 
 func _refresh_hud() -> void:
-	hud_label.text = "銀 %d　木 %d　毛皮 %d　鐵 %d　駐紮 %d／%d　在村 %d　出征 %d" % [
+	hud_label.text = "銀 %d　木 %d　毛皮 %d　鐵 %d　碎片 %d　駐紮 %d／%d　在村 %d　出征 %d" % [
 		GameState.silver,
 		GameState.wood,
 		GameState.fur,
 		GameState.iron,
+		GameState.fragments,
 		GameState.hero_count(),
 		GameState.hero_capacity(),
 		GameState.idle_hero_count(),
 		GameState.hunting_hero_count(),
 	]
+	_refresh_gacha_shop()
 	status_label.text = "%s　｜　練功+%.1f XP/s　｜　%s　｜　放＝自由放置（Esc 取消）" % [
 		UpkeepSystem.describe_rates(),
 		TrainingSystem.xp_per_sec(),
@@ -445,6 +463,9 @@ func _on_load_pressed() -> void:
 	if SaveManager.load_game():
 		_dispatch.resolve_due_hunts()
 		chk_auto.button_pressed = GameState.auto_dispatch
+		if chk_auto_shop:
+			chk_auto_shop.button_pressed = GameState.auto_shop
+		_sync_bounty_option()
 		_selected.clear()
 		_rebuild_buildings()
 		_rebuild_heroes()
@@ -482,3 +503,67 @@ func _refresh_tutorial() -> void:
 			tutorial_label.text = "③ 等下方倒數完 → 俠客回村，收銀／毛皮。跟住自由玩！"
 		_:
 			tutorial_label.text = "新手引導"
+
+func _setup_bounty_options() -> void:
+	if opt_bounty == null:
+		return
+	opt_bounty.clear()
+	opt_bounty.add_item("（無指定）", 0)
+	opt_bounty.set_item_metadata(0, "")
+	var i: int = 1
+	for tv in BountySystem.all_targets():
+		var td: Dictionary = tv as Dictionary
+		opt_bounty.add_item(str(td.get("name", td.get("id", "?"))), i)
+		opt_bounty.set_item_metadata(i, str(td.get("id", "")))
+		i += 1
+	_sync_bounty_option()
+
+func _sync_bounty_option() -> void:
+	if opt_bounty == null:
+		return
+	var cur: String = GameState.bounty_target
+	for idx in range(opt_bounty.item_count):
+		if str(opt_bounty.get_item_metadata(idx)) == cur:
+			opt_bounty.select(idx)
+			return
+	opt_bounty.select(0)
+
+func _refresh_gacha_shop() -> void:
+	if frag_label:
+		frag_label.text = "碎片 %d" % GameState.fragments
+	if btn_gacha:
+		var chk: Dictionary = GachaSystem.can_pull()
+		btn_gacha.disabled = not bool(chk.get("ok", false))
+		btn_gacha.text = "英雄帖（%d銀）" % GachaSystem.pull_cost()
+		btn_gacha.tooltip_text = str(chk.get("reason", "白／綠／藍池；重覆轉碎片"))
+	if btn_shop_once:
+		btn_shop_once.disabled = not ShopSystem.forge_ready()
+		btn_shop_once.tooltip_text = "為在村俠客買一件更強裝" if ShopSystem.forge_ready() else "要先起鐵匠鋪"
+
+func _on_gacha_pressed() -> void:
+	var res: Dictionary = GachaSystem.pull_once()
+	if not bool(res.get("ok", false)):
+		GameState.push_report("英雄帖失敗：%s" % str(res.get("reason", "")))
+	_rebuild_heroes()
+	_refresh_hud()
+
+func _on_bounty_selected(index: int) -> void:
+	if opt_bounty == null:
+		return
+	var tid: String = str(opt_bounty.get_item_metadata(index))
+	var res: Dictionary = BountySystem.set_active(tid)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("懸賞失敗：%s" % str(res.get("reason", "")))
+		_sync_bounty_option()
+
+func _on_auto_shop_toggled(pressed: bool) -> void:
+	GameState.auto_shop = pressed
+	GameState.push_report("兵器鋪自動買裝：%s" % ("開" if pressed else "關"))
+
+func _on_shop_once_pressed() -> void:
+	var res: Dictionary = ShopSystem.auto_buy_for_idle(1)
+	if int(res.get("bought", 0)) <= 0:
+		GameState.push_report("兵器鋪：冇可買升級（%s）" % str(res.get("reason", "銀／等級／已最強")))
+	_rebuild_heroes()
+	_refresh_hud()
+

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "wolf",
+    "name": "野狼",
+    "kind": "wolf",
+    "bonus_silver": 8,
+    "bonus_fur": 1,
+    "desc": "懸賞野狼：擊中則額外銀／毛皮。"
+  },
+  {
+    "id": "bandit",
+    "name": "山賊",
+    "kind": "bandit",
+    "bonus_silver": 12,
+    "bonus_fur": 0,
+    "bonus_iron": 1,
+    "desc": "懸賞山賊：擊中則額外銀／鐵。"
+  }
+]
