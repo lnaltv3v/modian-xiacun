@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from PIL import Image
 
 SIZE = 256
@@ -111,60 +112,217 @@ def gold_edge(im, x, y, w, h):
     Vline(im, x + w - 1, y, h, P["gold"])
 
 
-def shadow(im, cx=128, y=242, w=90):
+def shadow(im, cx=128, y=238, w=90):
+    """地面陰影：靴底應貼近 y（sole ≈ y-2）"""
     x = cx - w // 2
     R(im, x, y, w, 6, P["shade"])
     R(im, x + 8, y + 2, w - 16, 3, P["ink"])
     R(im, x + 18, y + 1, w - 36, 2, P["ink"])
 
 
-def face256(im, x, y, beard=False, long_beard=False, bald=False):
-    """約 48×52 臉"""
-    box(im, x, y, 48, 52, P["skin"])
-    R(im, x + 2, y + 2, 8, 46, P["skin2"])
-    R(im, x + 38, y + 4, 6, 42, P["skin2"])
-    R(im, x + 10, y + 40, 28, 8, P["skin3"])
-    # brows
-    Hline(im, x + 8, y + 14, 12, P["ink"])
-    Hline(im, x + 28, y + 14, 12, P["ink"])
-    Hline(im, x + 9, y + 13, 10, P["ink"])
-    Hline(im, x + 29, y + 13, 10, P["ink"])
-    # eyes
-    R(im, x + 10, y + 18, 8, 5, P["ink"])
-    R(im, x + 30, y + 18, 8, 5, P["ink"])
+def _face_skull(im, x, y, w=48, h=52, narrow=False):
+    """共用頭骨底，五官由各 face_* 覆寫"""
+    ww = 40 if narrow else w
+    xx = x + (w - ww) // 2 if narrow else x
+    box(im, xx, y, ww, h, P["skin"])
+    R(im, xx + 2, y + 2, 6 if narrow else 8, h - 6, P["skin2"])
+    R(im, xx + ww - 8, y + 4, 5 if narrow else 6, h - 10, P["skin2"])
+    R(im, xx + (8 if narrow else 10), y + h - 12, ww - 16, 8, P["skin3"])
+    return xx, ww
+
+
+def face_zhangwuji(im, x, y):
+    """溫厚圓目、微抿、少年氣"""
+    _face_skull(im, x, y)
+    # soft arched brows
+    Hline(im, x + 8, y + 13, 11, P["ink"])
+    Hline(im, x + 29, y + 13, 11, P["ink"])
+    put(im, x + 7, y + 14, P["ink"])
+    put(im, x + 40, y + 14, P["ink"])
+    # round warm eyes (larger)
+    R(im, x + 9, y + 17, 10, 7, P["ink"])
+    R(im, x + 29, y + 17, 10, 7, P["ink"])
+    R(im, x + 11, y + 18, 6, 5, P["paper"])
+    R(im, x + 31, y + 18, 6, 5, P["paper"])
+    put(im, x + 13, y + 20, P["ink"])
+    put(im, x + 33, y + 20, P["ink"])
     put(im, x + 14, y + 19, P["paper"])
     put(im, x + 34, y + 19, P["paper"])
-    put(im, x + 15, y + 20, P["paper"])
-    put(im, x + 35, y + 20, P["paper"])
-    # nose
+    # short soft nose
+    Vline(im, x + 23, y + 24, 8, P["skin2"])
+    Hline(im, x + 21, y + 31, 5, P["skin3"])
+    # gentle closed mouth (微抿) — thin, little red
+    Hline(im, x + 17, y + 37, 14, P["ink"])
+    Hline(im, x + 19, y + 38, 10, P["skin3"])
+    put(im, x + 20, y + 37, P["cinnabar"])
+    put(im, x + 27, y + 37, P["cinnabar"])
+
+
+def face_dongfang(im, x, y):
+    """細長鳳眼／戲謔上揚嘴角；孤傲（長髮遮額由髮型處理）"""
+    _face_skull(im, x, y)
+    # slender phoenix brows — outer tip up
+    Hline(im, x + 8, y + 14, 12, P["ink"])
+    Hline(im, x + 28, y + 13, 12, P["ink"])
+    put(im, x + 19, y + 13, P["ink"])
+    put(im, x + 39, y + 12, P["ink"])
+    put(im, x + 40, y + 11, P["ink"])
+    # phoenix eyes: elongated, outer corner raised
+    R(im, x + 8, y + 18, 12, 3, P["ink"])
+    R(im, x + 28, y + 17, 12, 3, P["ink"])
+    Hline(im, x + 9, y + 17, 10, P["ink"])
+    Hline(im, x + 29, y + 16, 10, P["ink"])
+    put(im, x + 10, y + 19, P["paper"])
+    put(im, x + 14, y + 19, P["paper"])
+    put(im, x + 30, y + 18, P["paper"])
+    put(im, x + 34, y + 18, P["paper"])
+    put(im, x + 18, y + 17, P["ink"])  # outer tip up L
+    put(im, x + 39, y + 15, P["ink"])  # outer tip up R
+    # nose delicate
+    Vline(im, x + 24, y + 22, 9, P["skin2"])
+    Hline(im, x + 22, y + 30, 4, P["skin3"])
+    # smirk: right side raised
+    Hline(im, x + 16, y + 36, 10, P["ink"])
+    Hline(im, x + 26, y + 35, 8, P["ink"])
+    put(im, x + 33, y + 34, P["ink"])
+    R(im, x + 18, y + 37, 12, 2, P["cinnabar"])
+    put(im, x + 30, y + 36, P["cinnabar"])
+
+
+def face_dugu(im, x, y):
+    """細目淡漠、薄唇、清瘦頰"""
+    xx, ww = _face_skull(im, x, y, narrow=True)
+    # thin flat brows
+    Hline(im, xx + 6, y + 14, 9, P["ink"])
+    Hline(im, xx + 22, y + 14, 9, P["ink"])
+    # thin indifferent eyes (slits)
+    Hline(im, xx + 7, y + 19, 8, P["ink"])
+    Hline(im, xx + 23, y + 19, 8, P["ink"])
+    Hline(im, xx + 7, y + 20, 8, P["ink"])
+    Hline(im, xx + 23, y + 20, 8, P["ink"])
+    put(im, xx + 10, y + 19, P["paper"])
+    put(im, xx + 26, y + 19, P["paper"])
+    # lean cheeks already from narrow; deepen shade
+    R(im, xx + 2, y + 28, 4, 16, P["skin3"])
+    R(im, xx + ww - 6, y + 28, 4, 16, P["skin3"])
+    # thin nose
+    Vline(im, xx + ww // 2, y + 22, 8, P["skin2"])
+    Hline(im, xx + ww // 2 - 1, y + 29, 3, P["skin3"])
+    # thin lips — almost no red
+    Hline(im, xx + 12, y + 36, 12, P["ink"])
+    Hline(im, xx + 14, y + 37, 8, P["skin3"])
+
+
+def face_saodi(im, x, y):
+    """老年皺紋／慈眉細目、光頭"""
+    _face_skull(im, x, y, w=48, h=54)
+    # bald pate
+    R(im, x + 4, y - 10, 40, 14, P["skin"])
+    R(im, x + 8, y - 16, 32, 10, P["skin"])
+    R(im, x + 12, y - 20, 24, 8, P["skin2"])
+    R(im, x + 16, y - 22, 16, 4, P["skin3"])
+    for dx in (14, 22, 30):
+        put(im, x + dx, y - 6, P["ink"])
+        put(im, x + dx + 1, y - 5, P["ink"])
+    # forehead wrinkles
+    Hline(im, x + 10, y + 4, 28, P["skin3"])
+    Hline(im, x + 12, y + 7, 24, P["skin3"])
+    Hline(im, x + 14, y + 10, 20, P["shade"])
+    # kind brows — soft droop
+    Hline(im, x + 8, y + 15, 12, P["ink"])
+    Hline(im, x + 28, y + 15, 12, P["ink"])
+    put(im, x + 7, y + 16, P["ink"])
+    put(im, x + 39, y + 16, P["ink"])
+    # kind half-closed eyes
+    Hline(im, x + 10, y + 20, 9, P["ink"])
+    Hline(im, x + 29, y + 20, 9, P["ink"])
+    R(im, x + 11, y + 21, 7, 2, P["ink"])
+    R(im, x + 30, y + 21, 7, 2, P["ink"])
+    put(im, x + 13, y + 21, P["paper"])
+    put(im, x + 32, y + 21, P["paper"])
+    # crow's feet
+    put(im, x + 7, y + 21, P["skin3"])
+    put(im, x + 6, y + 22, P["skin3"])
+    put(im, x + 40, y + 21, P["skin3"])
+    put(im, x + 41, y + 22, P["skin3"])
+    # nose aged
+    Vline(im, x + 24, y + 24, 9, P["skin2"])
+    Hline(im, x + 21, y + 32, 6, P["skin3"])
+    # gentle smile
+    Hline(im, x + 16, y + 38, 16, P["ink"])
+    put(im, x + 15, y + 37, P["ink"])
+    put(im, x + 32, y + 37, P["ink"])
+    R(im, x + 18, y + 39, 12, 2, P["cinnabar"])
+    # nasolabial
+    Vline(im, x + 14, y + 30, 8, P["skin3"])
+    Vline(im, x + 33, y + 30, 8, P["skin3"])
+
+
+def face_wangchongyang(im, x, y):
+    """長鬚遮下巴、劍眉正視、中年剛毅"""
+    _face_skull(im, x, y)
+    # sword brows — thick angled down to center
+    Hline(im, x + 6, y + 12, 14, P["ink"])
+    Hline(im, x + 7, y + 13, 13, P["ink"])
+    Hline(im, x + 28, y + 12, 14, P["ink"])
+    Hline(im, x + 28, y + 13, 13, P["ink"])
+    put(im, x + 5, y + 11, P["ink"])
+    put(im, x + 41, y + 11, P["ink"])
+    put(im, x + 19, y + 14, P["ink"])
+    put(im, x + 28, y + 14, P["ink"])
+    # resolute square eyes
+    R(im, x + 10, y + 17, 9, 5, P["ink"])
+    R(im, x + 29, y + 17, 9, 5, P["ink"])
+    R(im, x + 12, y + 18, 5, 3, P["paper"])
+    R(im, x + 31, y + 18, 5, 3, P["paper"])
+    put(im, x + 14, y + 19, P["ink"])
+    put(im, x + 33, y + 19, P["ink"])
+    # firm nose
     Vline(im, x + 24, y + 22, 10, P["skin2"])
-    Hline(im, x + 22, y + 31, 5, P["skin3"])
-    # mouth
-    R(im, x + 16, y + 36, 16, 4, P["cinnabar"])
-    Hline(im, x + 16, y + 36, 16, P["ink"])
-    Hline(im, x + 18, y + 39, 12, P["ink"])
-    if bald:
-        R(im, x + 4, y - 10, 40, 14, P["skin"])
-        R(im, x + 8, y - 16, 32, 10, P["skin"])
-        R(im, x + 12, y - 20, 24, 8, P["skin2"])
-        R(im, x + 16, y - 22, 16, 4, P["skin3"])
-        for dx in (14, 22, 30):
-            put(im, x + dx, y - 6, P["ink"])
-            put(im, x + dx + 1, y - 5, P["ink"])
-    if beard:
-        R(im, x + 12, y + 40, 24, 10, P["paper"])
-        R(im, x + 14, y + 42, 20, 14, P["paper"])
-        R(im, x + 16, y + 48, 16, 10, P["white2"])
-        for i in range(0, 20, 3):
-            Vline(im, x + 14 + i, y + 42, 12, P["shade"])
-    if long_beard:
-        R(im, x + 10, y + 40, 28, 8, P["paper"])
-        R(im, x + 12, y + 46, 24, 28, P["paper"])
-        R(im, x + 14, y + 70, 20, 20, P["white2"])
-        R(im, x + 16, y + 88, 16, 16, P["white3"])
-        for i in range(0, 22, 4):
-            Vline(im, x + 14 + i, y + 48, 40, P["shade"])
-            Vline(im, x + 15 + i, y + 70, 24, P["shade2"])
+    Hline(im, x + 21, y + 31, 6, P["skin3"])
+    # firm mouth above beard
+    Hline(im, x + 16, y + 35, 16, P["ink"])
+    Hline(im, x + 18, y + 36, 12, P["ink"])
+    # long white beard covering chin
+    R(im, x + 10, y + 38, 28, 8, P["paper"])
+    R(im, x + 12, y + 44, 24, 28, P["paper"])
+    R(im, x + 14, y + 68, 20, 22, P["white2"])
+    R(im, x + 16, y + 86, 16, 18, P["white3"])
+    for i in range(0, 22, 4):
+        Vline(im, x + 14 + i, y + 46, 40, P["shade"])
+        Vline(im, x + 15 + i, y + 68, 24, P["shade2"])
+
+
+def face_huangshang(im, x, y):
+    """文士細目、墨指可沾臉側、書生瘦頰、較真神情"""
+    xx, ww = _face_skull(im, x, y, narrow=True)
+    # scholarly thin brows
+    Hline(im, xx + 6, y + 13, 10, P["ink"])
+    Hline(im, xx + 22, y + 13, 10, P["ink"])
+    Hline(im, xx + 7, y + 12, 8, P["ink"])
+    # thin focused eyes
+    R(im, xx + 7, y + 17, 8, 3, P["ink"])
+    R(im, xx + 23, y + 17, 8, 3, P["ink"])
+    Hline(im, xx + 7, y + 16, 8, P["ink"])
+    Hline(im, xx + 23, y + 16, 8, P["ink"])
+    put(im, xx + 10, y + 18, P["paper"])
+    put(im, xx + 26, y + 18, P["paper"])
+    # lean cheeks
+    R(im, xx + 1, y + 26, 4, 18, P["skin3"])
+    R(im, xx + ww - 5, y + 26, 4, 18, P["skin3"])
+    # nose
+    Vline(im, xx + ww // 2, y + 21, 9, P["skin2"])
+    Hline(im, xx + ww // 2 - 1, y + 29, 3, P["skin3"])
+    # serious thin mouth
+    Hline(im, xx + 11, y + 35, 14, P["ink"])
+    Hline(im, xx + 13, y + 36, 10, P["ink"])
+    put(im, xx + 14, y + 35, P["cinnabar"])
+    put(im, xx + 22, y + 35, P["cinnabar"])
+    # ink stain on left cheek (墨指沾臉側)
+    put(im, xx + 3, y + 28, P["ink"])
+    put(im, xx + 4, y + 29, P["ink"])
+    put(im, xx + 2, y + 30, P["shade"])
+    put(im, xx + 5, y + 31, P["ink"])
 
 
 def hair_half_bun(im, x, y, lean=0):
@@ -270,29 +428,59 @@ def sleeves(im, xl, xr, y, w, h, fill, shade, bob=0):
         fold_h(im, xr + 3, y + bob + i, w - 6, shade)
 
 
-def legs_robe(im, x, y, fill, shade, step=0, lean=0, boot=True):
-    """長袍下擺＋腿步態"""
-    lx = lean + (-8 if step < 0 else (8 if step > 0 else 0))
-    rx = lean + (8 if step < 0 else (-8 if step > 0 else 0))
-    ly = -4 if step < 0 else 0
-    ry = -4 if step > 0 else 0
+def legs_robe(im, x, y, fill, shade, step=0, lean=0, boot=True, sole_y=239):
+    """長袍下擺＋腿；靴底平貼 sole_y（陰影上方 2px）。
+    idle：雙腳對稱踩實；walk：交替但落地腳仍貼 sole_y，抬腳僅 6px。
+    """
+    # 水平：腳跟大致喺髖下，唔外八大甩
+    hip_gap = 8  # space between inner ankles at rest
+    foot_w = 28
+    boot_h = 14
+    # left foot local origin relative to x
+    l_base = 2
+    r_base = 2 + foot_w + hip_gap  # ~38
+    if step == 0:
+        lx = lean
+        rx = lean
+        l_sole = sole_y
+        r_sole = sole_y
+    elif step < 0:
+        # left forward/up mid
+        lx = lean - 4
+        rx = lean + 2
+        l_sole = sole_y - 6
+        r_sole = sole_y
+    else:
+        lx = lean + 2
+        rx = lean - 4
+        l_sole = sole_y
+        r_sole = sole_y - 6
+    # robe panels from y down to boot top
+    l_boot_top = l_sole - boot_h
+    r_boot_top = r_sole - boot_h
+    l_h = max(20, l_boot_top - y)
+    r_h = max(20, r_boot_top - y)
     # left panel
-    R(im, x + lx, y + ly, 28, 48, fill)
-    R(im, x + lx + 2, y + ly + 2, 6, 42, shade)
-    fold_v(im, x + lx + 12, y + ly + 4, 36, shade)
-    fold_v(im, x + lx + 20, y + ly + 6, 30, shade)
+    R(im, x + l_base + lx, y, foot_w, l_h, fill)
+    R(im, x + l_base + lx + 2, y + 2, 6, max(4, l_h - 6), shade)
+    fold_v(im, x + l_base + lx + 12, y + 4, max(4, l_h - 10), shade)
+    fold_v(im, x + l_base + lx + 20, y + 6, max(4, l_h - 14), shade)
     # right
-    R(im, x + 36 + rx, y + ry, 28, 48, fill)
-    R(im, x + 38 + rx, y + ry + 2, 6, 42, shade)
-    fold_v(im, x + 48 + rx, y + ry + 4, 36, shade)
-    fold_v(im, x + 56 + rx, y + ry + 6, 30, shade)
+    R(im, x + r_base + rx, y, foot_w, r_h, fill)
+    R(im, x + r_base + rx + 2, y + 2, 6, max(4, r_h - 6), shade)
+    fold_v(im, x + r_base + rx + 12, y + 4, max(4, r_h - 10), shade)
+    fold_v(im, x + r_base + rx + 20, y + 6, max(4, r_h - 14), shade)
     if boot:
-        R(im, x + lx - 2, y + 42 + ly, 30, 14, P["boot"])
-        Hline(im, x + lx - 2, y + 42 + ly, 30, P["ink"])
-        Hline(im, x + lx - 2, y + 54 + ly, 30, P["ink"])
-        R(im, x + 36 + rx - 2, y + 42 + ry, 30, 14, P["boot"])
-        Hline(im, x + 36 + rx - 2, y + 42 + ry, 30, P["ink"])
-        Hline(im, x + 36 + rx - 2, y + 54 + ry, 30, P["ink"])
+        # soles flat on sole line
+        R(im, x + l_base + lx - 2, l_boot_top, foot_w + 4, boot_h, P["boot"])
+        Hline(im, x + l_base + lx - 2, l_boot_top, foot_w + 4, P["ink"])
+        Hline(im, x + l_base + lx - 2, l_sole - 1, foot_w + 4, P["ink"])
+        # sole contact shade
+        Hline(im, x + l_base + lx, l_sole, foot_w, P["shade"])
+        R(im, x + r_base + rx - 2, r_boot_top, foot_w + 4, boot_h, P["boot"])
+        Hline(im, x + r_base + rx - 2, r_boot_top, foot_w + 4, P["ink"])
+        Hline(im, x + r_base + rx - 2, r_sole - 1, foot_w + 4, P["ink"])
+        Hline(im, x + r_base + rx, r_sole, foot_w, P["shade"])
 
 
 def belt_gold(im, x, y, w, jewel=True):
@@ -331,7 +519,7 @@ def draw_zhangwuji(im, walk_i=-1):
     bob = -2 if walk_i >= 0 and walk_i % 2 else 0
     sway = 2 if walk_i >= 0 and walk_i % 2 else 0
     cx = 128 + lean
-    shadow(im, 128 + lean, 242 + bob, 100)
+    shadow(im, 128 + lean, 238 + bob, 100)
     # robe panels
     legs_robe(im, cx - 48, 168 + bob, P["white"], P["white3"], step, lean, True)
     # hem ink edge
@@ -364,7 +552,7 @@ def draw_zhangwuji(im, walk_i=-1):
     put(im, cx - 48, 168 + bob, P["gold"])
     Hline(im, cx - 56, 172 + bob, 18, P["ink"])
     # face + hair
-    face256(im, cx - 24, 28 + bob)
+    face_zhangwuji(im, cx - 24, 28 + bob)
     hair_half_bun(im, cx - 26, 28 + bob, 0)
     # dual palms forward-right
     ox = 4 if walk_i >= 0 else 0
@@ -382,7 +570,7 @@ def draw_dongfang(im, walk_i=-1):
     bob = -3 if walk_i >= 0 and walk_i % 2 else 0
     sway = (walk_i % 4 - 1) * 3 if walk_i >= 0 else 0
     cx = 128 + lean
-    shadow(im, 128 + lean, 242 + bob, 85)
+    shadow(im, 128 + lean, 238 + bob, 85)
     legs_robe(im, cx - 40, 170 + bob, P["redrobe"], P["redrobe2"], step, lean, True)
     robe_body(im, cx - 40, 72 + bob, 80, 104, P["redrobe3"], P["redrobe2"], P["gold"], True)
     # embroidery dots
@@ -413,7 +601,7 @@ def draw_dongfang(im, walk_i=-1):
         Vline(im, rx + 1, 72 + bob, 85 + k * 8, P["gold"])
         Vline(im, rx + 3, 74 + bob, 80, P["redrobe2"])
         R(im, rx - 2, 155 + bob + k * 10, 9, 12, P["cinnabar"])
-    face256(im, cx - 24, 24 + bob)
+    face_dongfang(im, cx - 24, 24 + bob)
     hair_long_red(im, cx - 26, 24 + bob, 0, sway)
     # silver needles in right hand fan
     nx = cx + 55 + (2 if walk_i >= 0 else 0)
@@ -435,7 +623,7 @@ def draw_dugu(im, walk_i=-1):
     lean = step * 2
     bob = -2 if walk_i >= 0 and walk_i % 2 else 0
     cx = 120 + lean  # slightly left lean silhouette
-    shadow(im, 128 + lean, 242 + bob, 70)
+    shadow(im, 128 + lean, 238 + bob, 70)
     # slim legs/robe
     legs_robe(im, cx - 32, 172 + bob, P["qing"], P["qing2"], step, lean, True)
     robe_body(im, cx - 34, 78 + bob, 68, 100, P["qing3"], P["qing2"], None, True)
@@ -451,7 +639,7 @@ def draw_dugu(im, walk_i=-1):
     Hline(im, cx - 32, 155 + bob, 64, P["ink"])
     Hline(im, cx - 32, 164 + bob, 64, P["ink"])
     put(im, cx - 2, 159 + bob, P["wood"])
-    face256(im, cx - 22, 28 + bob)
+    face_dugu(im, cx - 22, 28 + bob)
     hair_thin(im, cx - 24, 28 + bob)
     # wooden sword on back (diagonal)
     sx = cx + 20
@@ -484,7 +672,7 @@ def draw_saodi(im, walk_i=-1):
     lean = step * 2 + 4  # slight hunch forward bias in silhouette via offset
     bob = -1 if walk_i >= 0 and walk_i % 2 else 0
     cx = 130 + lean
-    shadow(im, 128 + lean, 242 + bob, 95)
+    shadow(im, 128 + lean, 238 + bob, 95)
     legs_robe(im, cx - 46, 168 + bob, P["monk"], P["monk2"], step, lean, True)
     # hunched torso (wider, lower neck)
     robe_body(im, cx - 50, 85 + bob, 100, 90, P["monk3"], P["monk2"], None, True)
@@ -503,7 +691,7 @@ def draw_saodi(im, walk_i=-1):
     Hline(im, cx - 48, 158 + bob, 96, P["ink"])
     for i in range(0, 90, 8):
         put(im, cx - 44 + i, 163 + bob, P["wood3"])
-    face256(im, cx - 24, 38 + bob, bald=True)
+    face_saodi(im, cx - 24, 38 + bob)
     # prayer beads
     beads = [P["wood"], P["gold"], P["cinnabar"], P["wood2"], P["gold"], P["wood"], P["pale_gold"], P["wood3"]]
     for i, c in enumerate(beads * 3):
@@ -540,7 +728,7 @@ def draw_wangchongyang(im, walk_i=-1):
     lean = step * 2
     bob = -2 if walk_i >= 0 and walk_i % 2 else 0
     cx = 128 + lean
-    shadow(im, 128 + lean, 242 + bob, 100)
+    shadow(im, 128 + lean, 238 + bob, 100)
     legs_robe(im, cx - 48, 168 + bob, P["dao"], P["dao2"], step, lean, True)
     robe_body(im, cx - 50, 80 + bob, 100, 95, P["dao3"], P["dao2"], P["gold"], True)
     # wide sleeves
@@ -558,7 +746,7 @@ def draw_wangchongyang(im, walk_i=-1):
     put(im, cx - 2, 170 + bob, P["pale_gold"])
     put(im, cx, 172 + bob, P["gold"])
     Hline(im, cx - 6, 168 + bob, 12, P["ink"])
-    face256(im, cx - 24, 30 + bob, long_beard=True)
+    face_wangchongyang(im, cx - 24, 30 + bob)
     hair_dao(im, cx - 26, 30 + bob)
     # dual fists centered (中正)
     ox = 3 if walk_i >= 0 else 0
@@ -588,7 +776,7 @@ def draw_huangshang(im, walk_i=-1):
     bob = -2 if walk_i >= 0 and walk_i % 2 else 0
     sway = 2 if walk_i >= 0 else 0
     cx = 128 + lean
-    shadow(im, 128 + lean, 242 + bob, 90)
+    shadow(im, 128 + lean, 238 + bob, 90)
     legs_robe(im, cx - 44, 170 + bob, P["inkrobe"], P["inkrobe2"], step, lean, True)
     robe_body(im, cx - 44, 78 + bob, 88, 98, P["inkrobe3"], P["inkrobe2"], P["cinnabar"], True)
     # cinnabar annotation dots on robe
@@ -604,7 +792,7 @@ def draw_huangshang(im, walk_i=-1):
         put(im, cx - 62 + i * 3, 148 + bob, P["shade"])
     belt_gold(im, cx - 42, 154 + bob, 84, jewel=False)
     R(im, cx - 6, 156 + bob, 12, 10, P["ink"])  # inkstone buckle
-    face256(im, cx - 24, 28 + bob)
+    face_huangshang(im, cx - 24, 28 + bob)
     hair_scholar(im, cx - 26, 28 + bob)
     # book scroll in left hand
     box(im, cx - 78, 120 + bob, 28, 40, P["paper"])
@@ -637,12 +825,12 @@ def draw_huangshang(im, walk_i=-1):
 
 
 HEROES = [
-    ("red_zhangwuji", "張無記", draw_zhangwuji, "白衣黑邊半束髮、雙掌淡金氣暈、藥囊"),
-    ("red_dongfang", "東方唔敗", draw_dongfang, "硃紅繡袍長髮、銀針扇、繡箍飄帶"),
-    ("red_dugu", "獨孤求拜", draw_dugu, "青袍負木劍、清瘦密褶、劍氣淡白"),
-    ("red_saodi", "掃地僧", draw_saodi, "灰僧衣補丁光頭、竹掃把、念珠落葉"),
-    ("red_wangchongyang", "王重揚", draw_wangchongyang, "道冠長鬚寬袖、玉牌、中正雙拳青氣"),
-    ("red_huangshang", "黃裳", draw_huangshang, "墨褐文袍書卷、袖弩鐵蓮、墨指痕"),
+    ("red_zhangwuji", "張無記", draw_zhangwuji, "facefix溫厚圓目微抿＋腳踩實；白衣黑邊半束髮、雙掌淡金、藥囊"),
+    ("red_dongfang", "東方唔敗", draw_dongfang, "facefix鳳眼戲謔嘴＋腳踩實；硃紅繡袍長髮、銀針、飄帶"),
+    ("red_dugu", "獨孤求拜", draw_dugu, "facefix細目薄唇清瘦＋腳踩實；青袍負木劍、密褶"),
+    ("red_saodi", "掃地僧", draw_saodi, "facefix老年皺紋慈眉＋腳踩實；灰僧衣補丁、掃把念珠"),
+    ("red_wangchongyang", "王重揚", draw_wangchongyang, "facefix劍眉長鬚剛毅＋腳踩實；道冠寬袖、玉牌雙拳"),
+    ("red_huangshang", "黃裳", draw_huangshang, "facefix文士細目墨頰＋腳踩實；墨褐袍書卷、袖弩鐵蓮"),
 ]
 
 
@@ -701,17 +889,52 @@ def main():
     roster.save(p1)
     roster.resize((roster.width * 2, roster.height * 2), Image.NEAREST).save(p2)
 
-    md = f"""# MANIFEST — 紅階六人 256×256
+    # face compare: old backup vs new face crops, or six face closeups
+    face_prev = Path(f"{OUT}/_prev_facefix")
+    crop = 72
+    face_y0, face_x0 = 20, 128 - 36
+    compare = Image.new("RGBA", (crop * 6, crop * 2 + 8), (26, 21, 16, 255))
+    face_row = Image.new("RGBA", (crop * 6, crop), (26, 21, 16, 255))
+    for idx, (hid, name, fn, feat) in enumerate(HEROES):
+        idle_path = Path(f"{OUT}/{hid}_idle.png")
+        im = Image.open(idle_path).convert("RGBA")
+        # new face crop
+        boxc = (face_x0, face_y0, face_x0 + crop, face_y0 + crop)
+        # clamp
+        boxc = (max(0, face_x0), max(0, face_y0), min(256, face_x0 + crop), min(256, face_y0 + crop))
+        face_crop = im.crop(boxc)
+        # pad if needed
+        tile = Image.new("RGBA", (crop, crop), (26, 21, 16, 255))
+        tile.paste(face_crop, (0, 0), face_crop)
+        face_row.paste(tile, (idx * crop, 0), tile)
+        oldp = face_prev / f"{hid}_idle.png"
+        if oldp.exists():
+            oim = Image.open(oldp).convert("RGBA")
+            of = oim.crop(boxc)
+            ot = Image.new("RGBA", (crop, crop), (26, 21, 16, 255))
+            ot.paste(of, (0, 0), of)
+            compare.paste(ot, (idx * crop, 0), ot)
+        compare.paste(tile, (idx * crop, crop + 8), tile)
+    face_row_path = f"{PREV}/red_faces_closeup.png"
+    face_row.resize((face_row.width * 2, face_row.height * 2), Image.NEAREST).save(face_row_path)
+    cmp_path = f"{PREV}/red_faces_compare.png"
+    compare.resize((compare.width * 2, compare.height * 2), Image.NEAREST).save(cmp_path)
+
+    md = f"""# MANIFEST — 紅階六人 256×256（facefix／腳形修正）
 
 生成腳本：`tools/gen_red_heroes_256.py`
 輸出目錄：`assets/art/heroes/red/`
+備份：`assets/art/heroes/red/_prev_facefix/`
 預覽：`assets/art/_preview/red_roster256_x1.png`、`red_roster256_x2.png`
+臉對照：`assets/art/_preview/red_faces_compare.png`（上＝舊／下＝新）、`red_faces_closeup.png`
 
 ## 規格
 - Idle：256×256 RGBA 透明底硬邊
 - Walk：1024×256（4 幀 × 256）
 - 色盤：墨黑#1A1510／宣紙#E8DCC8／硃紅#C43C2C／青綠#2F6B5A／金邊#C9A227＋skin/wood/boot/shade/robe 微調
 - 解像階梯：紅＝256；Nearest 整數倍顯示
+- **facefix**：六人獨立五官／神態（唔共用同一 face 模板）
+- **腳形修正**：靴底平貼 sole_y=239，陰影 y=238；idle 雙腳對稱踩實；walk 抬腳 6px
 - 技能特效：今次未做（可後補）
 
 ## 清單
@@ -722,12 +945,14 @@ def main():
 ## 自檢
 - 尺寸正確；alpha 以 0/255 為主
 - 六人並排剪影可辨：白掌／紅針／木劍／掃把／道鬚／書卷袖弩
+- 臉：溫厚圓目／鳳眼戲謔／細目淡漠／老年慈眉／劍眉長鬚／文士墨頰
+- 腳：唔懸空、唔外八歪斜
 - 唔抄原著立繪、唔抄俠客棧／銀樓舊造型
 """
     with open(MANIFEST, "w", encoding="utf-8") as f:
         f.write(md)
     print("Wrote", MANIFEST)
-    print("Preview", p1, p2)
+    print("Preview", p1, p2, cmp_path, face_row_path)
 
 
 if __name__ == "__main__":

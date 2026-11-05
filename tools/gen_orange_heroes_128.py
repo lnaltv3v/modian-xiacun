@@ -129,44 +129,171 @@ def shadow(im, cx=64, y=118, w=48):
     R(im, x + 6, y + 1, w - 12, 2, P["ink"])
 
 
-def face128(im, x, y, *, smile=False, stern=False, bald=False, white_hair_top=False):
-    """約 24×26 臉"""
-    box(im, x, y, 24, 26, P["skin"])
-    R(im, x + 1, y + 1, 4, 22, P["skin2"])
-    R(im, x + 19, y + 2, 3, 20, P["skin2"])
-    R(im, x + 5, y + 20, 14, 4, P["skin3"])
-    # brows
-    Hline(im, x + 4, y + 7, 6, P["ink"])
-    Hline(im, x + 14, y + 7, 6, P["ink"])
-    if stern:
-        Hline(im, x + 4, y + 6, 7, P["ink"])
-        Hline(im, x + 13, y + 6, 7, P["ink"])
-    # eyes
-    R(im, x + 5, y + 9, 4, 3, P["ink"])
-    R(im, x + 15, y + 9, 4, 3, P["ink"])
-    put(im, x + 7, y + 10, P["paper"])
-    put(im, x + 17, y + 10, P["paper"])
-    # nose
+def _skull128(im, x, y, narrow=False):
+    w, h = (20, 26) if narrow else (24, 26)
+    xx = x + (2 if narrow else 0)
+    box(im, xx, y, w, h, P["skin"])
+    R(im, xx + 1, y + 1, 3, h - 4, P["skin2"])
+    R(im, xx + w - 4, y + 2, 2, h - 6, P["skin2"])
+    R(im, xx + 4, y + h - 6, w - 8, 4, P["skin3"])
+    return xx, w
+
+
+def face_yangguo(im, x, y):
+    """ Melancholy youth, one sleeve vibe — soft round eyes, slight frown """
+    _skull128(im, x, y)
+    Hline(im, x + 4, y + 7, 6, P["ink"]); Hline(im, x + 14, y + 7, 6, P["ink"])
+    put(im, x + 9, y + 6, P["ink"]); put(im, x + 14, y + 6, P["ink"])  # frown brow
+    R(im, x + 5, y + 9, 5, 4, P["ink"]); R(im, x + 15, y + 9, 5, 4, P["ink"])
+    put(im, x + 7, y + 10, P["paper"]); put(im, x + 17, y + 10, P["paper"])
+    Vline(im, x + 12, y + 12, 4, P["skin2"]); Hline(im, x + 11, y + 15, 3, P["skin3"])
+    Hline(im, x + 8, y + 19, 8, P["ink"]); put(im, x + 9, y + 18, P["ink"]); put(im, x + 14, y + 18, P["ink"])
+
+
+def face_guojing(im, x, y):
+    """ Honest round face, open eyes, simple smile """
+    _skull128(im, x, y)
+    Hline(im, x + 4, y + 7, 6, P["ink"]); Hline(im, x + 14, y + 7, 6, P["ink"])
+    R(im, x + 4, y + 9, 6, 4, P["ink"]); R(im, x + 14, y + 9, 6, 4, P["ink"])
+    R(im, x + 5, y + 10, 4, 2, P["paper"]); R(im, x + 15, y + 10, 4, 2, P["paper"])
+    put(im, x + 7, y + 11, P["ink"]); put(im, x + 17, y + 11, P["ink"])
+    Vline(im, x + 12, y + 12, 5, P["skin2"]); Hline(im, x + 11, y + 16, 3, P["skin3"])
+    R(im, x + 8, y + 18, 8, 3, P["cinnabar"])
+    put(im, x + 8, y + 18, P["ink"]); put(im, x + 15, y + 18, P["ink"]); put(im, x + 11, y + 20, P["ink"])
+
+
+def face_linghuzhong(im, x, y):
+    """ Romantic rogue — tilted brow, charming smirk """
+    _skull128(im, x, y)
+    Hline(im, x + 4, y + 6, 6, P["ink"]); Hline(im, x + 14, y + 7, 6, P["ink"])
+    put(im, x + 10, y + 5, P["ink"])
+    R(im, x + 5, y + 9, 4, 3, P["ink"]); R(im, x + 15, y + 9, 5, 3, P["ink"])
+    put(im, x + 7, y + 10, P["paper"]); put(im, x + 17, y + 10, P["paper"])
+    Vline(im, x + 12, y + 11, 5, P["skin2"]); Hline(im, x + 11, y + 15, 3, P["skin3"])
+    Hline(im, x + 8, y + 18, 6, P["ink"]); Hline(im, x + 13, y + 17, 5, P["ink"])
+    put(im, x + 17, y + 16, P["ink"]); R(im, x + 9, y + 19, 7, 2, P["cinnabar"])
+
+
+def face_qiaofeng(im, x, y):
+    """ Broad heroic — thick brows, square eyes, firm mouth """
+    _skull128(im, x, y)
+    Hline(im, x + 3, y + 6, 8, P["ink"]); Hline(im, x + 13, y + 6, 8, P["ink"])
+    Hline(im, x + 3, y + 7, 8, P["ink"]); Hline(im, x + 13, y + 7, 8, P["ink"])
+    R(im, x + 5, y + 9, 5, 4, P["ink"]); R(im, x + 15, y + 9, 5, 4, P["ink"])
+    put(im, x + 7, y + 10, P["paper"]); put(im, x + 17, y + 10, P["paper"])
+    Vline(im, x + 12, y + 12, 5, P["skin2"]); Hline(im, x + 10, y + 16, 4, P["skin3"])
+    Hline(im, x + 7, y + 19, 10, P["ink"]); Hline(im, x + 8, y + 20, 8, P["ink"])
+
+
+def face_zhangsanfeng(im, x, y):
+    """ Elder taoist — kind slits, soft smile, white brow hint """
+    _skull128(im, x, y)
+    Hline(im, x + 4, y + 7, 6, P["paper"]); Hline(im, x + 14, y + 7, 6, P["paper"])
+    Hline(im, x + 4, y + 8, 6, P["ink"]); Hline(im, x + 14, y + 8, 6, P["ink"])
+    Hline(im, x + 5, y + 10, 5, P["ink"]); Hline(im, x + 15, y + 10, 5, P["ink"])
+    put(im, x + 6, y + 10, P["paper"]); put(im, x + 16, y + 10, P["paper"])
+    Vline(im, x + 12, y + 12, 4, P["skin2"]); Hline(im, x + 11, y + 15, 3, P["skin3"])
+    Hline(im, x + 8, y + 18, 8, P["ink"])
+    put(im, x + 7, y + 17, P["ink"]); put(im, x + 16, y + 17, P["ink"])
+    R(im, x + 9, y + 19, 6, 2, P["cinnabar"])
+
+
+def face_fengqingyang(im, x, y):
+    """ Lonely sword sage — cold narrow eyes, thin mouth """
+    xx, w = _skull128(im, x, y, narrow=True)
+    Hline(im, xx + 3, y + 7, 5, P["ink"]); Hline(im, xx + 11, y + 7, 5, P["ink"])
+    Hline(im, xx + 3, y + 9, 6, P["ink"]); Hline(im, xx + 11, y + 9, 6, P["ink"])
+    put(im, xx + 5, y + 9, P["paper"]); put(im, xx + 13, y + 9, P["paper"])
+    Vline(im, xx + w // 2, y + 11, 4, P["skin2"])
+    Hline(im, xx + 6, y + 18, 8, P["ink"])
+
+
+def face_huangyaoshi(im, x, y):
+    """ Eccentric scholar — raised brow, sharp eyes, thin smirk """
+    _skull128(im, x, y)
+    Hline(im, x + 4, y + 5, 6, P["ink"]); Hline(im, x + 14, y + 7, 6, P["ink"])  # uneven brows
+    put(im, x + 9, y + 4, P["ink"])
+    R(im, x + 5, y + 9, 4, 3, P["ink"]); R(im, x + 15, y + 9, 4, 2, P["ink"])
+    put(im, x + 7, y + 10, P["paper"]); put(im, x + 17, y + 9, P["paper"])
+    Vline(im, x + 12, y + 11, 5, P["skin2"]); Hline(im, x + 11, y + 15, 3, P["skin3"])
+    Hline(im, x + 9, y + 18, 7, P["ink"]); put(im, x + 15, y + 17, P["ink"])
+
+
+def face_ouyangfeng(im, x, y):
+    """ Mad venom — eerie wide eyes (paper whites big), grim mouth """
+    _skull128(im, x, y)
+    Hline(im, x + 3, y + 6, 7, P["ink"]); Hline(im, x + 14, y + 6, 7, P["ink"])
+    R(im, x + 4, y + 8, 6, 5, P["paper"]); R(im, x + 14, y + 8, 6, 5, P["paper"])
+    R(im, x + 5, y + 9, 4, 3, P["ink"]); R(im, x + 15, y + 9, 4, 3, P["ink"])
+    put(im, x + 6, y + 10, P["cinnabar"]); put(im, x + 16, y + 10, P["cinnabar"])
+    Vline(im, x + 12, y + 13, 4, P["skin2"])
+    Hline(im, x + 7, y + 19, 10, P["ink"]); Hline(im, x + 8, y + 20, 8, P["cinnabar"])
+
+
+def face_hongqigong(im, x, y):
+    """ Beggar elder — laugh lines, squint smile, round cheeks """
+    _skull128(im, x, y)
+    Hline(im, x + 4, y + 7, 6, P["ink"]); Hline(im, x + 14, y + 7, 6, P["ink"])
+    Hline(im, x + 5, y + 10, 5, P["ink"]); Hline(im, x + 15, y + 10, 5, P["ink"])
+    put(im, x + 6, y + 10, P["paper"]); put(im, x + 16, y + 10, P["paper"])
+    put(im, x + 3, y + 11, P["skin3"]); put(im, x + 20, y + 11, P["skin3"])  # laugh lines
+    Vline(im, x + 12, y + 12, 4, P["skin2"])
+    R(im, x + 7, y + 18, 10, 3, P["cinnabar"])
+    put(im, x + 7, y + 18, P["ink"]); put(im, x + 16, y + 18, P["ink"]); put(im, x + 11, y + 20, P["ink"])
+
+
+def face_yideng(im, x, y):
+    """ Monk emperor — bald serene, half-lid eyes, calm """
+    _skull128(im, x, y)
+    R(im, x + 2, y - 6, 20, 8, P["skin"]); R(im, x + 4, y - 10, 16, 6, P["skin2"])
+    R(im, x + 6, y - 12, 12, 4, P["skin3"])
+    for dx in (7, 11, 15):
+        put(im, x + dx, y - 2, P["ink"])
+    Hline(im, x + 4, y + 7, 6, P["ink"]); Hline(im, x + 14, y + 7, 6, P["ink"])
+    Hline(im, x + 5, y + 10, 5, P["ink"]); Hline(im, x + 15, y + 10, 5, P["ink"])
+    put(im, x + 6, y + 10, P["paper"]); put(im, x + 16, y + 10, P["paper"])
+    Vline(im, x + 12, y + 12, 4, P["skin2"])
+    Hline(im, x + 8, y + 18, 8, P["ink"])
+
+
+def face_zhoubotong(im, x, y):
+    """ Childlike elder — wide playful eyes, big grin """
+    _skull128(im, x, y)
+    Hline(im, x + 4, y + 6, 6, P["ink"]); Hline(im, x + 14, y + 6, 6, P["ink"])
+    R(im, x + 4, y + 8, 6, 5, P["ink"]); R(im, x + 14, y + 8, 6, 5, P["ink"])
+    R(im, x + 5, y + 9, 4, 3, P["paper"]); R(im, x + 15, y + 9, 4, 3, P["paper"])
+    put(im, x + 7, y + 10, P["ink"]); put(im, x + 17, y + 10, P["ink"])
+    Vline(im, x + 12, y + 13, 4, P["skin2"])
+    R(im, x + 6, y + 18, 12, 4, P["cinnabar"])
+    Hline(im, x + 6, y + 18, 12, P["ink"]); put(im, x + 11, y + 21, P["ink"])
+    put(im, x + 6, y + 17, P["ink"]); put(im, x + 17, y + 17, P["ink"])
+
+
+def face_miejueshitai(im, x, y):
+    """ Stern nun — sharp brows, cold eyes, tight mouth """
+    _skull128(im, x, y)
+    Hline(im, x + 3, y + 6, 7, P["ink"]); Hline(im, x + 14, y + 6, 7, P["ink"])
+    Hline(im, x + 3, y + 7, 7, P["ink"]); Hline(im, x + 14, y + 7, 7, P["ink"])
+    put(im, x + 10, y + 5, P["ink"]); put(im, x + 13, y + 5, P["ink"])
+    R(im, x + 5, y + 9, 4, 3, P["ink"]); R(im, x + 15, y + 9, 4, 3, P["ink"])
+    put(im, x + 7, y + 10, P["paper"]); put(im, x + 17, y + 10, P["paper"])
+    Hline(im, x + 5, y + 8, 4, P["ink"]); Hline(im, x + 15, y + 8, 4, P["ink"])
     Vline(im, x + 12, y + 11, 5, P["skin2"])
-    Hline(im, x + 11, y + 15, 3, P["skin3"])
-    # mouth
-    if smile:
-        R(im, x + 8, y + 18, 8, 3, P["cinnabar"])
-        put(im, x + 8, y + 18, P["ink"])
-        put(im, x + 15, y + 18, P["ink"])
-        put(im, x + 11, y + 20, P["ink"])
-    else:
-        R(im, x + 8, y + 18, 8, 2, P["cinnabar"])
-        Hline(im, x + 8, y + 18, 8, P["ink"])
+    Hline(im, x + 8, y + 18, 8, P["ink"]); Hline(im, x + 9, y + 19, 6, P["ink"])
+
+
+def face128(im, x, y, *, smile=False, stern=False, bald=False, white_hair_top=False):
+    """legacy fallback — prefer unique face_* """
     if bald:
-        R(im, x + 2, y - 6, 20, 8, P["skin"])
-        R(im, x + 4, y - 10, 16, 6, P["skin2"])
-        R(im, x + 6, y - 12, 12, 4, P["skin3"])
-        for dx in (7, 11, 15):
-            put(im, x + dx, y - 2, P["ink"])
-    if white_hair_top:
-        R(im, x + 2, y - 4, 20, 6, P["paper"])
-        R(im, x + 4, y - 8, 16, 5, P["white2"])
+        face_yideng(im, x, y)
+    elif stern and smile:
+        face_zhangsanfeng(im, x, y)
+    elif stern:
+        face_qiaofeng(im, x, y)
+    elif smile:
+        face_guojing(im, x, y)
+    else:
+        face_yangguo(im, x, y)
 
 
 def hair_black_half(im, x, y, sway=0):
@@ -268,24 +395,30 @@ def sleeves(im, xl, xr, y, w, h, fill, shade, bob=0):
         fold_h(im, xr + 2, y + bob + i, w - 4, shade)
 
 
-def legs(im, x, y, fill, shade, step=0, lean=0, boot=True, pant_h=26):
-    lx = lean + (-5 if step < 0 else (5 if step > 0 else 0))
-    rx = lean + (5 if step < 0 else (-5 if step > 0 else 0))
-    ly = -3 if step < 0 else 0
-    ry = -3 if step > 0 else 0
-    R(im, x + lx, y + ly, 14, pant_h, fill)
-    R(im, x + lx + 1, y + ly + 1, 3, pant_h - 4, shade)
-    fold_v(im, x + lx + 7, y + ly + 2, pant_h - 8, shade)
-    R(im, x + 18 + rx, y + ry, 14, pant_h, fill)
-    R(im, x + 19 + rx, y + ry + 1, 3, pant_h - 4, shade)
-    fold_v(im, x + 25 + rx, y + ry + 2, pant_h - 8, shade)
+def legs(im, x, y, fill, shade, step=0, lean=0, boot=True, pant_h=26, sole_y=120):
+    """腳踩實：idle 雙腳同高貼 sole_y；walk 抬腳僅 3px"""
+    boot_h = 8
+    if step == 0:
+        lx = lean; rx = lean; l_sole = sole_y; r_sole = sole_y
+    elif step < 0:
+        lx = lean - 3; rx = lean + 1; l_sole = sole_y - 3; r_sole = sole_y
+    else:
+        lx = lean + 1; rx = lean - 3; l_sole = sole_y; r_sole = sole_y - 3
+    l_h = max(12, l_sole - boot_h - y)
+    r_h = max(12, r_sole - boot_h - y)
+    R(im, x + lx, y, 14, l_h, fill)
+    R(im, x + lx + 1, y + 1, 3, max(4, l_h - 4), shade)
+    fold_v(im, x + lx + 7, y + 2, max(4, l_h - 8), shade)
+    R(im, x + 18 + rx, y, 14, r_h, fill)
+    R(im, x + 19 + rx, y + 1, 3, max(4, r_h - 4), shade)
+    fold_v(im, x + 25 + rx, y + 2, max(4, r_h - 8), shade)
     if boot:
-        R(im, x + lx - 1, y + pant_h - 4 + ly, 15, 8, P["boot"])
-        Hline(im, x + lx - 1, y + pant_h - 4 + ly, 15, P["ink"])
-        Hline(im, x + lx - 1, y + pant_h + 3 + ly, 15, P["ink"])
-        R(im, x + 18 + rx - 1, y + pant_h - 4 + ry, 15, 8, P["boot"])
-        Hline(im, x + 18 + rx - 1, y + pant_h - 4 + ry, 15, P["ink"])
-        Hline(im, x + 18 + rx - 1, y + pant_h + 3 + ry, 15, P["ink"])
+        R(im, x + lx - 1, l_sole - boot_h, 15, boot_h, P["boot"])
+        Hline(im, x + lx - 1, l_sole - boot_h, 15, P["ink"])
+        Hline(im, x + lx - 1, l_sole - 1, 15, P["ink"])
+        R(im, x + 18 + rx - 1, r_sole - boot_h, 15, boot_h, P["boot"])
+        Hline(im, x + 18 + rx - 1, r_sole - boot_h, 15, P["ink"])
+        Hline(im, x + 18 + rx - 1, r_sole - 1, 15, P["ink"])
 
 
 def belt(im, x, y, w, jewel=True, color=None):
@@ -356,7 +489,7 @@ def draw_yangguo(im, walk_i=-1):
     gold_trim(im, cx + 16, 76 + bob, 12, 14)
     put(im, cx + 21, 82 + bob, P["pale_gold"])
     put(im, cx + 20, 80 + bob, P["paper"])
-    face128(im, cx - 12, 14 + bob)
+    face_yangguo(im, cx - 12, 14 + bob)
     hair_black_half(im, cx - 12, 14 + bob, sway)
     # collar
     R(im, cx - 10, 40 + bob, 20, 4, P["cinnabar"])
@@ -387,7 +520,7 @@ def draw_guojing(im, walk_i=-1):
     # dual fists
     fist(im, cx - 42, 72 + bob)
     fist(im, cx + 32 + (2 if walk_i >= 0 else 0), 70 + bob)
-    face128(im, cx - 12, 12 + bob, smile=True)
+    face_guojing(im, cx - 12, 12 + bob)
     hair_short_brown(im, cx - 12, 12 + bob)
     # collar
     R(im, cx - 8, 38 + bob, 16, 4, P["brown2"])
@@ -419,7 +552,7 @@ def draw_linghuzhong(im, walk_i=-1):
     R(im, sx - 2, sy + 4, 10, 10, P["wood3"])
     Hline(im, sx - 2, sy + 4, 10, P["ink"])
     put(im, sx + 2, sy + 8, P["gold"])
-    face128(im, cx - 12, 12 + bob, smile=True)
+    face_linghuzhong(im, cx - 12, 12 + bob)
     hair_messy(im, cx - 12, 12 + bob, sway)
     fist(im, cx - 36, 68 + bob)
     fist(im, cx + 28, 66 + bob)
@@ -450,7 +583,7 @@ def draw_qiaofeng(im, walk_i=-1):
     for dx in range(0, 12, 3):
         put(im, cx - 40 + dx, 63 + bob, P["ink"])
         put(im, cx + 32 + dx, 61 + bob, P["ink"])
-    face128(im, cx - 12, 8 + bob, stern=True)
+    face_qiaofeng(im, cx - 12, 8 + bob)
     hair_short_brown(im, cx - 12, 8 + bob)
     # taller head offset already via y=8
 
@@ -480,7 +613,7 @@ def draw_zhangsanfeng(im, walk_i=-1):
     R(im, fx, 20 + bob, 16, 14, P["paper"])
     for i in range(0, 14, 2):
         Vline(im, fx + i, 16 + bob, 12 + (i % 4), P["white2"])
-    face128(im, cx - 12, 12 + bob, smile=True)
+    face_zhangsanfeng(im, cx - 12, 12 + bob)
     hair_white_long(im, cx - 12, 12 + bob, sway, bun=True)
     beard_long_white(im, cx - 12, 12 + bob)
     # circular arm pose hint
@@ -520,7 +653,7 @@ def draw_fengqingyang(im, walk_i=-1):
     R(im, cx + 14, 48 + bob, 8, 6, P["gold"])  # guard
     R(im, cx + 16, 42 + bob, 4, 8, P["wood2"])  # hilt
     put(im, cx + 17, 44 + bob, P["pale_gold"])
-    face128(im, cx - 12, 12 + bob, stern=True)
+    face_fengqingyang(im, cx - 12, 12 + bob)
     hair_white_long(im, cx - 12, 12 + bob, sway, bun=False)
     fist(im, cx - 34, 68 + bob)
 
@@ -550,7 +683,7 @@ def draw_huangyaoshi(im, walk_i=-1):
     for px, py in ((20, 30), (100, 45), (30, 55)):
         put(im, px, py + bob, P["peach"])
         put(im, px + 1, py + bob, P["cinnabar"])
-    face128(im, cx - 12, 12 + bob, stern=True)
+    face_huangyaoshi(im, cx - 12, 12 + bob)
     # scholar topknot
     R(im, cx - 10, 6 + bob, 20, 8, P["ink"])
     R(im, cx - 8, 2 + bob, 16, 6, P["ink"])
@@ -589,7 +722,7 @@ def draw_ouyangfeng(im, walk_i=-1):
     for i in range(20, 90, 8):
         put(im, sx + 1, 18 + bob + i, P["snakegreen"])
         put(im, sx + 4, 22 + bob + i, P["snakegreen2"])
-    face128(im, cx - 12, 12 + bob, stern=True)
+    face_ouyangfeng(im, cx - 12, 12 + bob)
     # eerie eyes overwrite
     R(im, cx - 7, 21 + bob, 4, 3, P["paper"])
     R(im, cx + 3, 21 + bob, 4, 3, P["paper"])
@@ -631,7 +764,7 @@ def draw_hongqigong(im, walk_i=-1):
         R(im, cx + 28, 60 + bob, 6, 16, P["wood2"])
         box(im, cx + 26, 54 + bob, 12, 10, P["brown3"])
         put(im, cx + 30, 57 + bob, P["pale_gold"])
-    face128(im, cx - 12, 14 + bob, smile=True)
+    face_hongqigong(im, cx - 12, 14 + bob)
     # old sparse white hair
     R(im, cx - 10, 8 + bob, 20, 6, P["paper"])
     R(im, cx - 8, 4 + bob, 16, 5, P["white2"])
@@ -661,7 +794,7 @@ def draw_yideng(im, walk_i=-1):
     for i, c in enumerate(beads * 2):
         R(im, cx - 14 + (i % 6) * 5, 38 + bob + (i // 6) * 4, 4, 4, c)
         put(im, cx - 13 + (i % 6) * 5, 39 + bob + (i // 6) * 4, P["ink"])
-    face128(im, cx - 12, 14 + bob, bald=True, smile=True)
+    face_yideng(im, cx - 12, 14 + bob)
     # finger warm light (right)
     fist(im, cx + 32, 68 + bob)
     put(im, cx + 40, 68 + bob, P["pale_gold"])
@@ -691,7 +824,7 @@ def draw_zhoubotong(im, walk_i=-1):
         put(im, cx + dx, dy + bob, P["white2"])
         put(im, cx + dx + 1, dy + bob + 1, P["shade"])
     belt(im, cx - 18, 76 + bob, 36)
-    face128(im, cx - 12, 12 + bob, smile=True)
+    face_zhoubotong(im, cx - 12, 12 + bob)
     hair_white_long(im, cx - 12, 12 + bob, sway, bun=False)
     # childlike rounder cheeks
     R(im, cx - 11, 28 + bob, 4, 6, P["skin2"])
@@ -720,7 +853,7 @@ def draw_miejueshitai(im, walk_i=-1):
     put(im, sx + 2, 90 + bob, P["gold"])
     fist(im, sx - 4, 82 + bob)
     fist(im, cx - 36, 70 + bob)
-    face128(im, cx - 12, 14 + bob, stern=True)
+    face_miejueshitai(im, cx - 12, 14 + bob)
     hair_nun(im, cx - 12, 14 + bob)
     # vermillion scar on forehead
     R(im, cx - 2, 16 + bob, 4, 3, P["cinnabar"])
@@ -815,7 +948,7 @@ def main():
     roster.save(p1)
     roster.resize((roster.width * 2, roster.height * 2), Image.NEAREST).save(p2)
 
-    md = f"""# MANIFEST — 橙階十二人 128×128
+    md = f"""# MANIFEST — 橙階（facefix／腳形修正）十二人 128×128
 
 生成腳本：`tools/gen_orange_heroes_128.py`
 輸出目錄：`assets/art/heroes/orange/`

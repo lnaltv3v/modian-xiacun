@@ -2,9 +2,12 @@ extends Node
 ## JSON 存檔 — user://save_slot_0.json（含版本欄）
 
 const SAVE_PATH := "user://save_slot_0.json"
-const SAVE_VERSION := 9
+const BACKUP_PATH := "user://save_slot_0.bak.json"
+const BACKUP_PATH_2 := "user://save_slot_0.bak2.json"
+const SAVE_VERSION := 10
 
 func save_game() -> bool:
+	_rotate_backups()
 	var data: Dictionary = {
 		"version": SAVE_VERSION,
 		"saved_at": Time.get_datetime_string_from_system(),
@@ -18,6 +21,39 @@ func save_game() -> bool:
 		return false
 	f.store_string(json)
 	return true
+
+func _rotate_backups() -> void:
+	## 現行 → .bak；舊 .bak → .bak2（最多兩份自動備份）
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	if FileAccess.file_exists(BACKUP_PATH):
+		_copy_user_file(BACKUP_PATH, BACKUP_PATH_2)
+	_copy_user_file(SAVE_PATH, BACKUP_PATH)
+
+func _copy_user_file(src: String, dst: String) -> bool:
+	var fr: FileAccess = FileAccess.open(src, FileAccess.READ)
+	if fr == null:
+		return false
+	var buf: PackedByteArray = fr.get_buffer(fr.get_length())
+	fr = null
+	var fw: FileAccess = FileAccess.open(dst, FileAccess.WRITE)
+	if fw == null:
+		return false
+	fw.store_buffer(buf)
+	fw.flush()
+	fw = null
+	return true
+
+func has_backup() -> bool:
+	return FileAccess.file_exists(BACKUP_PATH)
+
+func restore_backup() -> bool:
+	## 從最近自動備份還原主存檔（測試／救援）
+	if not FileAccess.file_exists(BACKUP_PATH):
+		return false
+	if not _copy_user_file(BACKUP_PATH, SAVE_PATH):
+		return false
+	return load_game()
 
 func load_game() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -43,3 +79,7 @@ func has_save() -> bool:
 func clear_save() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(SAVE_PATH)
+	if FileAccess.file_exists(BACKUP_PATH):
+		DirAccess.remove_absolute(BACKUP_PATH)
+	if FileAccess.file_exists(BACKUP_PATH_2):
+		DirAccess.remove_absolute(BACKUP_PATH_2)

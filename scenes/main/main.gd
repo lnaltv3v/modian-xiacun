@@ -1,11 +1,12 @@
 extends Control
-## 墨點俠村 v0.9.3 — 鑽石 stub／招募日節奏／秘境獎勵表
+## 墨點俠村 v0.9.4 — 戰鬥飄字／抽卡稀有閃光／存檔自動備份
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
 const DungeonRunScene := preload("res://scenes/combat/dungeon_run.tscn")
 const AutoCombatScene := preload("res://scenes/combat/auto_combat.tscn")
 const HeroPortraitScript := preload("res://scripts/ui/HeroPortrait.gd")
+const _GachaFlashScript := preload("res://scripts/ui/GachaFlash.gd")
 const _OutpostScript := preload("res://scripts/systems/OutpostSystem.gd")
 
 @onready var hud_label: Label = %HudLabel
@@ -58,6 +59,7 @@ var _battle_queue: Array = []
 var _battle_final: Dictionary = {}
 var _battle_mode: String = ""
 var _rng_ui := RandomNumberGenerator.new()
+var _gacha_flash: Control
 
 func _ready() -> void:
 	_dispatch = DispatchSystem.new()
@@ -84,9 +86,12 @@ func _ready() -> void:
 	if _auto_combat.has_signal("finished"):
 		_auto_combat.finished.connect(_on_auto_combat_finished)
 	_rng_ui.randomize()
+	_gacha_flash = _GachaFlashScript.new()
+	_gacha_flash.name = "GachaFlash"
+	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.9.3"
+		title_label.text = "墨點俠村 · v0.9.4"
 
 	_setup_resource_icons()
 	_setup_monster_reserve()
@@ -661,8 +666,10 @@ func _on_gacha_pressed() -> void:
 	var res: Dictionary = GachaSystem.pull_once()
 	if not bool(res.get("ok", false)):
 		GameState.push_report("英雄帖失敗：%s" % str(res.get("reason", "")))
-	elif GameState.tutorial_step == 4:
-		_complete_tutorial_build_or_gacha("抽卡")
+	else:
+		_flash_gacha_result(res)
+		if GameState.tutorial_step == 4:
+			_complete_tutorial_build_or_gacha("抽卡")
 	_rebuild_heroes()
 	_refresh_hud()
 
@@ -680,10 +687,22 @@ func _on_gacha10_pressed() -> void:
 			else:
 				dupes += 1
 		GameState.push_report("十連完成：新俠 %d／重覆 %d（耗鑽 %d）" % [news, dupes, int(res.get("cost", 0))])
+		if _gacha_flash and _gacha_flash.has_method("play_batch"):
+			_gacha_flash.play_batch(res.get("results", []) as Array)
 		if GameState.tutorial_step == 4:
 			_complete_tutorial_build_or_gacha("抽卡")
 	_rebuild_heroes()
 	_refresh_hud()
+
+func _flash_gacha_result(res: Dictionary) -> void:
+	if _gacha_flash == null:
+		return
+	var rarity: String = str(res.get("rarity", "白"))
+	var h: Dictionary = res.get("hero", {}) as Dictionary
+	var nm: String = str(h.get("name", ""))
+	var dupe: bool = str(res.get("result", "")) == "dupe"
+	if _gacha_flash.has_method("play"):
+		_gacha_flash.play(rarity, nm, dupe)
 
 func _on_bounty_selected(index: int) -> void:
 	if opt_bounty == null:

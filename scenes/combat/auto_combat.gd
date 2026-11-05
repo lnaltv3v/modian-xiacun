@@ -1,5 +1,7 @@
 extends Control
-## 短即時自動戰鬥：雙方靠近 → 攻擊幀循環 3–8 秒 → 結算摘要可選
+## 短即時自動戰鬥：雙方靠近 → 攻擊幀循環 3–8 秒 → 結算摘要＋飄字
+
+const _DamageFloater := preload("res://scripts/ui/DamageFloater.gd")
 
 signal finished(summary: Dictionary)
 
@@ -24,6 +26,8 @@ var _fight_left: float = 0.0
 var _rng := RandomNumberGenerator.new()
 var _bg_tex: TextureRect
 var _bg_dim: ColorRect
+var _float_layer: Control
+var _hit_tick: int = 0
 
 func _ready() -> void:
 	visible = false
@@ -53,6 +57,9 @@ func play(config: Dictionary) -> void:
 	visible = true
 	move_to_front()
 	_apply_zone_bg()
+	_ensure_float_layer()
+	_hit_tick = 0
+	_clear_floaters()
 	if summary_panel:
 		summary_panel.visible = false
 	if btn_ok:
@@ -221,6 +228,7 @@ func _pulse_frames() -> void:
 			continue
 		## 輕微前後晃
 		spr2.position.x += 3.0 if _atk_flip else -3.0
+	_spawn_hit_floaters()
 
 func _end_fight() -> void:
 	_phase = "done"
@@ -275,6 +283,7 @@ func _on_ok() -> void:
 func _finish() -> void:
 	_playing = false
 	visible = false
+	_clear_floaters()
 	if summary_panel:
 		summary_panel.visible = false
 	if btn_ok:
