@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.10.3 — Pivot R6 UI drop-in（hud／btn／resource icons）
+## 墨點俠村 v0.10.4 — 書院 Pivot R3 academy 接入
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -95,7 +95,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.10.3"
+		title_label.text = "墨點俠村 · v0.10.4"
 
 	_setup_resource_icons()
 	_setup_ui_art()

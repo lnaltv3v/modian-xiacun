@@ -80,3 +80,6 @@ academy 160 已接入；八棟＋村景統一加厚打磨（瓦紋／木紋／�
 
 ### Pivot R5（2026-11-06）
 八棟＋村景再密；`art_revision: pivot_r5`；pad 全透明；分層 tiles；預覽 `assets/art/_preview/pivot_r5_*`。
+
+### 書院 R3 接入（2026-11-06）
+Lemon 批核 Pivot R3 `academy.png`；live `assets/art/buildings/academy.png` 改用 R3 交付；`art_revision: pivot_r5_academy_r3`；預覽 `assets/art/_preview/pivot_r3_academy.png`。
