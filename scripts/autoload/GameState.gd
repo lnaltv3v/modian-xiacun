@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 13
+const SAVE_VERSION := 14
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -62,6 +62,10 @@ var outpost_diff_clears: Dictionary = {}
 var dungeon_pick_diff: String = "normal"
 var dungeon_pick_waves: String = "full"
 var outpost_pick_diff: String = "normal"
+## 外派營地駐守：camp_id -> {hero_ids, totals, accum...}
+var camp_stations: Dictionary = {}
+## 前哨面板揀中嘅營地
+var camp_pick_id: String = "luanshan"
 ## 書院技能樹已解鎖節點 id
 var academy_unlocked_nodes: Array = []
 ## 比武台日限／連勝
@@ -105,6 +109,8 @@ func _load_starter_data() -> void:
 	dungeon_pick_diff = "normal"
 	dungeon_pick_waves = "full"
 	outpost_pick_diff = "normal"
+	camp_stations = {}
+	camp_pick_id = "luanshan"
 	academy_unlocked_nodes = []
 	arena_day_key = ""
 	arena_spars_today = 0
@@ -349,6 +355,8 @@ func to_save_dict() -> Dictionary:
 		"dungeon_pick_diff": dungeon_pick_diff,
 		"dungeon_pick_waves": dungeon_pick_waves,
 		"outpost_pick_diff": outpost_pick_diff,
+		"camp_stations": camp_stations.duplicate(true),
+		"camp_pick_id": camp_pick_id,
 		"academy_unlocked_nodes": academy_unlocked_nodes.duplicate(true),
 		"arena_day_key": arena_day_key,
 		"arena_spars_today": arena_spars_today,
@@ -407,7 +415,10 @@ func load_from_dict(d: Dictionary) -> void:
 	dungeon_pick_diff = str(d.get("dungeon_pick_diff", "normal"))
 	dungeon_pick_waves = str(d.get("dungeon_pick_waves", "full"))
 	outpost_pick_diff = str(d.get("outpost_pick_diff", "normal"))
+	camp_stations = (d.get("camp_stations", {}) as Dictionary).duplicate(true) if typeof(d.get("camp_stations", {})) == TYPE_DICTIONARY else {}
+	camp_pick_id = str(d.get("camp_pick_id", "luanshan"))
 	academy_unlocked_nodes = (d.get("academy_unlocked_nodes", []) as Array).duplicate(true) if typeof(d.get("academy_unlocked_nodes", [])) == TYPE_ARRAY else []
+	OutpostSystem.sanitize_stations()
 	arena_day_key = str(d.get("arena_day_key", ""))
 	arena_spars_today = int(d.get("arena_spars_today", 0))
 	arena_wins_total = int(d.get("arena_wins_total", 0))

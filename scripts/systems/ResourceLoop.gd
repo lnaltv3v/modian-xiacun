@@ -48,7 +48,11 @@ static func describe_readiness(selected_n: int = 0) -> String:
 	else:
 		var od: Dictionary = OutpostSystem.difficulty_by_id(str(GameState.outpost_pick_diff))
 		o_txt = "前哨·%s" % str(od.get("name", "普通"))
-		o_txt += "✓" if ready_n > 0 else ""
+		var camp_n: int = OutpostSystem.stationed_count()
+		if camp_n > 0:
+			o_txt += "·駐%d" % camp_n
+		elif ready_n > 0:
+			o_txt += "✓"
 	var sel: String = ("　已選%d" % selected_n) if selected_n > 0 else ""
 	var academy: String = "　書院✓" if AcademySystem.academy_ready() else ""
 	return "%s%s%s　｜　就緒%d 在村%d 出征%d%s　｜　%s　｜　%s%s" % [

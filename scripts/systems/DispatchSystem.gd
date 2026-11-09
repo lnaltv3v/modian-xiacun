@@ -27,6 +27,7 @@ func _process(delta: float) -> void:
 	if _recover_accum >= 0.5:
 		UpkeepSystem.tick(_recover_pending)
 		TrainingSystem.tick(_recover_pending)
+		OutpostSystem.tick_camps(_recover_pending)
 		_shop_accum += _recover_pending
 		if GameState.auto_shop and _shop_accum >= 2.0:
 			_shop_accum = 0.0

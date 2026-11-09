@@ -4,7 +4,7 @@ extends Node
 const SAVE_PATH := "user://save_slot_0.json"
 const BACKUP_PATH := "user://save_slot_0.bak.json"
 const BACKUP_PATH_2 := "user://save_slot_0.bak2.json"
-const SAVE_VERSION := 13
+const SAVE_VERSION := 14
 
 func save_game() -> bool:
 	_rotate_backups()

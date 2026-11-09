@@ -161,7 +161,7 @@ func play_for_status(status: String) -> void:
 		return
 	if _sprite == null or _sprite.sprite_frames == null:
 		return
-	if status == "hunting" or status == "dungeon":
+	if status == "hunting" or status == "dungeon" or status == "camped":
 		if _sprite.sprite_frames.has_animation("walk"):
 			_sprite.play("walk")
 			return

@@ -72,3 +72,8 @@
 - 建築全數 160（含書院）；HUD 食住醫／秘境前哨釐清；橙紫 attack 見 v0.9.8
 - HUD：食住醫狀態／已選成功率；秘境·N波／前哨·N波 按鈕文案
 - 對齊 EHT 缺口見 `docs/NEXT.md`
+
+
+## v0.13 外派駐守
+- 多前哨營地：亂山前哨／官道哨卡；`OutpostSystem.station`／`recall`／`tick_camps`
+- 俠客 `status=camped`；存檔 `camp_stations`＋`camp_pick_id`；Save **14**
