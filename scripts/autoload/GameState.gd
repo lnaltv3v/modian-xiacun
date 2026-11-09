@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 12
+const SAVE_VERSION := 13
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -33,7 +33,7 @@ var zones: Dictionary = {}
 var inventory: Array = []
 ## 玩家放置：building_id -> {x, y}（設計座標 960×540）；空則用 layout 預設
 var building_placements: Dictionary = {}
-## 新手引導：0=完成／跳過；1=興建客棧；2=派遣；3=等回村；4=抽卡／興建
+## 新手引導：0=完成／跳過；1=興建客棧；2=派遣；3=等回村；4=抽卡／興建；5=秘境；6=前哨／書院（舊存檔 step=0 維持完成）
 var tutorial_step: int = 1
 ## 英雄帖碎片（重覆轉換）
 var fragments: int = 0

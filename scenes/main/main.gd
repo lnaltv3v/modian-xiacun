@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.11.0 — 秘境難度／波次選擇＋書院技能樹 stub
+## 墨點俠村 v0.12.0 — 新手秘境／前哨引導＋HUD 資訊密度
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -78,6 +78,16 @@ var _academy_label: Label
 var _academy_btns: VBoxContainer
 var _academy_preview: Label
 var _academy_pick_node: String = ""
+var _dense_hud_bg: TextureRect
+var _chip_food_icon: TextureRect
+var _chip_lodge_icon: TextureRect
+var _chip_med_icon: TextureRect
+var _chip_food_lab: Label
+var _chip_lodge_lab: Label
+var _chip_med_lab: Label
+var _chip_ready_lab: Label
+var _chip_dungeon_lab: Label
+var _chip_outpost_lab: Label
 
 func _ready() -> void:
 	_dispatch = DispatchSystem.new()
@@ -109,7 +119,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.10.4"
+		title_label.text = "墨點俠村 · v0.12.0"
 
 	_setup_resource_icons()
 	_setup_ui_art()
@@ -214,6 +224,13 @@ func _setup_ui_art() -> void:
 	_set_tex(hud, ArtPaths.HUD_PANEL)
 
 	_apply_btn_art(btn_dispatch, ArtPaths.BTN_DISPATCH, Vector2(128, 40))
+	_apply_btn_art(btn_dungeon, ArtPaths.BTN_DISPATCH, Vector2(108, 28))
+	_apply_btn_art(btn_outpost, ArtPaths.BTN_DISPATCH, Vector2(108, 28))
+	_apply_btn_art(btn_academy, ArtPaths.BTN_BUILD, Vector2(108, 28))
+	_apply_btn_art(btn_arena, ArtPaths.BTN_BUILD, Vector2(98, 28))
+	if btn_gacha:
+		_apply_btn_art(btn_gacha, ArtPaths.BTN_BUILD, Vector2(96, 28))
+	_setup_dense_hud()
 
 func _apply_btn_art(btn: Button, path: String, size: Vector2) -> void:
 	if btn == null:
@@ -234,6 +251,147 @@ func _apply_btn_art(btn: Button, path: String, size: Vector2) -> void:
 	btn.custom_minimum_size = size
 	btn.size = Vector2(maxf(btn.size.x, size.x), size.y)
 	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
+func _setup_dense_hud() -> void:
+	## 頂欄下資訊帶：重用 hud_panel／資源圖示，食住醫＋就緒／秘境／前哨可掃
+	_dense_hud_bg = get_node_or_null("DenseHudBg") as TextureRect
+	if _dense_hud_bg == null:
+		_dense_hud_bg = TextureRect.new()
+		_dense_hud_bg.name = "DenseHudBg"
+		_dense_hud_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_dense_hud_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_dense_hud_bg.stretch_mode = TextureRect.STRETCH_SCALE
+		_dense_hud_bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_dense_hud_bg.position = Vector2(4, 68)
+		_dense_hud_bg.size = Vector2(1272, 34)
+		_dense_hud_bg.modulate = Color(1, 1, 1, 0.88)
+		add_child(_dense_hud_bg)
+		var status_i: int = status_label.get_index() if status_label else -1
+		if status_i >= 0:
+			move_child(_dense_hud_bg, status_i)
+	_set_tex(_dense_hud_bg, ArtPaths.HUD_PANEL)
+
+	## 騰出 chip 帶：狀態列同左欄微移
+	if status_label:
+		status_label.position = Vector2(16, 102)
+		status_label.size = Vector2(1248, 22)
+	var left_panel := get_node_or_null("LeftPanel") as Control
+	if left_panel and left_panel.position.y < 110:
+		left_panel.position.y = 118
+	var left_title := get_node_or_null("LeftTitle") as Control
+	if left_title and left_title.position.y < 110:
+		left_title.position.y = 118
+	var bscroll := get_node_or_null("BuildingsScroll") as Control
+	if bscroll and bscroll.position.y < 140:
+		bscroll.position.y = 146
+	var vhost := village_host
+	if vhost and vhost.position.y < 110:
+		vhost.position.y = 118
+	var right_panel := get_node_or_null("RightPanel") as Control
+	if right_panel and right_panel.position.y < 110:
+		right_panel.position.y = 118
+	var right_title := get_node_or_null("RightTitle") as Control
+	if right_title and right_title.position.y < 110:
+		right_title.position.y = 118
+	var hscroll := get_node_or_null("HeroesScroll") as Control
+	if hscroll and hscroll.position.y < 150:
+		hscroll.position.y = 146
+
+	var chip_y: float = 72.0
+	var x: float = 16.0
+	_chip_food_icon = _ensure_chip_icon("ChipFoodIcon", ArtPaths.ICON_SILVER, Vector2(x, chip_y))
+	x += 22.0
+	_chip_food_lab = _ensure_chip_label("ChipFoodLab", Vector2(x, chip_y), 56.0)
+	x += 58.0
+	_chip_lodge_icon = _ensure_chip_icon("ChipLodgeIcon", ArtPaths.ICON_WOOD, Vector2(x, chip_y))
+	x += 22.0
+	_chip_lodge_lab = _ensure_chip_label("ChipLodgeLab", Vector2(x, chip_y), 56.0)
+	x += 58.0
+	_chip_med_icon = _ensure_chip_icon("ChipMedIcon", ArtPaths.ICON_HERB, Vector2(x, chip_y))
+	x += 22.0
+	_chip_med_lab = _ensure_chip_label("ChipMedLab", Vector2(x, chip_y), 56.0)
+	x += 64.0
+	_chip_ready_lab = _ensure_chip_label("ChipReadyLab", Vector2(x, chip_y), 200.0)
+	x += 204.0
+	_chip_dungeon_lab = _ensure_chip_label("ChipDungeonLab", Vector2(x, chip_y), 200.0)
+	x += 204.0
+	_chip_outpost_lab = _ensure_chip_label("ChipOutpostLab", Vector2(x, chip_y), 220.0)
+
+
+func _ensure_chip_icon(n: String, path: String, pos: Vector2) -> TextureRect:
+	var node := get_node_or_null(n) as TextureRect
+	if node == null:
+		node = TextureRect.new()
+		node.name = n
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		node.custom_minimum_size = Vector2(20, 20)
+		node.size = Vector2(20, 20)
+		node.position = pos
+		add_child(node)
+	_set_tex(node, path)
+	return node
+
+
+func _ensure_chip_label(n: String, pos: Vector2, w: float) -> Label:
+	var lab := get_node_or_null(n) as Label
+	if lab == null:
+		lab = Label.new()
+		lab.name = n
+		lab.position = pos
+		lab.size = Vector2(w, 22)
+		lab.add_theme_color_override("font_color", Color(0.12, 0.09, 0.06, 0.92))
+		lab.add_theme_font_size_override("font_size", 12)
+		lab.clip_text = false
+		add_child(lab)
+	return lab
+
+
+func _refresh_dense_chips() -> void:
+	var snap: Dictionary = UpkeepSystem.panel_snapshot()
+	if _chip_food_lab:
+		var mark: String = "⚠" if bool(snap.get("food_alert", false)) else ("✓" if int(snap.get("inn_lv", 0)) >= 1 else "·")
+		_chip_food_lab.text = "%s食 Lv%d" % [mark, int(snap.get("inn_lv", 0))]
+		_chip_food_lab.tooltip_text = str(snap.get("status_line", "食"))
+		_chip_food_lab.add_theme_color_override("font_color", Color(0.75, 0.2, 0.15) if bool(snap.get("food_alert", false)) else Color(0.12, 0.09, 0.06, 0.92))
+	if _chip_lodge_lab:
+		var mark2: String = "⚠" if bool(snap.get("lodge_alert", false)) else ("✓" if int(snap.get("inn_lv", 0)) >= 1 or int(snap.get("manor_lv", 0)) >= 1 else "·")
+		_chip_lodge_lab.text = "%s住" % mark2
+		_chip_lodge_lab.add_theme_color_override("font_color", Color(0.75, 0.2, 0.15) if bool(snap.get("lodge_alert", false)) else Color(0.12, 0.09, 0.06, 0.92))
+	if _chip_med_lab:
+		var mark3: String = "⚠" if bool(snap.get("med_alert", false)) else ("✓" if int(snap.get("clinic_lv", 0)) >= 1 else "·")
+		_chip_med_lab.text = "%s醫 Lv%d" % [mark3, int(snap.get("clinic_lv", 0))]
+		_chip_med_lab.add_theme_color_override("font_color", Color(0.75, 0.2, 0.15) if bool(snap.get("med_alert", false)) else Color(0.12, 0.09, 0.06, 0.92))
+	var ready_n: int = HeroSystem.find_ready_heroes(-1).size()
+	var hunt_n: int = GameState.hunting_hero_count()
+	var sel_n: int = _selected_ids(99).size()
+	if _chip_ready_lab:
+		_chip_ready_lab.text = "派遣就緒 %d｜出征 %d｜已選 %d" % [ready_n, hunt_n, sel_n]
+		_chip_ready_lab.tooltip_text = "可派體力足夠嘅在村俠客數"
+	var diff: Dictionary = DungeonSystem.difficulty_by_id(str(GameState.dungeon_pick_diff))
+	var wset: Dictionary = DungeonSystem.wave_set_by_id(str(GameState.dungeon_pick_waves))
+	if _chip_dungeon_lab:
+		var dmark: String = "▶" if GameState.dungeon_busy else ("✓" if ResourceLoop.dungeon_gate_ok() and ready_n > 0 else "·")
+		_chip_dungeon_lab.text = "%s秘境·%s·%d波" % [dmark, str(diff.get("name", "普通")), int(wset.get("max_waves", 3))]
+		if not ResourceLoop.dungeon_gate_ok():
+			_chip_dungeon_lab.tooltip_text = "興建懸賞榜後可入秘境（揀難度／波次）"
+		elif GameState.dungeon_busy:
+			_chip_dungeon_lab.tooltip_text = "秘境自動戰鬥進行中"
+		else:
+			_chip_dungeon_lab.tooltip_text = "剔選俠客 → 秘境按鈕揀難度／波次"
+	if _chip_outpost_lab:
+		if not OutpostSystem.is_unlocked():
+			_chip_outpost_lab.text = "·前哨鎖（府＋懸賞）"
+			_chip_outpost_lab.tooltip_text = "村長府＋懸賞榜達標後解鎖前哨防衛"
+		else:
+			var od: Dictionary = OutpostSystem.difficulty_by_id(str(GameState.outpost_pick_diff))
+			var omark: String = "✓" if ready_n > 0 else "·"
+			_chip_outpost_lab.text = "%s前哨·%s" % [omark, str(od.get("name", "普通"))]
+			_chip_outpost_lab.tooltip_text = "撳前哨揀難度守點"
+		if AcademySystem.academy_ready():
+			_chip_outpost_lab.text += "｜書院✓"
 
 
 func _setup_monster_reserve() -> void:
@@ -486,12 +644,12 @@ func _refresh_hud() -> void:
 	if sel_ids.size() > 0:
 		var pch: float = UpkeepSystem.party_success_chance(sel_ids)
 		party_txt = "　｜　已選成功率 %d%%" % int(round(pch * 100.0))
-	status_label.text = "%s　｜　練功+%.1f XP/s　｜　%s%s　｜　放＝自由放置（Esc 取消）" % [
-		UpkeepSystem.describe_status(),
+	status_label.text = "%s　｜　練功+%.1f XP/s　｜　%s　｜　放＝Esc取消" % [
+		ResourceLoop.describe_readiness(sel_ids.size()),
 		TrainingSystem.xp_per_sec(),
-		ResourceLoop.describe_loop(),
-		party_txt,
+		party_txt if party_txt != "" else UpkeepSystem.describe_status(),
 	]
+	_refresh_dense_chips()
 	for hid in _hero_rows.keys():
 		var hero: Dictionary = HeroSystem.get_hero(str(hid))
 		if hero.is_empty():
@@ -712,15 +870,36 @@ func _refresh_tutorial() -> void:
 		3:
 			tutorial_label.text = "③ 等下方倒數完 → 俠客回村，收銀／毛皮。"
 		4:
-			tutorial_label.text = "④ 撳「英雄帖」抽一次，或興建醫館／貨棧／書院；之後可試秘境／前哨。"
+			tutorial_label.text = "④ 撳「英雄帖」抽一次，或興建醫館／貨棧／懸賞榜／書院。"
+		5:
+			tutorial_label.text = "⑤ 秘境：剔選俠客 → 撳「秘境」開選擇（難度／波次）→「入秘境」。未建懸賞榜先興建。"
+		6:
+			tutorial_label.text = "⑥ 前哨：撳「前哨」睇難度（鎖住會顯示解鎖條件）；有書院可撳開技能樹 stub。"
 		_:
 			tutorial_label.text = "新手引導"
 
 func _complete_tutorial_build_or_gacha(via: String) -> void:
 	if GameState.tutorial_step != 4:
 		return
+	GameState.tutorial_step = 5
+	GameState.push_report("引導⑤（%s）：剔選俠客 → 撳「秘境」開難度／波次選擇（要懸賞榜）。" % via)
+	_refresh_tutorial()
+
+
+func _advance_tutorial(from_step: int, to_step: int, report: String) -> void:
+	if GameState.tutorial_step != from_step:
+		return
+	GameState.tutorial_step = to_step
+	if report != "":
+		GameState.push_report(report)
+	_refresh_tutorial()
+
+
+func _finish_tutorial(via: String) -> void:
+	if GameState.tutorial_step <= 0:
+		return
 	GameState.tutorial_step = 0
-	GameState.push_report("引導完成（%s）！之後可自由興建、放置、抽卡、製作同自動出征。" % via)
+	GameState.push_report("引導完成（%s）！之後可自由興建、秘境、前哨、書院技能樹同自動出征。" % via)
 	_refresh_tutorial()
 
 func _setup_bounty_options() -> void:
@@ -895,6 +1074,7 @@ func _on_dungeon_pressed() -> void:
 	if show:
 		_dungeon_panel.move_to_front()
 		_refresh_dungeon_panel()
+		_advance_tutorial(5, 6, "引導⑥：撳「前哨」睇難度／解鎖條件；有書院可開技能樹。")
 
 func _run_dungeon_now() -> void:
 	var ids: Array = _selected_ids(DungeonSystem.max_party())
@@ -904,6 +1084,7 @@ func _run_dungeon_now() -> void:
 		return
 	if _dungeon_panel:
 		_dungeon_panel.visible = false
+	_advance_tutorial(5, 6, "引導⑥：秘境已出發；接著撳「前哨」或「書院」睇技能樹。")
 	GameState.dungeon_busy = true
 	_selected.clear()
 	_rebuild_heroes()
@@ -947,6 +1128,11 @@ func _on_academy_pressed() -> void:
 	if show:
 		_academy_panel.move_to_front()
 		_refresh_academy_panel()
+		if GameState.tutorial_step == 6:
+			_finish_tutorial("書院技能樹")
+		elif GameState.tutorial_step == 5:
+			## 允許略過秘境直接睇書院，再去前哨
+			_advance_tutorial(5, 6, "引導⑥：書院已開；再撳「前哨」睇解鎖／難度即完成引導。")
 
 func _setup_zone_options() -> void:
 	if opt_zone == null:
@@ -998,7 +1184,8 @@ func _refresh_outpost_btn() -> void:
 	var cur_m: int = BuildingSystem.building_level("manor")
 	var cur_b: int = BuildingSystem.building_level("bounty")
 	if not _OutpostScript.is_unlocked():
-		btn_outpost.disabled = true
+		## 仍可撳：顯示解鎖條件（新手⑥／資訊密度）
+		btn_outpost.disabled = false
 		btn_outpost.text = "前哨（鎖）"
 		btn_outpost.tooltip_text = "解鎖：村長府 Lv.%d（而家%d）＋懸賞榜 Lv.%d（而家%d）→ 守 %d 波" % [
 			need_m, cur_m, need_b, cur_b, wn
@@ -1093,6 +1280,17 @@ func _on_inv_sell(inv_index: int) -> void:
 	_refresh_hud()
 
 func _on_outpost_pressed() -> void:
+	if not _OutpostScript.is_unlocked():
+		var odef: Dictionary = _OutpostScript.def()
+		GameState.push_report("前哨未解鎖：村長府 Lv.%d＋懸賞榜 Lv.%d（而家 %d／%d）" % [
+			int(odef.get("unlock_manor_level", 2)), int(odef.get("unlock_bounty_level", 2)),
+			BuildingSystem.building_level("manor"), BuildingSystem.building_level("bounty"),
+		])
+		if GameState.tutorial_step == 6:
+			_finish_tutorial("前哨解鎖提示")
+		elif GameState.tutorial_step == 5:
+			_advance_tutorial(5, 6, "引導⑥：先升級府／懸賞解鎖前哨；或撳「書院」睇技能樹。")
+		return
 	if _outpost_panel == null:
 		_run_outpost_now()
 		return
@@ -1102,6 +1300,10 @@ func _on_outpost_pressed() -> void:
 	if show:
 		_outpost_panel.move_to_front()
 		_refresh_outpost_panel()
+		if GameState.tutorial_step == 6:
+			_finish_tutorial("前哨選擇")
+		elif GameState.tutorial_step == 5:
+			_advance_tutorial(5, 6, "引導⑥：前哨面板已開；再開「書院」或關閉即完成。")
 
 func _run_outpost_now() -> void:
 	var ids: Array = _selected_ids(6)
@@ -1109,6 +1311,8 @@ func _run_outpost_now() -> void:
 	if not bool(res.get("ok", false)):
 		GameState.push_report("前哨失敗：%s" % str(res.get("reason", "")))
 		return
+	if GameState.tutorial_step >= 5:
+		_finish_tutorial("前哨出發")
 	if _outpost_panel:
 		_outpost_panel.visible = false
 	_selected.clear()
@@ -1229,6 +1433,7 @@ func _setup_upkeep_panel() -> void:
 	_btn_upkeep.size = Vector2(72, 26)
 	_btn_upkeep.pressed.connect(_on_upkeep_pressed)
 	add_child(_btn_upkeep)
+	_apply_btn_art(_btn_upkeep, ArtPaths.BTN_BUILD, Vector2(72, 26))
 
 	_upkeep_panel = ColorRect.new()
 	_upkeep_panel.name = "UpkeepPanel"
@@ -1272,6 +1477,7 @@ func _refresh_upkeep_panel() -> void:
 			_btn_upkeep.tooltip_text = "村莊維護：食／住／醫 · " + str(snap.get("status_line", ""))
 	if _upkeep_label and _upkeep_panel and _upkeep_panel.visible:
 		_upkeep_label.text = UpkeepSystem.describe_panel()
+	_refresh_dense_chips()
 
 
 
