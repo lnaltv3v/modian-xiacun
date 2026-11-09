@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.18.0 — 駐守深化：營地升級／手動巡哨
+## 墨點俠村 v0.18.1 — 開局六綠俠高密度美術接入
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -126,7 +126,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.18.0"
+		title_label.text = "墨點俠村 · v0.18.1"
 
 	_setup_resource_icons()
 	_setup_ui_art()

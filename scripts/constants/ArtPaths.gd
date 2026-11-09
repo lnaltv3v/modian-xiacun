@@ -6,6 +6,7 @@ const HEROES_DIR := "res://assets/art/heroes/"
 const HEROES_RED_DIR := "res://assets/art/heroes/red/"
 const HEROES_ORANGE_DIR := "res://assets/art/heroes/orange/"
 const HEROES_PURPLE_DIR := "res://assets/art/heroes/purple/"
+const HEROES_GREEN_DIR := "res://assets/art/heroes/green/"
 const HEROES_FALLBACK_DIR := "res://assets/art/heroes/_prev_48/"
 const BUILDINGS_DIR := "res://assets/art/buildings/"
 const UI_DIR := "res://assets/art/ui/"
@@ -98,6 +99,12 @@ const HERO_ART := {
 	"hero_dali": "hero_gun_dali",
 	"hero_azhen": "hero_anqi_azhen",
 	"hero_aniu": "hero_quan_aniu",
+	"hero_dao_atie": "hero_dao_atie",
+	"hero_jian_aqing": "hero_jian_aqing",
+	"hero_qiang_achang": "hero_qiang_achang",
+	"hero_gun_dali": "hero_gun_dali",
+	"hero_anqi_azhen": "hero_anqi_azhen",
+	"hero_quan_aniu": "hero_quan_aniu",
 }
 
 const MONSTER_ART := {
@@ -188,7 +195,7 @@ static func purple_stem_for(hero_id: String) -> String:
 	return _stem_from_gacha_id(hero_id, PURPLE_ART)
 
 static func _hero_path_candidates(hero_id: String, suffix: String) -> Array:
-	## 紅 → 橙 → 紫 → 一般 64 → 48 fallback
+	## 紅 → 橙 → 紫 → 綠64 → 一般雙寫 → 48 fallback
 	var stem: String = hero_stem(hero_id)
 	var red: String = red_stem_for(hero_id)
 	var orange: String = orange_stem_for(hero_id)
@@ -211,8 +218,12 @@ static func _hero_path_candidates(hero_id: String, suffix: String) -> Array:
 			seen[pp] = true
 			out.append(pp)
 	if stem != "":
+		var gdir: String = HEROES_GREEN_DIR + stem + suffix
 		var gp: String = HEROES_DIR + stem + suffix
 		var fp: String = HEROES_FALLBACK_DIR + stem + suffix
+		if not seen.has(gdir):
+			seen[gdir] = true
+			out.append(gdir)
 		if not seen.has(gp):
 			seen[gp] = true
 			out.append(gp)
@@ -231,10 +242,11 @@ static func hero_walk(hero_id: String) -> String:
 	return _first_existing(_hero_path_candidates(hero_id, "_walk.png"))
 
 static func hero_attack(hero_id: String) -> String:
-	## 正式 attack 只認紅／橙／紫 Pivot；綠階／一般目錄 WIP 唔接入玩法（避 loader 噪音）
+	## 正式 attack：紅／橙／紫／綠 Pivot（綠 64；雙寫 green/ 優先）
 	var red: String = red_stem_for(hero_id)
 	var orange: String = orange_stem_for(hero_id)
 	var purple: String = purple_stem_for(hero_id)
+	var stem: String = hero_stem(hero_id)
 	var out: Array = []
 	var seen: Dictionary = {}
 	if red != "":
@@ -252,6 +264,15 @@ static func hero_attack(hero_id: String) -> String:
 		if not seen.has(pp):
 			seen[pp] = true
 			out.append(pp)
+	if stem != "":
+		var gp: String = HEROES_GREEN_DIR + stem + "_attack.png"
+		var root: String = HEROES_DIR + stem + "_attack.png"
+		if not seen.has(gp):
+			seen[gp] = true
+			out.append(gp)
+		if not seen.has(root):
+			seen[root] = true
+			out.append(root)
 	if out.is_empty():
 		return ""
 	return _first_existing_imported(out)
@@ -273,6 +294,14 @@ static func has_purple_art(hero_id: String) -> bool:
 	if purple != "" and ResourceLoader.exists(HEROES_PURPLE_DIR + purple + "_idle.png"):
 		return true
 	return false
+
+static func has_green_art(hero_id: String) -> bool:
+	var stem: String = hero_stem(hero_id)
+	if stem == "":
+		return false
+	if ResourceLoader.exists(HEROES_GREEN_DIR + stem + "_idle.png"):
+		return true
+	return ResourceLoader.exists(HEROES_DIR + stem + "_idle.png")
 
 static func display_scale_for(hero_id: String, target_px: float = 72.0) -> float:
 	var fw: int = hero_frame_px(hero_id)
@@ -407,7 +436,7 @@ static func _first_existing(paths: Array) -> String:
 	return str(paths[0]) if paths.size() > 0 else ""
 
 static func _first_existing_imported(paths: Array) -> String:
-	## 優先已 import；其次檔＋.import 齊（唔單憑裸 PNG，避免綠階 WIP attack）
+	## 優先已 import；其次檔＋.import 齊（唔單憑裸 PNG）
 	for p in paths:
 		var s: String = str(p)
 		if ResourceLoader.exists(s):
@@ -467,7 +496,7 @@ static func make_hero_frames(hero_id: String) -> SpriteFrames:
 	elif idle_tex != null:
 		frames.add_frame("walk", idle_tex)
 
-	## attack sheet：有正式紅／橙／紫檔先加 anim；綠階 WIP 唔接入；否則戰鬥繼續用 walk
+	## attack sheet：有正式紅／橙／紫／綠檔先加 anim；否則戰鬥繼續用 walk
 	var atk_path: String = hero_attack(hero_id)
 	var atk_tex: Texture2D = load_tex(atk_path) if atk_path != "" and exists(atk_path) else null
 	if atk_tex != null:

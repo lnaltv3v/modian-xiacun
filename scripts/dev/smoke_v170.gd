@@ -1,5 +1,5 @@
 extends Node
-## headless 煙測 v0.17.0：煙測版本 pin 放寬、舊存檔升級、綠階 WIP attack 唔接入
+## headless 煙測 v0.17.0：煙測版本 pin 放寬、舊存檔升級；綠階 attack 接入見 v0.18.1
 ## godot --headless --path . res://scenes/dev/smoke_v170.tscn
 
 const SmokeUtil = preload("res://scripts/dev/SmokeUtil.gd")
@@ -106,20 +106,16 @@ func _run() -> void:
 				ok = false
 				errors.append("file-load should ensure academy starter")
 
-	## --- green WIP attack must NOT wire into gameplay ---
+	## --- green attack：v0.18.1 起正式接入 green/；此煙測唔再禁止（見 smoke_v181）---
 	var green_ids: PackedStringArray = PackedStringArray([
 		"hero_quan_aniu", "hero_dao_atie", "hero_jian_aqing",
 		"hero_qiang_achang", "hero_gun_dali", "hero_anqi_azhen",
 	])
 	for gid in green_ids:
 		var ap: String = ArtPaths.hero_attack(gid)
-		if ap != "" and ("/heroes/red/" not in ap) and ("/heroes/orange/" not in ap) and ("/heroes/purple/" not in ap):
+		if ap != "" and ("/heroes/red/" not in ap) and ("/heroes/orange/" not in ap) and ("/heroes/purple/" not in ap) and ("/heroes/green/" not in ap) and ("/heroes/hero_" not in ap):
 			ok = false
-			errors.append("green attack path should be empty or rarity-dir only got %s" % ap)
-		var frames: SpriteFrames = ArtPaths.make_hero_frames(gid)
-		if frames != null and frames.has_animation("attack"):
-			ok = false
-			errors.append("green %s should not get attack anim from WIP" % gid)
+			errors.append("unexpected green attack path %s" % ap)
 
 	## rarity attack still resolves under red/orange/purple when art present
 	var red_probe := ""
