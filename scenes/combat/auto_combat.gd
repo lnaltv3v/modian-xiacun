@@ -26,8 +26,12 @@ var _fight_left: float = 0.0
 var _rng := RandomNumberGenerator.new()
 var _bg_tex: TextureRect
 var _bg_dim: ColorRect
+var _bg_layers: Dictionary = {}  ## sky/mid/ground/props TextureRect
 var _float_layer: Control
 var _hit_tick: int = 0
+var _arena_origin: Vector2 = Vector2.ZERO
+var _shaking: bool = false
+var _zone_key: String = "hills"
 
 func _ready() -> void:
 	visible = false
@@ -48,7 +52,7 @@ func play(config: Dictionary) -> void:
 	_cfg = config.duplicate(true)
 	_summary = (_cfg.get("summary", {}) as Dictionary).duplicate(true)
 	_playing = true
-	_phase = "approach"
+	_phase = "entrance"
 	_atk_flip = false
 	_atk_timer = 0.0
 	_rng.randomize()
@@ -67,12 +71,12 @@ func play(config: Dictionary) -> void:
 	if title_label:
 		title_label.text = str(_cfg.get("title", "交戰"))
 	if phase_label:
-		phase_label.text = "逼近…"
+		phase_label.text = "入場…"
 	_clear_layers()
 	_spawn_sides()
 	set_process(true)
-	## approach tween ~0.55s
-	_tween_approach()
+	## 入場淡入 → 逼近（不拖慢主戰鬥循環）
+	_tween_entrance()
 
 func _clear_layers() -> void:
 	_hero_nodes.clear()
@@ -208,8 +212,64 @@ func _spawn_sides() -> void:
 		ei += 1
 		if ei >= 4:
 			break
+	## 入場前全透明（由 _tween_entrance 淡入）
+	for n_all in _hero_nodes + _enemy_nodes:
+		var nd: CanvasItem = n_all as CanvasItem
+		if nd:
+			var m: Color = nd.modulate
+			m.a = 0.0
+			nd.modulate = m
+			nd.set_meta("base_scale", (n_all as Node2D).scale if n_all is Node2D else Vector2.ONE)
+
+func _tween_entrance() -> void:
+	_phase = "entrance"
+	if phase_label:
+		phase_label.text = "入場…"
+	## 短 pose：優先 idle，淡入＋輕彈縮放
+	for n in _hero_nodes:
+		var spr: AnimatedSprite2D = n as AnimatedSprite2D
+		if spr and spr.sprite_frames and spr.sprite_frames.has_animation("idle"):
+			spr.play("idle")
+			spr.speed_scale = 1.0
+	for n_e in _enemy_nodes:
+		if not bool(n_e.get_meta("duelist", false)):
+			continue
+		var spr_e: AnimatedSprite2D = n_e as AnimatedSprite2D
+		if spr_e and spr_e.sprite_frames and spr_e.sprite_frames.has_animation("idle"):
+			spr_e.play("idle")
+			spr_e.speed_scale = 1.0
+	var tw := create_tween()
+	tw.set_parallel(true)
+	for n2 in _hero_nodes + _enemy_nodes:
+		var node: Node2D = n2 as Node2D
+		if node == null:
+			continue
+		var base_s: Vector2 = node.get_meta("base_scale", node.scale) as Vector2
+		node.scale = base_s * 0.92
+		tw.tween_property(node, "modulate:a", 1.0, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(node, "scale", base_s, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_callback(_after_entrance)
+
+func _after_entrance() -> void:
+	if not _playing:
+		return
+	## 轉 walk 再逼近
+	for n in _hero_nodes:
+		var spr: AnimatedSprite2D = n as AnimatedSprite2D
+		if spr and spr.sprite_frames and spr.sprite_frames.has_animation("walk"):
+			spr.play("walk")
+	for n_e in _enemy_nodes:
+		if not bool(n_e.get_meta("duelist", false)):
+			continue
+		var spr_e: AnimatedSprite2D = n_e as AnimatedSprite2D
+		if spr_e and spr_e.sprite_frames and spr_e.sprite_frames.has_animation("walk"):
+			spr_e.play("walk")
+	if phase_label:
+		phase_label.text = "逼近…"
+	_tween_approach()
 
 func _tween_approach() -> void:
+	_phase = "approach"
 	var tw := create_tween()
 	tw.set_parallel(true)
 	for n in _hero_nodes:
@@ -398,10 +458,25 @@ func _ensure_bg() -> void:
 		return
 	if _bg_tex != null and is_instance_valid(_bg_tex):
 		return
-	## 隱藏純色底，改用野外合成圖
+	## 隱藏純色底，改用野外分層／合成圖
 	var old_bg := arena.get_node_or_null("ArenaBg")
 	if old_bg:
 		old_bg.visible = false
+	var z_base: int = -6
+	for layer_name in ["sky", "mid", "ground", "props"]:
+		var tr := TextureRect.new()
+		tr.name = "ArenaBg_" + layer_name
+		tr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tr.z_index = z_base
+		tr.visible = false
+		arena.add_child(tr)
+		arena.move_child(tr, 0)
+		_bg_layers[layer_name] = tr
+		z_base += 1
 	_bg_tex = TextureRect.new()
 	_bg_tex.name = "ArenaBgTex"
 	_bg_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -419,7 +494,8 @@ func _ensure_bg() -> void:
 	_bg_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bg_dim.z_index = -1
 	arena.add_child(_bg_dim)
-	arena.move_child(_bg_dim, 1)
+	arena.move_child(_bg_dim, mini(arena.get_child_count() - 1, 5))
+	_arena_origin = arena.position
 
 func _apply_zone_bg() -> void:
 	_ensure_bg()
@@ -431,9 +507,47 @@ func _apply_zone_bg() -> void:
 			str(_cfg.get("zone_id", "")),
 			str(_cfg.get("battle_mode", ""))
 		)
+	_zone_key = key
+	var layered: int = 0
+	for layer_name in ["sky", "mid", "ground", "props"]:
+		var tr: TextureRect = _bg_layers.get(layer_name) as TextureRect
+		if tr == null or not is_instance_valid(tr):
+			continue
+		var lp: String = ArtPaths.zone_bg_layer(key, layer_name)
+		var ltex: Texture2D = ArtPaths.load_tex(lp)
+		if ltex != null:
+			tr.texture = ltex
+			tr.visible = true
+			## 輕微分層：用 offset 拉開 sky／mid／ground／props 景深
+			tr.offset_left = 0.0
+			tr.offset_right = 0.0
+			match layer_name:
+				"sky":
+					tr.offset_top = -10.0
+					tr.offset_bottom = -4.0
+					tr.modulate = Color(1, 1, 1, 1)
+				"mid":
+					tr.offset_top = -2.0
+					tr.offset_bottom = 2.0
+					tr.modulate = Color(1, 1, 1, 0.98)
+				"ground":
+					tr.offset_top = 6.0
+					tr.offset_bottom = 10.0
+					tr.modulate = Color(1, 1, 1, 1)
+				"props":
+					tr.offset_top = 10.0
+					tr.offset_bottom = 14.0
+					tr.modulate = Color(1, 1, 1, 1)
+			layered += 1
+		else:
+			tr.visible = false
+			tr.texture = null
 	var path: String = ArtPaths.zone_bg(key)
 	var tex: Texture2D = ArtPaths.load_tex(path)
-	if tex != null:
+	if layered >= 2:
+		## 有分層就隱藏合成圖，避免糊叠
+		_bg_tex.visible = false
+	elif tex != null:
 		_bg_tex.texture = tex
 		_bg_tex.visible = true
 	else:
@@ -465,17 +579,25 @@ func _spawn_hit_floaters() -> void:
 	if _float_layer == null:
 		return
 	_hit_tick += 1
-	## 每隔一拍左右各噴一兩個飄字
+	## 每隔一拍左右各噴一兩個飄字；偶發招架取代受傷
 	var spawn_hero: bool = (_hit_tick % 2) == 0
 	var spawn_enemy: bool = (_hit_tick % 2) == 1 or str(_cfg.get("battle_mode", "")) == "arena"
 	if spawn_hero and not _hero_nodes.is_empty():
 		var hn: Node2D = _hero_nodes[_rng.randi_range(0, _hero_nodes.size() - 1)] as Node2D
 		if hn:
-			var amt: int = _rng.randi_range(6, 28)
-			var kind: String = "crit" if _rng.randf() < 0.12 else "hit"
-			var fl = _DamageFloater.new()
-			_float_layer.add_child(fl)
-			fl.setup(amt, hn.position + Vector2(_rng.randf_range(-12, 12), -30), kind)
+			var do_parry: bool = _rng.randf() < 0.20
+			if do_parry:
+				var flp = _DamageFloater.new()
+				_float_layer.add_child(flp)
+				flp.setup(0, hn.position + Vector2(_rng.randf_range(-10, 10), -34), "parry")
+				_fx_parry(hn)
+			else:
+				var amt: int = _rng.randi_range(6, 28)
+				var kind: String = "crit" if _rng.randf() < 0.12 else "hit"
+				var fl = _DamageFloater.new()
+				_float_layer.add_child(fl)
+				fl.setup(amt, hn.position + Vector2(_rng.randf_range(-12, 12), -30), kind)
+				_fx_hurt(hn, true, kind == "crit")
 	if spawn_enemy and not _enemy_nodes.is_empty():
 		var en: Node2D = _enemy_nodes[_rng.randi_range(0, _enemy_nodes.size() - 1)] as Node2D
 		if en:
@@ -483,3 +605,55 @@ func _spawn_hit_floaters() -> void:
 			var fl2 = _DamageFloater.new()
 			_float_layer.add_child(fl2)
 			fl2.setup(amt2, en.position + Vector2(_rng.randf_range(-12, 12), -28), "enemy")
+			_fx_hurt(en, false, _rng.randf() < 0.10)
+
+func _fx_hurt(node: Node2D, hit_from_right: bool, heavy: bool = false) -> void:
+	##  procedural 受傷閃紅／微擊退（無專用 hurt 幀時）
+	if node == null or not is_instance_valid(node):
+		return
+	var base_a: float = 1.0
+	var flash := Color(1.45, 0.42, 0.38, base_a) if heavy else Color(1.28, 0.55, 0.48, base_a)
+	node.modulate = flash
+	var knock: float = (6.0 if heavy else 4.0) * (-1.0 if hit_from_right else 1.0)
+	## 敵人在右、被打應向右退；俠在左、被打應向左退
+	if hit_from_right:
+		knock = -absf(knock)
+	else:
+		knock = absf(knock)
+	var ox: float = node.position.x
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(node, "position:x", ox + knock, 0.05).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(node, "position:x", ox, 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	var tw2 := create_tween()
+	tw2.tween_property(node, "modulate", Color(1, 1, 1, base_a), 0.16)
+	if heavy:
+		_fx_micro_shake()
+
+func _fx_parry(node: Node2D) -> void:
+	if node == null or not is_instance_valid(node):
+		return
+	node.modulate = Color(0.65, 0.88, 1.25, 1.0)
+	var tw := create_tween()
+	tw.tween_property(node, "modulate", Color(1, 1, 1, 1), 0.18)
+	## 招架微亮圈感：短暫放大再回
+	var base_s: Vector2 = node.get_meta("base_scale", node.scale) as Vector2
+	var tws := create_tween()
+	tws.tween_property(node, "scale", base_s * 1.06, 0.06)
+	tws.tween_property(node, "scale", base_s, 0.12)
+
+func _fx_micro_shake() -> void:
+	## Lemon：鏡頭震動要細 — 只微移 Arena 1～2px
+	if arena == null or _shaking:
+		return
+	_shaking = true
+	var origin: Vector2 = _arena_origin if _arena_origin != Vector2.ZERO else arena.position
+	var tw := create_tween()
+	tw.tween_property(arena, "position", origin + Vector2(1.5, -1.0), 0.035)
+	tw.tween_property(arena, "position", origin + Vector2(-1.2, 0.8), 0.035)
+	tw.tween_property(arena, "position", origin, 0.045)
+	tw.tween_callback(func() -> void:
+		if arena:
+			arena.position = origin
+		_shaking = false
+	)
