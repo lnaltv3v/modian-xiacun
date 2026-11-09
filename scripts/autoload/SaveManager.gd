@@ -4,7 +4,7 @@ extends Node
 const SAVE_PATH := "user://save_slot_0.json"
 const BACKUP_PATH := "user://save_slot_0.bak.json"
 const BACKUP_PATH_2 := "user://save_slot_0.bak2.json"
-const SAVE_VERSION := 14
+const SAVE_VERSION := 15
 
 func save_game() -> bool:
 	_rotate_backups()
@@ -69,6 +69,8 @@ func migrate_state(state: Dictionary, from_version: int = 0) -> Dictionary:
 		out["tutorial_step"] = 0
 	if not out.has("camp_pick_id") or str(out.get("camp_pick_id", "")) == "":
 		out["camp_pick_id"] = "luanshan"
+	if not out.has("camp_levels") or typeof(out.get("camp_levels")) != TYPE_DICTIONARY:
+		out["camp_levels"] = {}
 	# from_version reserved for future schema bumps (currently keys-only fill)
 	if from_version < 0:
 		push_warning("SaveManager: negative save version %d" % from_version)

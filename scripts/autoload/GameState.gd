@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 14
+const SAVE_VERSION := 15
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -66,6 +66,8 @@ var outpost_pick_diff: String = "normal"
 var camp_stations: Dictionary = {}
 ## 前哨面板揀中嘅營地
 var camp_pick_id: String = "luanshan"
+## 營地升級等級：camp_id -> int（0=未升）
+var camp_levels: Dictionary = {}
 ## 書院技能樹已解鎖節點 id
 var academy_unlocked_nodes: Array = []
 ## 比武台日限／連勝
@@ -111,6 +113,7 @@ func _load_starter_data() -> void:
 	outpost_pick_diff = "normal"
 	camp_stations = {}
 	camp_pick_id = "luanshan"
+	camp_levels = {}
 	academy_unlocked_nodes = []
 	arena_day_key = ""
 	arena_spars_today = 0
@@ -357,6 +360,7 @@ func to_save_dict() -> Dictionary:
 		"outpost_pick_diff": outpost_pick_diff,
 		"camp_stations": camp_stations.duplicate(true),
 		"camp_pick_id": camp_pick_id,
+		"camp_levels": camp_levels.duplicate(true),
 		"academy_unlocked_nodes": academy_unlocked_nodes.duplicate(true),
 		"arena_day_key": arena_day_key,
 		"arena_spars_today": arena_spars_today,
@@ -424,6 +428,10 @@ func load_from_dict(d: Dictionary) -> void:
 	else:
 		camp_stations = {}
 	camp_pick_id = str(d.get("camp_pick_id", "luanshan"))
+	if typeof(d.get("camp_levels", {})) == TYPE_DICTIONARY:
+		camp_levels = (d.get("camp_levels", {}) as Dictionary).duplicate(true)
+	else:
+		camp_levels = {}
 	if typeof(d.get("academy_unlocked_nodes", [])) == TYPE_ARRAY:
 		academy_unlocked_nodes = (d.get("academy_unlocked_nodes", []) as Array).duplicate(true)
 	else:

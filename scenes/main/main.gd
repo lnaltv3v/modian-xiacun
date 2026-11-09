@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.17.0 — 工程收尾：煙測 pin／存檔兼容／綠階 attack 噪音
+## 墨點俠村 v0.18.0 — 駐守深化：營地升級／手動巡哨
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -76,6 +76,8 @@ var _btn_outpost_go: Button
 var _camp_btns: HBoxContainer
 var _btn_camp_station: Button
 var _btn_camp_recall: Button
+var _btn_camp_upgrade: Button
+var _btn_camp_patrol: Button
 var _academy_panel: ColorRect
 var _academy_label: Label
 var _academy_btns: VBoxContainer
@@ -124,7 +126,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.17.0"
+		title_label.text = "墨點俠村 · v0.18.0"
 
 	_setup_resource_icons()
 	_setup_ui_art()
@@ -1606,14 +1608,14 @@ func _setup_outpost_panel() -> void:
 	_outpost_panel.name = "OutpostPickPanel"
 	_outpost_panel.color = Color(0.07, 0.06, 0.08, 0.95)
 	_outpost_panel.position = Vector2(400, 72)
-	_outpost_panel.size = Vector2(440, 400)
+	_outpost_panel.size = Vector2(440, 460)
 	_outpost_panel.visible = false
 	_outpost_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_outpost_panel)
 
 	_outpost_label = Label.new()
 	_outpost_label.position = Vector2(12, 8)
-	_outpost_label.size = Vector2(416, 220)
+	_outpost_label.size = Vector2(416, 216)
 	_outpost_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_outpost_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
 	_outpost_label.add_theme_font_size_override("font_size", 12)
@@ -1660,13 +1662,27 @@ func _setup_outpost_panel() -> void:
 	btn_close2.pressed.connect(func() -> void: _outpost_panel.visible = false)
 	_outpost_panel.add_child(btn_close2)
 
+	_btn_camp_upgrade = Button.new()
+	_btn_camp_upgrade.text = "升級營"
+	_btn_camp_upgrade.position = Vector2(12, 352)
+	_btn_camp_upgrade.size = Vector2(100, 36)
+	_btn_camp_upgrade.pressed.connect(_on_camp_upgrade_pressed)
+	_outpost_panel.add_child(_btn_camp_upgrade)
+
+	_btn_camp_patrol = Button.new()
+	_btn_camp_patrol.text = "巡哨"
+	_btn_camp_patrol.position = Vector2(120, 352)
+	_btn_camp_patrol.size = Vector2(88, 36)
+	_btn_camp_patrol.pressed.connect(_on_camp_patrol_pressed)
+	_outpost_panel.add_child(_btn_camp_patrol)
+
 	var hint := Label.new()
-	hint.position = Vector2(12, 352)
-	hint.size = Vector2(416, 40)
+	hint.position = Vector2(12, 396)
+	hint.size = Vector2(416, 52)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", Color(0.75, 0.7, 0.62))
 	hint.add_theme_font_size_override("font_size", 11)
-	hint.text = "駐守＝長期外派（被動銀／偶發小戰）；飽食只走營地耗；糧餉繳足＝舒適減耗。召回先清位。一波「守前哨」仍要在村閒置俠。"
+	hint.text = "駐守＝長期外派；升級營耗銀／木／鐵加槽或舒適／涓滴；巡哨＝駐軍一鍵小戰（自動戰鬥）。召回先清位。一波「守前哨」仍要在村閒置俠。"
 	_outpost_panel.add_child(hint)
 
 	_rebuild_outpost_pick_buttons()
@@ -1710,7 +1726,8 @@ func _rebuild_camp_pick_buttons() -> void:
 		b.disabled = lock
 		b.toggle_mode = true
 		b.button_pressed = cid == pick
-		b.tooltip_text = str(cd.get("desc", ""))
+		var lv: int = _OutpostScript.camp_level(cid)
+		b.tooltip_text = "%s｜Lv%d 槽%d" % [str(cd.get("desc", "")), lv, _OutpostScript.effective_slots(cid)]
 		b.pressed.connect(_on_pick_camp.bind(cid))
 		_camp_btns.add_child(b)
 
@@ -1732,7 +1749,7 @@ func _on_camp_station_pressed() -> void:
 	var camp_id: String = str(GameState.camp_pick_id)
 	if camp_id == "":
 		camp_id = _OutpostScript.default_camp_id()
-	var slots: int = int(_OutpostScript.camp_by_id(camp_id).get("slots", 3))
+	var slots: int = _OutpostScript.effective_slots(camp_id)
 	var ids: Array = _selected_ids(slots)
 	var res: Dictionary = _OutpostScript.station(camp_id, ids)
 	if not bool(res.get("ok", false)):
@@ -1759,6 +1776,54 @@ func _on_camp_recall_pressed() -> void:
 	_rebuild_camp_pick_buttons()
 
 
+func _on_camp_upgrade_pressed() -> void:
+	var camp_id: String = str(GameState.camp_pick_id)
+	if camp_id == "":
+		camp_id = _OutpostScript.default_camp_id()
+	var res: Dictionary = _OutpostScript.upgrade_camp(camp_id)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("升級失敗：%s" % str(res.get("reason", "")))
+		_refresh_outpost_panel()
+		return
+	_refresh_hud()
+	_refresh_outpost_panel()
+	_rebuild_camp_pick_buttons()
+
+
+func _on_camp_patrol_pressed() -> void:
+	var camp_id: String = str(GameState.camp_pick_id)
+	if camp_id == "":
+		camp_id = _OutpostScript.default_camp_id()
+	var res: Dictionary = _OutpostScript.run_manual_skirmish(camp_id)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("巡哨失敗：%s" % str(res.get("reason", "")))
+		_refresh_outpost_panel()
+		return
+	if _outpost_panel:
+		_outpost_panel.visible = false
+	_rebuild_heroes()
+	_refresh_hud()
+	var waves: Array = res.get("waves", []) as Array
+	var rewards: Dictionary = (res.get("rewards", {}) as Dictionary).duplicate(true)
+	rewards["flavor"] = str(res.get("flavor", rewards.get("flavor", "")))
+	rewards["run_mode"] = "camp_skirmish"
+	rewards["battle_mode"] = "outpost"
+	rewards["waves"] = waves
+	rewards["waves_cleared"] = int(res.get("waves_cleared", 1 if bool(res.get("success", false)) else 0))
+	rewards["cleared"] = bool(res.get("cleared", res.get("success", false)))
+	rewards["success"] = bool(res.get("success", false))
+	rewards["total_waves"] = maxi(1, waves.size())
+	rewards["zone_name"] = str(rewards.get("zone_name", "巡哨 · %s" % str(res.get("camp_name", camp_id))))
+	rewards["run_title"] = str(rewards["zone_name"])
+	_start_wave_battles(
+		"outpost",
+		str(rewards["zone_name"]),
+		waves,
+		res.get("heroes", []),
+		rewards
+	)
+
+
 func _refresh_outpost_panel() -> void:
 	if _outpost_label and _outpost_panel and _outpost_panel.visible:
 		_outpost_label.text = _OutpostScript.describe_pick_panel_full()
@@ -1770,7 +1835,7 @@ func _refresh_outpost_panel() -> void:
 		var camp_id: String = str(GameState.camp_pick_id)
 		if camp_id == "":
 			camp_id = _OutpostScript.default_camp_id()
-		var slots: int = int(_OutpostScript.camp_by_id(camp_id).get("slots", 3))
+		var slots: int = _OutpostScript.effective_slots(camp_id)
 		var schk: Dictionary = _OutpostScript.can_station(camp_id, _selected_ids(slots)) if _selected_ids(slots).size() > 0 else {"ok": false, "reason": "未揀俠"}
 		if _btn_camp_station:
 			_btn_camp_station.disabled = not bool(schk.get("ok", false))
@@ -1779,6 +1844,21 @@ func _refresh_outpost_panel() -> void:
 		if _btn_camp_recall:
 			_btn_camp_recall.disabled = not bool(rchk.get("ok", false))
 			_btn_camp_recall.tooltip_text = str(rchk.get("reason", "召回"))
+		var uchk: Dictionary = _OutpostScript.can_upgrade_camp(camp_id)
+		if _btn_camp_upgrade:
+			_btn_camp_upgrade.disabled = not bool(uchk.get("ok", false))
+			var utip: String = str(uchk.get("reason", "升級營"))
+			if bool(uchk.get("ok", false)):
+				var ud: Dictionary = uchk.get("upgrade", {}) as Dictionary
+				utip = "升級「%s」銀%d 木%d 鐵%d" % [
+					str(ud.get("name", "升級")), int(ud.get("silver", 0)),
+					int(ud.get("wood", 0)), int(ud.get("iron", 0)),
+				]
+			_btn_camp_upgrade.tooltip_text = utip
+		var pchk: Dictionary = _OutpostScript.can_manual_skirmish(camp_id)
+		if _btn_camp_patrol:
+			_btn_camp_patrol.disabled = not bool(pchk.get("ok", false))
+			_btn_camp_patrol.tooltip_text = str(pchk.get("reason", "巡哨"))
 
 
 func _setup_academy_panel() -> void:

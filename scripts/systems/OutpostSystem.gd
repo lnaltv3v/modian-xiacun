@@ -1,6 +1,6 @@
 extends RefCounted
 class_name OutpostSystem
-## 前哨防衛（v0.13）— 三波＋難度階＋多前哨外派駐守 stub
+## 前哨防衛（v0.18）— 三波＋難度階＋駐守升級／手動巡哨 stub
 
 const DATA_PATH := "res://data/outpost/core.json"
 
@@ -422,7 +422,7 @@ static func can_station(camp_id: String, hero_ids: Array) -> Dictionary:
 		return {"ok": false, "reason": "「%s」未解鎖（需前哨全勝 %d 次）" % [
 			str(c.get("name", camp_id)), int(c.get("unlock_clears_need", 1))
 		]}
-	var slots: int = int(c.get("slots", 2))
+	var slots: int = effective_slots(camp_id)
 	if hero_ids.is_empty():
 		return {"ok": false, "reason": "未揀駐守俠客"}
 	if hero_ids.size() > slots:
@@ -471,6 +471,8 @@ static func station(camp_id: String, hero_ids: Array) -> Dictionary:
 		"total_iron": 0,
 		"total_fur": 0,
 		"skirmishes": 0,
+		"manual_skirmishes": 0,
+		"manual_cd_until": 0.0,
 		"last_summary": "剛進駐",
 	}
 	GameState.camp_pick_id = camp_id
@@ -580,6 +582,8 @@ static func sanitize_stations() -> void:
 				st["bag_upkeep"] = 0.0
 			if not st.has("comfort"):
 				st["comfort"] = true
+			if not st.has("manual_cd_until"):
+				st["manual_cd_until"] = 0.0
 			GameState.camp_stations[cid] = st
 	for h in GameState.heroes:
 		var hd: Dictionary = h as Dictionary
@@ -627,10 +631,11 @@ static func tick_camps(delta: float) -> Dictionary:
 		## 先結糧餉 → 決定舒適減耗（單一飽食路徑）
 		var camp_up_m: float = AcademySystem.village_effect_mult("camp_upkeep_mult", 1.0)
 		var camp_sil_b: float = AcademySystem.village_effect_add("camp_silver_bonus", 0.0)
+		var up_m: float = camp_trickle_mult(cid)
 		var upkeep_rate: float = float(c.get("upkeep_silver_per_min", 1.5)) * n / 60.0 * camp_up_m
-		var silver_rate: float = float(c.get("trickle_silver_per_min", 10.0)) * power_m / 60.0 * (1.0 + camp_sil_b)
-		var fur_rate: float = float(c.get("trickle_fur_per_min", 0.0)) * power_m / 60.0
-		var iron_rate: float = float(c.get("trickle_iron_per_min", 0.0)) * power_m / 60.0
+		var silver_rate: float = float(c.get("trickle_silver_per_min", 10.0)) * power_m / 60.0 * (1.0 + camp_sil_b) * up_m
+		var fur_rate: float = float(c.get("trickle_fur_per_min", 0.0)) * power_m / 60.0 * up_m
+		var iron_rate: float = float(c.get("trickle_iron_per_min", 0.0)) * power_m / 60.0 * up_m
 		var bag_s: float = float(st.get("bag_silver", 0.0)) + silver_rate * delta
 		var bag_f: float = float(st.get("bag_fur", 0.0)) + fur_rate * delta
 		var bag_i: float = float(st.get("bag_iron", 0.0)) + iron_rate * delta
@@ -656,6 +661,8 @@ static func tick_camps(delta: float) -> Dictionary:
 			else:
 				comfort = bool(st.get("comfort", true))
 		var comfort_m: float = float(c.get("comfort_drain_mult", 0.55)) if comfort else float(c.get("unpaid_drain_mult", 1.15))
+		if comfort:
+			comfort_m *= camp_comfort_drain_scale(cid)
 		var stam_d: float = float(c.get("stamina_drain_per_min", 3.0)) / 60.0 * delta * comfort_m
 		var sat_d: float = float(c.get("satiety_drain_per_min", 1.8)) / 60.0 * delta * comfort_m
 		## 舒適時微補營帳乾糧（唔疊村莊客棧）
@@ -762,25 +769,40 @@ static func describe_camps_panel() -> String:
 		var ids: Array = st.get("hero_ids", []) as Array
 		var mark: String = "●" if cid == pick else "○"
 		var lock_txt: String = "（鎖）" if lock else ""
+		var lv: int = camp_level(cid)
+		var slots_n: int = effective_slots(cid)
+		var sil_m: float = float(cd.get("trickle_silver_per_min", 0.0)) * camp_trickle_mult(cid)
 		if ids.is_empty():
-			lines.append("%s %s%s　空　槽%d　銀≈%.0f/分" % [
-				mark, str(cd.get("name", cid)), lock_txt, int(cd.get("slots", 2)),
-				float(cd.get("trickle_silver_per_min", 0.0))
+			lines.append("%s %s%s　空　Lv%d　槽%d　銀≈%.0f/分" % [
+				mark, str(cd.get("name", cid)), lock_txt, lv, slots_n, sil_m
 			])
 		else:
 			var names: PackedStringArray = PackedStringArray()
 			for hid_v in ids:
 				names.append(str(HeroSystem.get_hero(str(hid_v)).get("name", hid_v)))
-			lines.append("%s %s　駐：%s" % [mark, str(cd.get("name", cid)), "、".join(names)])
+			lines.append("%s %s　Lv%d　駐：%s（%d／%d）" % [
+				mark, str(cd.get("name", cid)), lv, "、".join(names), ids.size(), slots_n
+			])
 			var comfort_txt: String = "舒適" if bool(st.get("comfort", true)) else "欠餉"
-			lines.append("　累計銀%d 鐵%d 毛皮%d 小戰%d｜%s｜%s" % [
+			lines.append("　累計銀%d 鐵%d 毛皮%d 小戰%d 巡%d｜%s｜%s" % [
 				int(st.get("total_silver", 0)), int(st.get("total_iron", 0)),
 				int(st.get("total_fur", 0)), int(st.get("skirmishes", 0)),
+				int(st.get("manual_skirmishes", 0)),
 				comfort_txt,
 				str(st.get("last_summary", ""))
 			])
+		var nxt: Dictionary = next_upgrade_def(cid)
+		if nxt.is_empty():
+			lines.append("　升級：已滿 Lv.%d" % lv)
+		else:
+			lines.append("　下級「%s」：銀%d 木%d 鐵%d（＋槽%d　涓×%.2f　舒×%.2f）" % [
+				str(nxt.get("name", "升級")),
+				int(nxt.get("silver", 0)), int(nxt.get("wood", 0)), int(nxt.get("iron", 0)),
+				int(nxt.get("add_slots", 0)), float(nxt.get("trickle_mult", 1.0)),
+				float(nxt.get("comfort_drain_scale", 1.0)),
+			])
 	lines.append("規則：駐守飽食／體力只走營地耗（唔疊村莊饑餓）；糧餉繳足＝舒適減耗＋微補乾糧，欠餉加重。")
-	lines.append("剔選在村俠 → 揀營地 →「駐守」；「召回」返村。駐守中唔可派遣／秘境／一波防衛。")
+	lines.append("「升級營」耗銀木鐵加深營地；「巡哨」一鍵小戰（重用自動戰鬥）。駐守中唔可派遣／秘境／一波防衛。")
 	return "\n".join(lines)
 
 
@@ -791,6 +813,306 @@ static func describe_pick_panel_full() -> String:
 
 static func stationed_count() -> int:
 	return stationed_hero_ids("").size()
+
+
+
+
+## --- v0.18 營地升級／手動巡哨 ---
+
+static func camp_upgrade_levels() -> Array:
+	ensure_loaded()
+	var cu: Dictionary = _def.get("camp_upgrades", {}) as Dictionary
+	var out: Array = []
+	for u in cu.get("levels", []) as Array:
+		out.append((u as Dictionary).duplicate(true))
+	return out
+
+
+static func camp_max_level() -> int:
+	ensure_loaded()
+	var cu: Dictionary = _def.get("camp_upgrades", {}) as Dictionary
+	var mx: int = int(cu.get("max_level", 0))
+	if mx <= 0:
+		mx = camp_upgrade_levels().size()
+	return maxi(0, mx)
+
+
+static func camp_level(camp_id: String) -> int:
+	return clampi(int(GameState.camp_levels.get(camp_id, 0)), 0, camp_max_level())
+
+
+static func next_upgrade_def(camp_id: String) -> Dictionary:
+	var want: int = camp_level(camp_id) + 1
+	for u in camp_upgrade_levels():
+		var ud: Dictionary = u as Dictionary
+		if int(ud.get("level", 0)) == want:
+			return ud.duplicate(true)
+	return {}
+
+
+static func effective_slots(camp_id: String) -> int:
+	var c: Dictionary = camp_by_id(camp_id)
+	var slots: int = int(c.get("slots", 2))
+	var lv: int = camp_level(camp_id)
+	for u in camp_upgrade_levels():
+		var ud: Dictionary = u as Dictionary
+		if int(ud.get("level", 0)) <= lv:
+			slots += int(ud.get("add_slots", 0))
+	return maxi(1, slots)
+
+
+static func camp_trickle_mult(camp_id: String) -> float:
+	var m: float = 1.0
+	var lv: int = camp_level(camp_id)
+	for u in camp_upgrade_levels():
+		var ud: Dictionary = u as Dictionary
+		if int(ud.get("level", 0)) <= lv:
+			m *= float(ud.get("trickle_mult", 1.0))
+	return maxf(0.1, m)
+
+
+static func camp_comfort_drain_scale(camp_id: String) -> float:
+	## <1 = 舒適時更少耗
+	var m: float = 1.0
+	var lv: int = camp_level(camp_id)
+	for u in camp_upgrade_levels():
+		var ud: Dictionary = u as Dictionary
+		if int(ud.get("level", 0)) <= lv:
+			m *= float(ud.get("comfort_drain_scale", 1.0))
+	return clampf(m, 0.35, 1.5)
+
+
+static func can_upgrade_camp(camp_id: String) -> Dictionary:
+	ensure_loaded()
+	if not is_unlocked():
+		return {"ok": false, "reason": "前哨未解鎖"}
+	var c: Dictionary = camp_by_id(camp_id)
+	if c.is_empty():
+		return {"ok": false, "reason": "無此地營地"}
+	if not is_camp_unlocked(camp_id):
+		return {"ok": false, "reason": "「%s」未解鎖" % str(c.get("name", camp_id))}
+	var nxt: Dictionary = next_upgrade_def(camp_id)
+	if nxt.is_empty():
+		return {"ok": false, "reason": "「%s」已滿級 Lv.%d" % [str(c.get("name", camp_id)), camp_level(camp_id)]}
+	var need_s: int = int(nxt.get("silver", 0))
+	var need_w: int = int(nxt.get("wood", 0))
+	var need_i: int = int(nxt.get("iron", 0))
+	if GameState.silver < need_s or GameState.wood < need_w or GameState.iron < need_i:
+		return {
+			"ok": false,
+			"reason": "升級「%s」欠資源（要銀%d 木%d 鐵%d）" % [
+				str(nxt.get("name", "升級")), need_s, need_w, need_i
+			],
+			"cost": {"silver": need_s, "wood": need_w, "iron": need_i},
+		}
+	return {
+		"ok": true,
+		"reason": "",
+		"cost": {"silver": need_s, "wood": need_w, "iron": need_i},
+		"upgrade": nxt.duplicate(true),
+	}
+
+
+static func upgrade_camp(camp_id: String) -> Dictionary:
+	var chk: Dictionary = can_upgrade_camp(camp_id)
+	if not bool(chk.get("ok", false)):
+		return {"ok": false, "reason": str(chk.get("reason", ""))}
+	var nxt: Dictionary = chk.get("upgrade", {}) as Dictionary
+	var need_s: int = int(nxt.get("silver", 0))
+	var need_w: int = int(nxt.get("wood", 0))
+	var need_i: int = int(nxt.get("iron", 0))
+	if not GameState.try_spend(need_s, need_w, 0, need_i):
+		return {"ok": false, "reason": "扣費失敗"}
+	var new_lv: int = camp_level(camp_id) + 1
+	GameState.camp_levels[camp_id] = new_lv
+	var c: Dictionary = camp_by_id(camp_id)
+	var msg: String = "營地「%s」升至 Lv.%d「%s」｜槽%d　涓×%.2f" % [
+		str(c.get("name", camp_id)),
+		new_lv,
+		str(nxt.get("name", "升級")),
+		effective_slots(camp_id),
+		camp_trickle_mult(camp_id),
+	]
+	GameState.push_report(msg)
+	GameState.resources_changed.emit()
+	return {
+		"ok": true,
+		"reason": "",
+		"camp_id": camp_id,
+		"level": new_lv,
+		"upgrade": nxt.duplicate(true),
+		"slots": effective_slots(camp_id),
+		"summary": msg,
+	}
+
+
+static func _manual_skirmish_def() -> Dictionary:
+	ensure_loaded()
+	var m: Dictionary = _def.get("manual_skirmish", {}) as Dictionary
+	return m.duplicate(true)
+
+
+static func can_manual_skirmish(camp_id: String) -> Dictionary:
+	ensure_loaded()
+	var c: Dictionary = camp_by_id(camp_id)
+	if c.is_empty():
+		return {"ok": false, "reason": "無此地營地"}
+	var st: Dictionary = camp_station(camp_id)
+	var ids: Array = []
+	for hid_v in st.get("hero_ids", []) as Array:
+		ids.append(str(hid_v))
+	if ids.is_empty():
+		return {"ok": false, "reason": "「%s」無人駐守，未能巡哨" % str(c.get("name", camp_id))}
+	var now: float = Time.get_unix_time_from_system()
+	var cd_until: float = float(st.get("manual_cd_until", 0.0))
+	if now < cd_until:
+		return {"ok": false, "reason": "巡哨冷卻中（約 %.0f 秒）" % maxf(1.0, cd_until - now)}
+	for hid in ids:
+		var h: Dictionary = HeroSystem.get_hero(str(hid))
+		if h.is_empty():
+			return {"ok": false, "reason": "駐軍資料異常"}
+		if float(h.get("stamina", 0)) < 12.0:
+			return {"ok": false, "reason": "%s 太疲，未能巡哨" % str(h.get("name", hid))}
+		if float(h.get("satiety", 0)) < 8.0:
+			return {"ok": false, "reason": "%s 太餓，未能巡哨" % str(h.get("name", hid))}
+		if float(h.get("injury", 0)) >= 60.0:
+			return {"ok": false, "reason": "%s 傷重，未能巡哨" % str(h.get("name", hid))}
+	return {"ok": true, "reason": "", "heroes": ids.duplicate()}
+
+
+static func run_manual_skirmish(camp_id: String) -> Dictionary:
+	## 一鍵巡哨：即時結算＋回傳單波供 auto_combat 演出
+	var chk: Dictionary = can_manual_skirmish(camp_id)
+	if not bool(chk.get("ok", false)):
+		return {"ok": false, "reason": str(chk.get("reason", "")), "success": false, "waves": [], "rewards": {}}
+	ensure_loaded()
+	var c: Dictionary = camp_by_id(camp_id)
+	var st: Dictionary = camp_station(camp_id)
+	var ids: Array = []
+	for hid_v in st.get("hero_ids", []) as Array:
+		ids.append(str(hid_v))
+	var mdef: Dictionary = _manual_skirmish_def()
+	var total_power: int = _party_power(ids)
+	var count: int = int(mdef.get("count_base", 3))
+	var power_per: int = int(mdef.get("power_per", 7))
+	## 升級略降敵壓／略加獎
+	var up_m: float = camp_trickle_mult(camp_id)
+	var need: int = int(round(float(count * power_per) / maxf(1.0, 0.85 + (up_m - 1.0) * 0.5)))
+	var success_chance: float = clampf(0.34 + float(total_power) / float(maxi(1, need)) * 0.55, 0.15, 0.96)
+	var success: bool = _rng.randf() <= success_chance
+	var wave_stub: Dictionary = {
+		"mix": mdef.get("mix", []) as Array,
+		"boss": false,
+		"enemy_name": str(mdef.get("label", "巡哨")),
+	}
+	var enemies: Array = _pick_enemies(wave_stub, mini(count, 4))
+	var silver_gain: int = 0
+	var fur_gain: int = 0
+	var iron_gain: int = 0
+	var stam_cost: float = float(mdef.get("stamina_cost", 7))
+	var sat_cost: float = float(mdef.get("satiety_cost", 3.5))
+	var inj: float = float(mdef.get("fail_injury", 6))
+	if success:
+		silver_gain = int(round(float(mdef.get("silver_base", 16)) + float(total_power) * float(mdef.get("power_bonus_per", 0.35))))
+		silver_gain = maxi(1, int(round(float(silver_gain) * up_m)))
+		if _rng.randf() <= float(mdef.get("fur_chance", 0.4)):
+			fur_gain = 1
+		if _rng.randf() <= float(mdef.get("iron_chance", 0.15)):
+			iron_gain = 1
+		GameState.add_silver(silver_gain)
+		if fur_gain > 0:
+			GameState.add_fur(fur_gain)
+		if iron_gain > 0:
+			GameState.add_iron(iron_gain)
+		st["total_silver"] = int(st.get("total_silver", 0)) + silver_gain
+		st["total_fur"] = int(st.get("total_fur", 0)) + fur_gain
+		st["total_iron"] = int(st.get("total_iron", 0)) + iron_gain
+		for hid in ids:
+			HeroSystem.mutate(str(hid), func(hd: Dictionary) -> void:
+				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - stam_cost)
+				hd["satiety"] = maxf(0.0, float(hd.get("satiety", 100)) - sat_cost)
+				hd["status"] = "camped"
+				var add_xp: float = 4.0 + float(BuildingSystem.building_level("training")) * 0.5
+				var lv: int = int(hd.get("level", 1))
+				var xp: float = float(hd.get("xp", 0)) + add_xp
+				var need_xp: float = float(TrainingSystem.xp_to_next(lv))
+				while xp >= need_xp and lv < 30:
+					xp -= need_xp
+					lv += 1
+					need_xp = float(TrainingSystem.xp_to_next(lv))
+				hd["level"] = lv
+				hd["xp"] = xp
+				hd["xp_to_next"] = int(need_xp)
+			)
+	else:
+		silver_gain = maxi(0, int(round(float(mdef.get("silver_base", 16)) * 0.2)))
+		if silver_gain > 0:
+			GameState.add_silver(silver_gain)
+			st["total_silver"] = int(st.get("total_silver", 0)) + silver_gain
+		for hid2 in ids:
+			HeroSystem.mutate(str(hid2), func(hd: Dictionary) -> void:
+				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - stam_cost * 1.35)
+				hd["satiety"] = maxf(0.0, float(hd.get("satiety", 100)) - sat_cost)
+				hd["injury"] = clampf(float(hd.get("injury", 0)) + inj, 0.0, 100.0)
+				hd["status"] = "camped"
+			)
+	st["skirmishes"] = int(st.get("skirmishes", 0)) + 1
+	st["manual_skirmishes"] = int(st.get("manual_skirmishes", 0)) + 1
+	var cd: float = maxf(8.0, float(mdef.get("cooldown_sec", 28)))
+	st["manual_cd_until"] = Time.get_unix_time_from_system() + cd
+	var flavor: String
+	if success:
+		flavor = "「%s」巡哨得手，掃走斥候。" % str(c.get("name", camp_id))
+	else:
+		flavor = "「%s」巡哨受挫，駐軍帶傷撤回營帳。" % str(c.get("name", camp_id))
+	st["last_summary"] = flavor
+	st["hero_ids"] = ids.duplicate()
+	GameState.camp_stations[camp_id] = st
+	GameState.push_report("巡哨「%s」%s ＋銀%d%s%s" % [
+		str(c.get("name", camp_id)),
+		("捷" if success else "挫"),
+		silver_gain,
+		(" 毛皮%d" % fur_gain) if fur_gain > 0 else "",
+		(" 鐵%d" % iron_gain) if iron_gain > 0 else "",
+	])
+	GameState.heroes_changed.emit()
+	var wave_out: Dictionary = {
+		"index": 1,
+		"label": str(mdef.get("label", "手動巡哨")),
+		"boss": false,
+		"enemy_name": str(mdef.get("label", "巡哨")),
+		"enemy_count": count,
+		"enemies": enemies,
+		"party_power": total_power,
+		"enemy_power": need,
+		"success": success,
+		"success_chance": success_chance,
+	}
+	return {
+		"ok": true,
+		"reason": "",
+		"success": success,
+		"cleared": success,
+		"waves_cleared": 1 if success else 0,
+		"waves": [wave_out],
+		"heroes": ids.duplicate(),
+		"flavor": flavor,
+		"camp_id": camp_id,
+		"camp_name": str(c.get("name", camp_id)),
+		"rewards": {
+			"silver": silver_gain,
+			"iron": iron_gain,
+			"fur": fur_gain,
+			"wood": 0,
+			"flavor": flavor,
+			"injured": [],
+			"run_mode": "camp_skirmish",
+			"battle_mode": "outpost",
+			"zone_name": "巡哨 · %s" % str(c.get("name", camp_id)),
+			"success": success,
+			"cleared": success,
+		},
+	}
 
 
 static func hud_camp_chip() -> String:

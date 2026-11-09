@@ -89,7 +89,7 @@
     "full_clear_bonus_iron": 2
   },
   "fail_injury": 12,
-  "desc": "v0.16：三波防衛＋難度階；駐守單一飽食路徑＋糧餉舒適減耗（亂山／官道）。",
+  "desc": "v0.18：三波防衛＋難度階；駐守升級（槽／舒適／涓滴）＋手動巡哨 stub。",
   "bg_key": "outpost",
   "difficulties": [
     {
@@ -162,5 +162,73 @@
       "comfort_satiety_per_min": 0.3
     }
   ],
-  "default_camp": "luanshan"
+  "default_camp": "luanshan",
+  "camp_upgrades": {
+    "max_level": 3,
+    "levels": [
+      {
+        "level": 1,
+        "name": "擴營帳",
+        "silver": 80,
+        "wood": 40,
+        "iron": 4,
+        "add_slots": 1,
+        "trickle_mult": 1.08,
+        "comfort_drain_scale": 0.92,
+        "desc": "多一個床位；涓滴略增；舒適耗略減"
+      },
+      {
+        "level": 2,
+        "name": "加固營柵",
+        "silver": 150,
+        "wood": 75,
+        "iron": 10,
+        "add_slots": 0,
+        "trickle_mult": 1.12,
+        "comfort_drain_scale": 0.88,
+        "desc": "營柵加固；涓滴再增；舒適再減耗"
+      },
+      {
+        "level": 3,
+        "name": "哨樓",
+        "silver": 240,
+        "wood": 110,
+        "iron": 18,
+        "add_slots": 1,
+        "trickle_mult": 1.15,
+        "comfort_drain_scale": 0.85,
+        "desc": "哨樓落成；再＋1 槽；最高涓滴／舒適"
+      }
+    ]
+  },
+  "manual_skirmish": {
+    "cooldown_sec": 28,
+    "label": "手動巡哨",
+    "count_base": 3,
+    "power_per": 7,
+    "silver_base": 16,
+    "power_bonus_per": 0.35,
+    "fur_chance": 0.42,
+    "iron_chance": 0.18,
+    "stamina_cost": 7,
+    "satiety_cost": 3.5,
+    "fail_injury": 6,
+    "mix": [
+      {
+        "kind": "bandit",
+        "name": "山賊斥候",
+        "weight": 55
+      },
+      {
+        "kind": "wolf",
+        "name": "野狼",
+        "weight": 30
+      },
+      {
+        "kind": "boar",
+        "name": "野豬",
+        "weight": 15
+      }
+    ]
+  }
 }
