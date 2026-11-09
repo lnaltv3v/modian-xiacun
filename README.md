@@ -1,4 +1,4 @@
-# 墨點俠村（Ink Hero Village）· v0.19.0
+# 墨點俠村（Ink Hero Village）· v0.20.0
 
 武俠墨點風格村莊經營＋俠客養成。玩法跟足《獵魔村物語》核心循環（建築→養俠→派遣→資源→再升級）。
 
@@ -112,7 +112,7 @@ Headless 煙測（唔開窗）：
 
 
 
-## v0.19.0
+## v0.20.0
 - **開局六綠俠 Pivot 高密度**：idle 64／walk＋attack 256×64；`heroes/green/` 稀有度目錄優先；戰鬥 `make_hero_frames` 含 attack
 - smoke_v181
 
@@ -124,7 +124,7 @@ Headless 煙測（唔開窗）：
 ## v0.17.0
 - **工程收尾**：舊煙測版本 pin 改為 ≥（`SmokeUtil`）；`smoke_v110`–`v160` 可喺 HEAD 一齊過
 - **存檔兼容**：`SaveManager.migrate_state` 補 `academy_unlocked_nodes`／`camp_stations`／`tutorial_step`；讀檔後 `AcademySystem.reload`
-- **綠階 attack（當時）**：暫跳過 WIP；**v0.19.0 已正式接入** `heroes/green/`
+- **綠階 attack（當時）**：暫跳過 WIP；**v0.20.0 已正式接入** `heroes/green/`
 - 煙測：`res://scenes/dev/smoke_v170.tscn`；SAVE 仍 14
 
 ## v0.16.0

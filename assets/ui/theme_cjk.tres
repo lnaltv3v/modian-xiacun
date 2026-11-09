@@ -1,6 +1,6 @@
 [gd_resource type="Theme" load_steps=2 format=3 uid="uid://bmodiantheme001"]
 
-[ext_resource type="FontFile" uid="uid://bjifvlwvig8ad" path="res://assets/fonts/DroidSansFallback.ttf" id="1_font"]
+[ext_resource type="FontFile" uid="uid://de3qnrb8bbqbg" path="res://assets/fonts/NotoSansTC-Regular.otf" id="1_font"]
 
 [resource]
 default_font = ExtResource("1_font")
@@ -9,16 +9,28 @@ Button/font_sizes/font_size = 16
 Button/fonts/font = ExtResource("1_font")
 CheckBox/font_sizes/font_size = 15
 CheckBox/fonts/font = ExtResource("1_font")
+ItemList/font_sizes/font_size = 15
+ItemList/fonts/font = ExtResource("1_font")
 Label/font_sizes/font_size = 16
 Label/fonts/font = ExtResource("1_font")
+LineEdit/font_sizes/font_size = 16
+LineEdit/fonts/font = ExtResource("1_font")
 OptionButton/font_sizes/font_size = 15
 OptionButton/fonts/font = ExtResource("1_font")
 PopupMenu/font_sizes/font_size = 13
 PopupMenu/fonts/font = ExtResource("1_font")
+PopupMenu/fonts/font_separator = ExtResource("1_font")
 RichTextLabel/fonts/normal_font = ExtResource("1_font")
 RichTextLabel/fonts/bold_font = ExtResource("1_font")
 RichTextLabel/fonts/italics_font = ExtResource("1_font")
 RichTextLabel/fonts/bold_italics_font = ExtResource("1_font")
 RichTextLabel/fonts/mono_font = ExtResource("1_font")
-LineEdit/fonts/font = ExtResource("1_font")
+TabBar/font_sizes/font_size = 15
+TabBar/fonts/font = ExtResource("1_font")
+TextEdit/font_sizes/font_size = 15
 TextEdit/fonts/font = ExtResource("1_font")
+TooltipLabel/font_sizes/font_size = 13
+TooltipLabel/fonts/font = ExtResource("1_font")
+Tree/font_sizes/font_size = 14
+Tree/fonts/font = ExtResource("1_font")
+Tree/fonts/title_font = ExtResource("1_font")

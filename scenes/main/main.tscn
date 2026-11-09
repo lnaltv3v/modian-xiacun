@@ -24,10 +24,10 @@ color = Color(0.909804, 0.862745, 0.784314, 1)
 [node name="VillageHost" type="Control" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 40.0
-offset_top = 164.0
-offset_right = 680.0
-offset_bottom = 524.0
+offset_left = 8.0
+offset_top = 160.0
+offset_right = 712.0
+offset_bottom = 700.0
 clip_contents = true
 
 [node name="InkBar" type="ColorRect" parent="."]
@@ -45,7 +45,7 @@ offset_right = 420.0
 offset_bottom = 36.0
 theme_override_colors/font_color = Color(0.788235, 0.635294, 0.152941, 1)
 theme_override_font_sizes/font_size = 18
-text = "墨點俠村 · v0.19.0"
+text = "墨點俠村 · v0.20.0"
 clip_text = false
 
 [node name="IconSilver" type="TextureRect" parent="."]
@@ -501,4 +501,4 @@ offset_bottom = 1204.0
 theme_override_colors/font_color = Color(0.101961, 0.0823529, 0.0627451, 0.5)
 theme_override_font_sizes/font_size = 11
 autowrap_mode = 3
-text = "v0.19.0 · 直向手機優先"
+text = "v0.20.0 · 地圖自由移動"

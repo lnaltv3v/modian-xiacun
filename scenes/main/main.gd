@@ -1,7 +1,8 @@
 extends Control
-## 墨點俠村 v0.19.0 — 開局六綠俠高密度美術接入
+## 墨點俠村 v0.20.0 — Noto 繁中字體＋同屏世界地圖自由移動
 
-const VillageScene := preload("res://scenes/village/village.tscn")
+const VillageScene := preload("res://scenes/world/world_map.tscn")
+const LegacyVillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
 const DungeonRunScene := preload("res://scenes/combat/dungeon_run.tscn")
 const AutoCombatScene := preload("res://scenes/combat/auto_combat.tscn")
@@ -59,6 +60,11 @@ var _craft_hero_id: String = ""
 var _battle_queue: Array = []
 var _battle_final: Dictionary = {}
 var _battle_mode: String = ""
+var _map_encounter_marker: Node = null
+var _building_overlay: ColorRect
+var _building_overlay_label: Label
+var _building_overlay_btns: HBoxContainer
+var _building_overlay_id: String = ""
 var _rng_ui := RandomNumberGenerator.new()
 var _gacha_flash: Control
 var _btn_upkeep: Button
@@ -107,6 +113,12 @@ func _ready() -> void:
 	_village.building_clicked.connect(_on_building_clicked)
 	if _village.has_signal("building_placed"):
 		_village.building_placed.connect(_on_building_placed)
+	if _village.has_signal("encounter_requested"):
+		_village.encounter_requested.connect(_on_map_encounter)
+	if _village.has_signal("map_action"):
+		_village.map_action.connect(_on_map_action)
+	_ensure_building_overlay()
+	_force_cjk_fonts(self)
 
 	_hunt_result = HuntResultScene.instantiate()
 	add_child(_hunt_result)
@@ -126,7 +138,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.19.0"
+		title_label.text = "墨點俠村 · v0.20.0"
 
 	_setup_resource_icons()
 	_setup_ui_art()
@@ -762,7 +774,8 @@ func _on_place_building(building_id: String) -> void:
 		_village.begin_place(building_id)
 
 func _on_building_clicked(building_id: String) -> void:
-	_on_upgrade(building_id)
+	## 地圖上點建築：優先開互動 overlay；長線仍保留升級入口
+	_open_building_overlay(building_id)
 
 func _on_craft(recipe_id: String) -> void:
 	var res: Dictionary = CraftSystem.craft(recipe_id, _craft_hero_id)
@@ -1387,6 +1400,14 @@ func _play_next_wave_battle() -> void:
 	})
 
 func _on_auto_combat_finished(_summary: Dictionary) -> void:
+	if _battle_mode == "map":
+		_battle_mode = ""
+		if _village and _village.has_method("notify_encounter_done"):
+			_village.notify_encounter_done(bool(_summary.get("success", true)), _map_encounter_marker)
+		_map_encounter_marker = null
+		_rebuild_heroes()
+		_refresh_hud()
+		return
 	if _battle_mode == "hunt":
 		_battle_mode = ""
 		_rebuild_heroes()
@@ -2033,3 +2054,209 @@ func _on_academy_rotate_pressed() -> void:
 	_rebuild_heroes()
 	_refresh_hud()
 	_refresh_academy_panel()
+
+
+func _force_cjk_fonts(node: Node) -> void:
+	## Web／Safari：強制所有常見 Control 用專案 Theme 字體，避免預設字缺字
+	var theme: Theme = ThemeDB.get_project_theme()
+	if theme == null or theme.default_font == null:
+		return
+	var font: Font = theme.default_font
+	if node is Control:
+		var c := node as Control
+		for k in ["font", "normal_font", "bold_font", "italics_font", "bold_italics_font", "mono_font", "font_separator", "title_font"]:
+			## 只喺該 type 有對應時先設；用 theme override 最穩
+			pass
+		if node is Label or node is Button or node is CheckBox or node is OptionButton or node is LineEdit or node is RichTextLabel:
+			c.add_theme_font_override("font", font)
+		if node is RichTextLabel:
+			var rtl := node as RichTextLabel
+			rtl.add_theme_font_override("normal_font", font)
+			rtl.add_theme_font_override("bold_font", font)
+			rtl.add_theme_font_override("italics_font", font)
+			rtl.add_theme_font_override("bold_italics_font", font)
+			rtl.add_theme_font_override("mono_font", font)
+	for child in node.get_children():
+		_force_cjk_fonts(child)
+
+
+func _on_map_action(action: String, payload: Dictionary) -> void:
+	if action == "select_zone":
+		var zid: String = str(payload.get("zone_id", ""))
+		if zid == "outpost_fringe":
+			zid = "luan_shan_po"
+		if zid != "" and GameState.zones.has(zid):
+			GameState.selected_zone = zid
+			_setup_zone_options()
+			_refresh_dispatch_btn()
+
+
+func _on_map_encounter(payload: Dictionary) -> void:
+	if _auto_combat == null or not _auto_combat.has_method("play"):
+		return
+	if _auto_combat.has_method("is_busy") and _auto_combat.is_busy():
+		return
+	_battle_mode = "map"
+	_map_encounter_marker = payload.get("marker") as Node
+	var zid: String = str(payload.get("zone_id", GameState.selected_zone))
+	var zbg: String = str((GameState.get_zone(zid) as Dictionary).get("bg_key", ""))
+	if zbg == "":
+		zbg = ArtPaths.zone_bg_key_for(zid, "hunt")
+	var enemies: Array = payload.get("enemies", []) as Array
+	var success := true
+	## 輕量即時結算（銀兩／毛皮），戰鬥演出用 overlay，唔切場景
+	var silver_gain: int = 8 + enemies.size() * 4
+	var fur_gain: int = enemies.size()
+	GameState.add_silver(silver_gain)
+	GameState.add_fur(fur_gain)
+	GameState.push_report("地圖遭遇！奪得銀兩 %d、毛皮 %d" % [silver_gain, fur_gain])
+	_auto_combat.play({
+		"title": "地圖遭遇 · %s" % str(payload.get("zone_name", "野外")),
+		"heroes": payload.get("heroes", []),
+		"enemies": enemies,
+		"success": success,
+		"duration": 3.2,
+		"summary": {"success": success, "silver": silver_gain, "fur": fur_gain, "zone_id": zid},
+		"show_summary": true,
+		"zone_id": zid,
+		"zone_bg": zbg,
+		"battle_mode": "map",
+	})
+
+
+func _ensure_building_overlay() -> void:
+	if _building_overlay != null:
+		return
+	_building_overlay = ColorRect.new()
+	_building_overlay.name = "BuildingOverlay"
+	_building_overlay.color = Color(0.08, 0.06, 0.04, 0.92)
+	_building_overlay.visible = false
+	_building_overlay.position = Vector2(60, 420)
+	_building_overlay.size = Vector2(600, 200)
+	add_child(_building_overlay)
+	_building_overlay_label = Label.new()
+	_building_overlay_label.position = Vector2(16, 12)
+	_building_overlay_label.size = Vector2(568, 90)
+	_building_overlay_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_building_overlay_label.add_theme_font_size_override("font_size", 15)
+	_building_overlay_label.add_theme_color_override("font_color", Color(0.95, 0.9, 0.75, 1))
+	_building_overlay.add_child(_building_overlay_label)
+	_building_overlay_btns = HBoxContainer.new()
+	_building_overlay_btns.position = Vector2(16, 120)
+	_building_overlay_btns.size = Vector2(568, 56)
+	_building_overlay_btns.add_theme_constant_override("separation", 10)
+	_building_overlay.add_child(_building_overlay_btns)
+	var close_btn := Button.new()
+	close_btn.text = "關閉"
+	close_btn.custom_minimum_size = Vector2(100, 44)
+	close_btn.pressed.connect(func() -> void:
+		_building_overlay.visible = false
+	)
+	_building_overlay_btns.add_child(close_btn)
+	_force_cjk_fonts(_building_overlay)
+
+
+func _open_building_overlay(building_id: String) -> void:
+	_ensure_building_overlay()
+	_building_overlay_id = building_id
+	var name_cn: String = BuildingSystem.building_name(building_id)
+	var lv: int = BuildingSystem.building_level(building_id)
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("【%s】Lv.%d" % [name_cn, lv])
+	match building_id:
+		"inn":
+			lines.append("客棧：休息回復體力／飽食；亦可升級擴容。")
+		"forge":
+			lines.append("鐵匠鋪：為在村俠客打點裝備（等同商店一次）。")
+		"clinic":
+			lines.append("醫館：處理傷勢；升級可提高醫療能力。")
+		"manor":
+			lines.append("村長府：村莊核心；升級解鎖更多系統。")
+		"warehouse":
+			lines.append("倉庫：資源週轉。")
+		"training":
+			lines.append("演武場：加快練功。")
+		"bounty":
+			lines.append("懸賞榜：解鎖野外區域。")
+		"academy":
+			lines.append("師門書院：技能樹。")
+		_:
+			lines.append("點擊互動；可升級建築。")
+	_building_overlay_label.text = "\n".join(lines)
+	## clear old action buttons except close (index 0)
+	while _building_overlay_btns.get_child_count() > 1:
+		var ch: Node = _building_overlay_btns.get_child(1)
+		_building_overlay_btns.remove_child(ch)
+		ch.queue_free()
+	var act := Button.new()
+	act.custom_minimum_size = Vector2(140, 44)
+	match building_id:
+		"inn":
+			act.text = "休息"
+			act.pressed.connect(_on_overlay_rest)
+		"forge":
+			act.text = "打造／購物"
+			act.pressed.connect(_on_overlay_forge)
+		"clinic":
+			act.text = "療傷"
+			act.pressed.connect(_on_overlay_clinic)
+		_:
+			act.text = "升級"
+			act.pressed.connect(func() -> void:
+				_building_overlay.visible = false
+				_on_upgrade(building_id)
+			)
+	_building_overlay_btns.add_child(act)
+	var up := Button.new()
+	up.text = "升級"
+	up.custom_minimum_size = Vector2(100, 44)
+	up.pressed.connect(func() -> void:
+		_building_overlay.visible = false
+		_on_upgrade(building_id)
+	)
+	if building_id not in ["inn", "forge", "clinic"]:
+		## already have upgrade as primary
+		up.queue_free()
+	else:
+		_building_overlay_btns.add_child(up)
+	_building_overlay.visible = true
+	_building_overlay.move_to_front()
+	_force_cjk_fonts(_building_overlay)
+
+
+func _on_overlay_rest() -> void:
+	var n := 0
+	for h in GameState.heroes:
+		var hd: Dictionary = h as Dictionary
+		hd["stamina"] = mini(100, int(hd.get("stamina", 100)) + 35)
+		hd["satiety"] = mini(100, int(hd.get("satiety", 100)) + 25)
+		if str(hd.get("status", "")) == "resting":
+			hd["status"] = "ready"
+		n += 1
+	GameState.heroes_changed.emit()
+	GameState.push_report("客棧休息：%d 位俠客回復體力／飽食。" % n)
+	_building_overlay.visible = false
+	_refresh_hud()
+	_rebuild_heroes()
+
+
+func _on_overlay_forge() -> void:
+	_building_overlay.visible = false
+	_on_shop_once_pressed()
+
+
+func _on_overlay_clinic() -> void:
+	var healed := 0
+	for h in GameState.heroes:
+		var hd: Dictionary = h as Dictionary
+		var inj: int = int(hd.get("injury", 0))
+		if inj > 0:
+			hd["injury"] = maxi(0, inj - 25)
+			healed += 1
+		if str(hd.get("status", "")) == "injured" and int(hd.get("injury", 0)) <= 0:
+			hd["status"] = "ready"
+	GameState.heroes_changed.emit()
+	GameState.push_report("醫館療傷：處理 %d 人。" % healed)
+	_building_overlay.visible = false
+	_refresh_hud()
+	_rebuild_heroes()
