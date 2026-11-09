@@ -235,6 +235,7 @@ static func run_defense(hero_ids: Array, diff_id: String = "") -> Dictionary:
 		silver_gain = maxi(0, int(round(float(silver_gain) * reward_mult)))
 		iron_gain = maxi(0, int(round(float(iron_gain) * reward_mult)))
 		fur_gain = maxi(0, int(round(float(fur_gain) * reward_mult)))
+		silver_gain = maxi(0, int(round(float(silver_gain) * (1.0 + AcademySystem.village_effect_add("outpost_silver_bonus", 0.0)))))
 		GameState.add_silver(silver_gain)
 		if iron_gain > 0:
 			GameState.add_iron(iron_gain)
@@ -626,8 +627,10 @@ static func tick_camps(delta: float) -> Dictionary:
 				hd["status"] = "camped"
 			)
 		## upkeep silver each full second bucket via tick_accum minutes
-		var upkeep_rate: float = float(c.get("upkeep_silver_per_min", 1.5)) * n / 60.0
-		var silver_rate: float = float(c.get("trickle_silver_per_min", 10.0)) * power_m / 60.0
+		var camp_up_m: float = AcademySystem.village_effect_mult("camp_upkeep_mult", 1.0)
+		var camp_sil_b: float = AcademySystem.village_effect_add("camp_silver_bonus", 0.0)
+		var upkeep_rate: float = float(c.get("upkeep_silver_per_min", 1.5)) * n / 60.0 * camp_up_m
+		var silver_rate: float = float(c.get("trickle_silver_per_min", 10.0)) * power_m / 60.0 * (1.0 + camp_sil_b)
 		var fur_rate: float = float(c.get("trickle_fur_per_min", 0.0)) * power_m / 60.0
 		var iron_rate: float = float(c.get("trickle_iron_per_min", 0.0)) * power_m / 60.0
 		## accumulate fractional gains in station bag

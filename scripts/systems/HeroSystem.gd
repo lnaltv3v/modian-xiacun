@@ -162,8 +162,11 @@ static func power_of(hero: Dictionary) -> int:
 	var forge: int = ResourceLoop.forge_bonus_power()
 	var gear: int = equipment_power(hero)
 	var passive: int = AcademySystem.passive_power_bonus(hero)
+	var defense: int = AcademySystem.passive_def_bonus(hero)
 	var injury: float = float(hero.get("injury", 0))
 	var resist: float = AcademySystem.passive_injury_resist(hero)
+	## 守勢略減傷勢對戰力懲罰
+	resist = clampf(resist + float(defense) * 0.02, 0.0, 0.9)
 	var raw: float = float(base + (level - 1) * 3 + forge + gear + passive)
 	var injury_factor: float = clampf(1.0 - (injury / 120.0) * (1.0 - resist * 0.5), 0.4, 1.0)
 	return int(maxi(1, int(round(raw * injury_factor))))

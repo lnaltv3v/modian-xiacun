@@ -296,6 +296,14 @@ static func run_dungeon(hero_ids: Array, diff_id: String = "", wave_set_id: Stri
 	frag_gain = maxi(0, int(round(float(frag_gain) * reward_mult)))
 	## 鑽石至少按倍率機率感：整數四捨五入
 	diamond_gain = maxi(0, int(round(float(diamond_gain) * maxf(1.0, reward_mult * 0.85))))
+	## 書院經世：秘藏錄等全村秘境獎
+	var dungeon_loot: float = 1.0 + AcademySystem.village_effect_add("dungeon_loot_bonus", 0.0)
+	var dungeon_frag: float = 1.0 + AcademySystem.village_effect_add("dungeon_frag_bonus", 0.0)
+	silver_gain = maxi(0, int(round(float(silver_gain) * dungeon_loot)))
+	fur_gain = maxi(0, int(round(float(fur_gain) * dungeon_loot)))
+	wood_gain = maxi(0, int(round(float(wood_gain) * dungeon_loot)))
+	iron_gain = maxi(0, int(round(float(iron_gain) * dungeon_loot)))
+	frag_gain = maxi(0, int(round(float(frag_gain) * dungeon_frag)))
 
 	## rare drops → inventory（短波組降低機會）
 	var rare_chance_scale: float = 1.0 if is_full_set else 0.35

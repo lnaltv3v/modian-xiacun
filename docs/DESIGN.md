@@ -77,3 +77,10 @@
 ## v0.13 外派駐守
 - 多前哨營地：亂山前哨／官道哨卡；`OutpostSystem.station`／`recall`／`tick_camps`
 - 俠客 `status=camped`；存檔 `camp_stations`＋`camp_pick_id`；Save **14**
+
+
+## v0.15 書院專精
+- 技能樹兩路：**武學**（破招／卸力／剛猛／鐵壁／武學心訣）、**經世**（村賬／貨棧／礦脈／秘藏／營帳／前哨／經世要略）
+- 碎片解鎖；授徒被動＋全村 `village` 效果（`AcademySystem.village_effect_*`）
+- 自動戰鬥讀 `party_crit_chance`／`party_parry_chance`；Save 仍 **14**（`academy_unlocked_nodes`）
+- 煙測 `smoke_v150.tscn`

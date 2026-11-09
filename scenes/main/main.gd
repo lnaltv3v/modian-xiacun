@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.14.0 — 戰鬥手感 hurt/parry/入場
+## 墨點俠村 v0.15.0 — 書院武學／經世技能樹
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -81,6 +81,8 @@ var _academy_label: Label
 var _academy_btns: VBoxContainer
 var _academy_preview: Label
 var _academy_pick_node: String = ""
+var _academy_branch_row: HBoxContainer
+var _academy_unlock_flash: ColorRect
 var _dense_hud_bg: TextureRect
 var _chip_food_icon: TextureRect
 var _chip_lodge_icon: TextureRect
@@ -122,7 +124,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.14.0"
+		title_label.text = "墨點俠村 · v0.15.0"
 
 	_setup_resource_icons()
 	_setup_ui_art()
@@ -1783,43 +1785,58 @@ func _setup_academy_panel() -> void:
 	_academy_panel = ColorRect.new()
 	_academy_panel.name = "AcademyTreePanel"
 	_academy_panel.color = Color(0.07, 0.06, 0.08, 0.95)
-	_academy_panel.position = Vector2(400, 88)
-	_academy_panel.size = Vector2(480, 360)
+	_academy_panel.position = Vector2(300, 56)
+	_academy_panel.size = Vector2(620, 460)
 	_academy_panel.visible = false
 	_academy_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_academy_panel)
 
 	_academy_label = Label.new()
 	_academy_label.position = Vector2(12, 8)
-	_academy_label.size = Vector2(280, 200)
+	_academy_label.size = Vector2(300, 150)
 	_academy_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_academy_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
 	_academy_label.add_theme_font_size_override("font_size", 12)
 	_academy_panel.add_child(_academy_label)
 
 	_academy_preview = Label.new()
-	_academy_preview.position = Vector2(300, 8)
-	_academy_preview.size = Vector2(168, 200)
+	_academy_preview.position = Vector2(320, 8)
+	_academy_preview.size = Vector2(286, 150)
 	_academy_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_academy_preview.add_theme_color_override("font_color", Color(0.85, 0.9, 0.78))
 	_academy_preview.add_theme_font_size_override("font_size", 12)
-	_academy_preview.text = "撳左邊節點預覽"
+	_academy_preview.text = "撳下方節點預覽（武學／經世）"
 	_academy_panel.add_child(_academy_preview)
 
+	_academy_branch_row = HBoxContainer.new()
+	_academy_branch_row.position = Vector2(12, 162)
+	_academy_branch_row.size = Vector2(596, 22)
+	_academy_branch_row.add_theme_constant_override("separation", 12)
+	_academy_panel.add_child(_academy_branch_row)
+
 	_academy_btns = VBoxContainer.new()
-	_academy_btns.position = Vector2(12, 216)
-	_academy_btns.size = Vector2(456, 100)
+	_academy_btns.position = Vector2(12, 188)
+	_academy_btns.size = Vector2(596, 220)
 	_academy_btns.add_theme_constant_override("separation", 4)
 	_academy_panel.add_child(_academy_btns)
+
+	_academy_unlock_flash = ColorRect.new()
+	_academy_unlock_flash.name = "AcademyUnlockFlash"
+	_academy_unlock_flash.color = Color(0.95, 0.85, 0.45, 0.0)
+	_academy_unlock_flash.position = Vector2(0, 0)
+	_academy_unlock_flash.size = _academy_panel.size
+	_academy_unlock_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_academy_panel.add_child(_academy_unlock_flash)
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	_academy_panel.add_child(row)
-	row.position = Vector2(12, 320)
-	row.size = Vector2(456, 32)
+	row.position = Vector2(12, 418)
+	row.size = Vector2(596, 32)
 
 	var btn_unlock := Button.new()
 	btn_unlock.text = "解鎖節點"
+	btn_unlock.tooltip_text = "消耗碎片解鎖揀中節點（需滿足前置）"
 	btn_unlock.pressed.connect(_on_academy_unlock_pressed)
 	row.add_child(btn_unlock)
 
@@ -1833,6 +1850,14 @@ func _setup_academy_panel() -> void:
 	btn_close3.text = "關閉"
 	btn_close3.pressed.connect(func() -> void: _academy_panel.visible = false)
 	row.add_child(btn_close3)
+
+
+func _academy_branch_color(branch_id: String) -> Color:
+	if branch_id == "wuxue":
+		return Color(0.78, 0.42, 0.34)
+	if branch_id == "jingshi":
+		return Color(0.42, 0.62, 0.48)
+	return Color(0.7, 0.7, 0.72)
 
 
 func _refresh_academy_panel() -> void:
@@ -1850,35 +1875,76 @@ func _refresh_academy_panel() -> void:
 		if _academy_pick_node != "":
 			_academy_preview.text = AcademySystem.preview_node(_academy_pick_node)
 		else:
-			_academy_preview.text = "撳節點預覽效果"
-	## 重建節點掣
+			_academy_preview.text = "撳節點預覽效果\n武學＝攻防招架　經世＝村務營帳秘境"
+	if _academy_branch_row:
+		for c0 in _academy_branch_row.get_children():
+			c0.queue_free()
+		for br in AcademySystem.branches():
+			var bd: Dictionary = br as Dictionary
+			var lab := Label.new()
+			lab.text = "● %s　%s" % [str(bd.get("name", "")), str(bd.get("desc", ""))]
+			lab.add_theme_color_override("font_color", _academy_branch_color(str(bd.get("id", ""))))
+			lab.add_theme_font_size_override("font_size", 12)
+			_academy_branch_row.add_child(lab)
+	## 按 row 重建網格（col 對齊）
 	for c in _academy_btns.get_children():
 		c.queue_free()
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	_academy_btns.add_child(row)
-	var count: int = 0
-	for n in AcademySystem.tree_nodes():
+	var by_row: Dictionary = {}
+	var max_col: int = 0
+	for n in AcademySystem.tree_nodes_sorted():
 		var nd: Dictionary = n as Dictionary
-		var nid: String = str(nd.get("id", ""))
-		var b := Button.new()
-		var unlocked: bool = AcademySystem.is_node_unlocked(nid)
-		b.text = ("✓" if unlocked else "·") + str(nd.get("name", nid))
-		b.toggle_mode = true
-		b.button_pressed = nid == _academy_pick_node
-		b.tooltip_text = str(nd.get("desc", ""))
-		b.pressed.connect(_on_academy_pick_node.bind(nid))
-		row.add_child(b)
-		count += 1
-		if count % 4 == 0:
-			row = HBoxContainer.new()
-			row.add_theme_constant_override("separation", 4)
-			_academy_btns.add_child(row)
+		var r: int = int(nd.get("row", 0))
+		var col: int = int(nd.get("col", 0))
+		max_col = maxi(max_col, col)
+		if not by_row.has(r):
+			by_row[r] = {}
+		(by_row[r] as Dictionary)[col] = nd
+	var rows: Array = by_row.keys()
+	rows.sort()
+	for r2 in rows:
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 4)
+		_academy_btns.add_child(h)
+		var row_map: Dictionary = by_row[r2] as Dictionary
+		for col_i in range(max_col + 1):
+			if not row_map.has(col_i):
+				var spacer := Control.new()
+				spacer.custom_minimum_size = Vector2(108, 28)
+				h.add_child(spacer)
+				continue
+			var nd2: Dictionary = row_map[col_i] as Dictionary
+			var nid: String = str(nd2.get("id", ""))
+			var b := Button.new()
+			var unlocked: bool = AcademySystem.is_node_unlocked(nid)
+			var cost: int = int(nd2.get("cost", 0))
+			var branch: String = str(nd2.get("branch", ""))
+			var mark: String = "✓" if unlocked else ("◇" if bool(AcademySystem.can_unlock_node(nid).get("ok", false)) else "·")
+			var cost_txt: String = "" if unlocked or cost <= 0 else " %d碎" % cost
+			b.text = "%s%s%s" % [mark, str(nd2.get("name", nid)), cost_txt]
+			b.custom_minimum_size = Vector2(108, 28)
+			b.toggle_mode = true
+			b.button_pressed = nid == _academy_pick_node
+			b.tooltip_text = AcademySystem.preview_node(nid)
+			b.add_theme_color_override("font_color", _academy_branch_color(branch) if not unlocked else Color(0.95, 0.9, 0.7))
+			if unlocked:
+				b.modulate = Color(1.05, 1.02, 0.9)
+			elif not bool(AcademySystem.can_unlock_node(nid).get("ok", false)):
+				b.modulate = Color(0.72, 0.72, 0.74)
+			b.pressed.connect(_on_academy_pick_node.bind(nid))
+			h.add_child(b)
 
 
 func _on_academy_pick_node(node_id: String) -> void:
 	_academy_pick_node = node_id
 	_refresh_academy_panel()
+
+
+func _academy_play_unlock_flash() -> void:
+	if _academy_unlock_flash == null or not is_instance_valid(_academy_unlock_flash):
+		return
+	_academy_unlock_flash.color = Color(0.95, 0.82, 0.4, 0.35)
+	var tw := create_tween()
+	tw.tween_property(_academy_unlock_flash, "color:a", 0.0, 0.45)
 
 
 func _on_academy_unlock_pressed() -> void:
@@ -1888,6 +1954,8 @@ func _on_academy_unlock_pressed() -> void:
 	var res: Dictionary = AcademySystem.unlock_node(_academy_pick_node)
 	if not bool(res.get("ok", false)):
 		GameState.push_report("書院解鎖失敗：%s" % str(res.get("reason", "")))
+	else:
+		_academy_play_unlock_flash()
 	_refresh_hud()
 	_refresh_academy_panel()
 

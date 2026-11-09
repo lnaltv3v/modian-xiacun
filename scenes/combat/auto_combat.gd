@@ -582,10 +582,13 @@ func _spawn_hit_floaters() -> void:
 	## 每隔一拍左右各噴一兩個飄字；偶發招架取代受傷
 	var spawn_hero: bool = (_hit_tick % 2) == 0
 	var spawn_enemy: bool = (_hit_tick % 2) == 1 or str(_cfg.get("battle_mode", "")) == "arena"
+	var hero_ids_fx: Array = _cfg.get("heroes", []) as Array
+	var parry_p: float = AcademySystem.party_parry_chance(hero_ids_fx)
+	var crit_p: float = AcademySystem.party_crit_chance(hero_ids_fx)
 	if spawn_hero and not _hero_nodes.is_empty():
 		var hn: Node2D = _hero_nodes[_rng.randi_range(0, _hero_nodes.size() - 1)] as Node2D
 		if hn:
-			var do_parry: bool = _rng.randf() < 0.20
+			var do_parry: bool = _rng.randf() < parry_p
 			if do_parry:
 				var flp = _DamageFloater.new()
 				_float_layer.add_child(flp)
@@ -593,7 +596,7 @@ func _spawn_hit_floaters() -> void:
 				_fx_parry(hn)
 			else:
 				var amt: int = _rng.randi_range(6, 28)
-				var kind: String = "crit" if _rng.randf() < 0.12 else "hit"
+				var kind: String = "crit" if _rng.randf() < crit_p else "hit"
 				var fl = _DamageFloater.new()
 				_float_layer.add_child(fl)
 				fl.setup(amt, hn.position + Vector2(_rng.randf_range(-12, 12), -30), kind)
@@ -602,10 +605,12 @@ func _spawn_hit_floaters() -> void:
 		var en: Node2D = _enemy_nodes[_rng.randi_range(0, _enemy_nodes.size() - 1)] as Node2D
 		if en:
 			var amt2: int = _rng.randi_range(5, 24)
+			## 我方暴擊感：打中敵人時同樣抬暴擊率
+			var ekind: String = "crit" if _rng.randf() < crit_p else "enemy"
 			var fl2 = _DamageFloater.new()
 			_float_layer.add_child(fl2)
-			fl2.setup(amt2, en.position + Vector2(_rng.randf_range(-12, 12), -28), "enemy")
-			_fx_hurt(en, false, _rng.randf() < 0.10)
+			fl2.setup(amt2 if ekind != "crit" else int(round(float(amt2) * 1.45)), en.position + Vector2(_rng.randf_range(-12, 12), -28), ekind if ekind == "crit" else "enemy")
+			_fx_hurt(en, false, ekind == "crit" or _rng.randf() < 0.10)
 
 func _fx_hurt(node: Node2D, hit_from_right: bool, heavy: bool = false) -> void:
 	##  procedural 受傷閃紅／微擊退（無專用 hurt 幀時）

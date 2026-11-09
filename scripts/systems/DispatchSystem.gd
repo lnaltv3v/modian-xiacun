@@ -191,6 +191,8 @@ func _complete_hunt(hunt: Dictionary) -> void:
 	var fur_gain: int = int(round(float(zone.get("base_fur", 1)) * float(n) * mult))
 	var wood_gain: int = int(round(float(zone.get("base_wood", 0)) * mult))
 	var iron_gain: int = int(round(float(zone.get("base_iron", 0)) * mult))
+	fur_gain = int(round(float(fur_gain) * (1.0 + AcademySystem.village_effect_add("hunt_fur_bonus", 0.0))))
+	iron_gain = int(round(float(iron_gain) * (1.0 + AcademySystem.village_effect_add("hunt_iron_bonus", 0.0))))
 	## 山賊較易掉鐵；野豬多毛皮
 	for ev in enemies:
 		var kind: String = str((ev as Dictionary).get("kind", ""))

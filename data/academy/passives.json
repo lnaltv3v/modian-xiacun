@@ -37,6 +37,37 @@
       "desc": "傷勢抗性再升；戰力＋3。",
       "power_bonus": 3,
       "injury_resist": 0.65
+    },
+    {
+      "id": "pogao",
+      "name": "破招",
+      "desc": "戰鬥暴擊率＋12%；戰力＋2。",
+      "power_bonus": 2,
+      "crit_chance": 0.12
+    },
+    {
+      "id": "xieli",
+      "name": "卸力",
+      "desc": "招架率＋15%；傷抗略升。",
+      "power_bonus": 1,
+      "parry_chance": 0.15,
+      "injury_resist": 0.25
+    },
+    {
+      "id": "gangmeng",
+      "name": "剛猛",
+      "desc": "戰力＋5；成功率＋5%。",
+      "power_bonus": 5,
+      "success_bonus": 0.05,
+      "atk_bonus": 3
+    },
+    {
+      "id": "tiebi",
+      "name": "鐵壁",
+      "desc": "高傷抗；戰力＋3（守勢）。",
+      "power_bonus": 3,
+      "injury_resist": 0.55,
+      "def_bonus": 4
     }
   ],
   "skill_tree": {
@@ -45,55 +76,85 @@
     "starter_unlocks": [
       "n_tiegu"
     ],
+    "branches": [
+      {
+        "id": "wuxue",
+        "name": "武學",
+        "desc": "攻防招架暴擊，強化交鋒"
+      },
+      {
+        "id": "jingshi",
+        "name": "經世",
+        "desc": "村務營帳秘境，厚積薄發"
+      }
+    ],
     "nodes": [
       {
         "id": "n_tiegu",
         "skill_id": "tiegu",
         "name": "鐵骨入門",
+        "branch": "wuxue",
         "cost": 0,
         "requires": [],
         "row": 0,
         "col": 0,
-        "desc": "解鎖被動「鐵骨」可授徒"
+        "desc": "武學根：解鎖被動「鐵骨」可授徒"
       },
       {
         "id": "n_jifeng",
         "skill_id": "jifeng",
         "name": "疾風入門",
+        "branch": "wuxue",
         "cost": 6,
         "requires": [],
         "row": 0,
         "col": 1,
-        "desc": "解鎖被動「疾風」"
+        "desc": "武學根：解鎖被動「疾風」"
       },
       {
         "id": "n_chenzhuo",
         "skill_id": "chenzhuo",
         "name": "沉著心法",
+        "branch": "wuxue",
         "cost": 12,
         "requires": [
           "n_tiegu"
         ],
         "row": 1,
         "col": 0,
-        "desc": "解鎖被動「沉著」"
+        "desc": "解鎖被動「沉著」；經世亦可由此分岔"
       },
       {
-        "id": "n_xueqi",
-        "skill_id": "xueqi",
-        "name": "血氣心法",
-        "cost": 12,
+        "id": "n_pogao",
+        "skill_id": "pogao",
+        "name": "破招入門",
+        "branch": "wuxue",
+        "cost": 14,
         "requires": [
           "n_jifeng"
         ],
         "row": 1,
         "col": 1,
+        "desc": "解鎖被動「破招」（暴擊）"
+      },
+      {
+        "id": "n_xueqi",
+        "skill_id": "xueqi",
+        "name": "血氣心法",
+        "branch": "wuxue",
+        "cost": 12,
+        "requires": [
+          "n_jifeng"
+        ],
+        "row": 1,
+        "col": 2,
         "desc": "解鎖被動「血氣」"
       },
       {
         "id": "n_tiegu_plus",
         "skill_id": "tiegu_plus",
         "name": "鐵骨精通",
+        "branch": "wuxue",
         "cost": 20,
         "requires": [
           "n_chenzhuo"
@@ -103,16 +164,44 @@
         "desc": "進階被動「鐵骨精通」"
       },
       {
+        "id": "n_xieli",
+        "skill_id": "xieli",
+        "name": "卸力心法",
+        "branch": "wuxue",
+        "cost": 18,
+        "requires": [
+          "n_chenzhuo",
+          "n_pogao"
+        ],
+        "row": 2,
+        "col": 1,
+        "desc": "解鎖被動「卸力」（招架）"
+      },
+      {
+        "id": "n_gangmeng",
+        "skill_id": "gangmeng",
+        "name": "剛猛刀意",
+        "branch": "wuxue",
+        "cost": 18,
+        "requires": [
+          "n_xueqi"
+        ],
+        "row": 2,
+        "col": 2,
+        "desc": "解鎖被動「剛猛」（攻勢）"
+      },
+      {
         "id": "n_village_ledger",
         "skill_id": "",
         "name": "村賬精算",
+        "branch": "jingshi",
         "cost": 16,
         "requires": [
           "n_chenzhuo"
         ],
         "row": 2,
-        "col": 1,
-        "desc": "村莊日耗銀 −8%（全村生效）",
+        "col": 3,
+        "desc": "經世：村莊日耗銀 −8%（全村）",
         "village": {
           "upkeep_silver_mult": 0.92
         }
@@ -121,15 +210,134 @@
         "id": "n_village_store",
         "skill_id": "",
         "name": "貨棧要訣",
+        "branch": "jingshi",
         "cost": 16,
         "requires": [
           "n_xueqi"
         ],
         "row": 2,
-        "col": 2,
-        "desc": "出征銀獎＋6%（全村生效）",
+        "col": 4,
+        "desc": "經世：出征銀獎＋6%（全村）",
         "village": {
           "hunt_silver_bonus": 0.06
+        }
+      },
+      {
+        "id": "n_tiebi",
+        "skill_id": "tiebi",
+        "name": "鐵壁守勢",
+        "branch": "wuxue",
+        "cost": 24,
+        "requires": [
+          "n_tiegu_plus"
+        ],
+        "row": 3,
+        "col": 0,
+        "desc": "解鎖被動「鐵壁」"
+      },
+      {
+        "id": "n_wuxue_xin",
+        "skill_id": "",
+        "name": "武學心訣",
+        "branch": "wuxue",
+        "cost": 28,
+        "requires": [
+          "n_xieli",
+          "n_gangmeng"
+        ],
+        "row": 3,
+        "col": 1,
+        "desc": "武學巔：全村暴擊＋6%／招架＋6%；被動槽＋1",
+        "village": {
+          "party_crit_bonus": 0.06,
+          "party_parry_bonus": 0.06,
+          "passive_slots_bonus": 1
+        }
+      },
+      {
+        "id": "n_kuangmai",
+        "skill_id": "",
+        "name": "礦脈通",
+        "branch": "jingshi",
+        "cost": 20,
+        "requires": [
+          "n_village_ledger"
+        ],
+        "row": 3,
+        "col": 3,
+        "desc": "經世：出征毛皮／鐵＋10%（全村）",
+        "village": {
+          "hunt_fur_bonus": 0.1,
+          "hunt_iron_bonus": 0.1
+        }
+      },
+      {
+        "id": "n_micang",
+        "skill_id": "",
+        "name": "秘藏錄",
+        "branch": "jingshi",
+        "cost": 22,
+        "requires": [
+          "n_village_store"
+        ],
+        "row": 3,
+        "col": 4,
+        "desc": "經世：秘境銀／碎片＋12%（全村）",
+        "village": {
+          "dungeon_loot_bonus": 0.12,
+          "dungeon_frag_bonus": 0.12
+        }
+      },
+      {
+        "id": "n_yingzhang",
+        "skill_id": "",
+        "name": "營帳策",
+        "branch": "jingshi",
+        "cost": 24,
+        "requires": [
+          "n_kuangmai"
+        ],
+        "row": 4,
+        "col": 3,
+        "desc": "經世：駐守涓滴銀＋15%；營帳日耗×0.9",
+        "village": {
+          "camp_silver_bonus": 0.15,
+          "camp_upkeep_mult": 0.9
+        }
+      },
+      {
+        "id": "n_qianshao",
+        "skill_id": "",
+        "name": "前哨規",
+        "branch": "jingshi",
+        "cost": 24,
+        "requires": [
+          "n_micang"
+        ],
+        "row": 4,
+        "col": 4,
+        "desc": "經世：前哨防衛銀獎＋12%（全村）",
+        "village": {
+          "outpost_silver_bonus": 0.12
+        }
+      },
+      {
+        "id": "n_jingshi_yao",
+        "skill_id": "",
+        "name": "經世要略",
+        "branch": "jingshi",
+        "cost": 32,
+        "requires": [
+          "n_yingzhang",
+          "n_qianshao"
+        ],
+        "row": 5,
+        "col": 3,
+        "desc": "經世巔：日耗銀再−5%；出征銀＋5%；秘境銀＋5%",
+        "village": {
+          "upkeep_silver_mult": 0.95,
+          "hunt_silver_bonus": 0.05,
+          "dungeon_loot_bonus": 0.05
         }
       }
     ]
