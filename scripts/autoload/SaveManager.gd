@@ -55,6 +55,26 @@ func restore_backup() -> bool:
 		return false
 	return load_game()
 
+func migrate_state(state: Dictionary, from_version: int = 0) -> Dictionary:
+	## 舊存檔缺鍵補預設（academy／camp／tutorial）；可重複呼叫
+	var out: Dictionary = state.duplicate(true)
+	if not out.has("camp_stations") or typeof(out.get("camp_stations")) != TYPE_DICTIONARY:
+		out["camp_stations"] = {}
+	if not out.has("academy_unlocked_nodes") or typeof(out.get("academy_unlocked_nodes")) != TYPE_ARRAY:
+		out["academy_unlocked_nodes"] = []
+	if not out.has("tutorial_step"):
+		## 無引導欄＝舊檔，當已完成，唔重播
+		out["tutorial_step"] = 0
+	elif typeof(out.get("tutorial_step")) != TYPE_INT and typeof(out.get("tutorial_step")) != TYPE_FLOAT:
+		out["tutorial_step"] = 0
+	if not out.has("camp_pick_id") or str(out.get("camp_pick_id", "")) == "":
+		out["camp_pick_id"] = "luanshan"
+	# from_version reserved for future schema bumps (currently keys-only fill)
+	if from_version < 0:
+		push_warning("SaveManager: negative save version %d" % from_version)
+	return out
+
+
 func load_game() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
 		return false
@@ -69,7 +89,11 @@ func load_game() -> bool:
 	if ver < 1:
 		push_warning("SaveManager: unknown save version %d" % ver)
 	if d.has("state") and d["state"] is Dictionary:
-		GameState.load_from_dict(d["state"] as Dictionary)
+		var state: Dictionary = migrate_state(d["state"] as Dictionary, ver)
+		GameState.load_from_dict(state)
+		## 讀檔後補書院 starter／樹資料（唔叫 Script.reload）
+		AcademySystem.ensure_loaded()
+		AcademySystem._ensure_starter_unlocks()
 		return true
 	return false
 

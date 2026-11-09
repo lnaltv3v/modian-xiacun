@@ -1,4 +1,4 @@
-# 墨點俠村 · 試玩檢查清單（v0.16.0）
+# 墨點俠村 · 試玩檢查清單（v0.17.0）
 
 繁中。本機：`tools/play.sh`；Web：`cd export/web && python3 -m http.server 8877` 再開瀏覽器。
 
@@ -85,6 +85,10 @@
 4. 舊存檔已解鎖節點仍保留；武學心訣後被動槽顯示＋1
 5. headless：`smoke_v150.tscn` → `SMOKE_V150_OK`
 
+
+## v0.17.0 加測
+- [ ] `smoke_v170.tscn` OK；舊稀疏存檔讀入後 tutorial=0、有 academy starter、camp_stations 空表
+- [ ] 綠六人戰鬥仍無 attack anim（WIP PNG 未接入）
 
 ## v0.16.0 加測
 1. 駐守後開「維護」：在村俠仍食住醫；駐守俠飽食唔應再被村莊饑餓雙重狂扣

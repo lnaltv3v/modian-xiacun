@@ -231,7 +231,30 @@ static func hero_walk(hero_id: String) -> String:
 	return _first_existing(_hero_path_candidates(hero_id, "_walk.png"))
 
 static func hero_attack(hero_id: String) -> String:
-	return _first_existing(_hero_path_candidates(hero_id, "_attack.png"))
+	## 正式 attack 只認紅／橙／紫 Pivot；綠階／一般目錄 WIP 唔接入玩法（避 loader 噪音）
+	var red: String = red_stem_for(hero_id)
+	var orange: String = orange_stem_for(hero_id)
+	var purple: String = purple_stem_for(hero_id)
+	var out: Array = []
+	var seen: Dictionary = {}
+	if red != "":
+		var rp: String = HEROES_RED_DIR + red + "_attack.png"
+		if not seen.has(rp):
+			seen[rp] = true
+			out.append(rp)
+	if orange != "":
+		var op: String = HEROES_ORANGE_DIR + orange + "_attack.png"
+		if not seen.has(op):
+			seen[op] = true
+			out.append(op)
+	if purple != "":
+		var pp: String = HEROES_PURPLE_DIR + purple + "_attack.png"
+		if not seen.has(pp):
+			seen[pp] = true
+			out.append(pp)
+	if out.is_empty():
+		return ""
+	return _first_existing_imported(out)
 
 static func has_red_art(hero_id: String) -> bool:
 	var red: String = red_stem_for(hero_id)
@@ -361,15 +384,18 @@ static func exists(path: String) -> bool:
 	return _res_or_file(path)
 
 static func load_tex(path: String) -> Texture2D:
-	if not exists(path):
+	if path == "" or not exists(path):
 		return null
-	var tex: Texture2D = load(path) as Texture2D
-	if tex != null:
-		return tex
-	## import 未完成時直讀 PNG
-	if FileAccess.file_exists(path):
+	## 只喺 ResourceLoader 認得時先用 load()，避免半成品／未 import WIP 洗 ERROR
+	if ResourceLoader.exists(path):
+		var tex: Texture2D = load(path) as Texture2D
+		if tex != null:
+			return tex
+	## 有檔＋.import sidecar 先允許直讀 PNG（正式資源 import 未完成時）
+	if FileAccess.file_exists(path) and FileAccess.file_exists(path + ".import"):
 		var img := Image.new()
-		if img.load(ProjectSettings.globalize_path(path) if path.begins_with("res://") else path) == OK:
+		var disk: String = ProjectSettings.globalize_path(path) if path.begins_with("res://") else path
+		if img.load(disk) == OK:
 			return ImageTexture.create_from_image(img)
 	return null
 
@@ -379,6 +405,18 @@ static func _first_existing(paths: Array) -> String:
 		if _res_or_file(s):
 			return s
 	return str(paths[0]) if paths.size() > 0 else ""
+
+static func _first_existing_imported(paths: Array) -> String:
+	## 優先已 import；其次檔＋.import 齊（唔單憑裸 PNG，避免綠階 WIP attack）
+	for p in paths:
+		var s: String = str(p)
+		if ResourceLoader.exists(s):
+			return s
+	for p2 in paths:
+		var s2: String = str(p2)
+		if FileAccess.file_exists(s2) and FileAccess.file_exists(s2 + ".import"):
+			return s2
+	return ""
 
 static func monster_frame_px(kind: String) -> int:
 	var tex: Texture2D = load_tex(monster_idle(kind))
@@ -429,9 +467,9 @@ static func make_hero_frames(hero_id: String) -> SpriteFrames:
 	elif idle_tex != null:
 		frames.add_frame("walk", idle_tex)
 
-	## attack sheet：有正式檔先加 anim（紅／橙／紫 Pivot）；否則戰鬥繼續用 walk
+	## attack sheet：有正式紅／橙／紫檔先加 anim；綠階 WIP 唔接入；否則戰鬥繼續用 walk
 	var atk_path: String = hero_attack(hero_id)
-	var atk_tex: Texture2D = load_tex(atk_path) if exists(atk_path) else null
+	var atk_tex: Texture2D = load_tex(atk_path) if atk_path != "" and exists(atk_path) else null
 	if atk_tex != null:
 		frames.add_animation("attack")
 		frames.set_animation_speed("attack", 8.0)

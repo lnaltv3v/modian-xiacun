@@ -2,6 +2,8 @@ extends Node
 ## headless 煙測 v0.11.0：秘境難度／波次選擇＋書院技能樹 stub
 ## godot --headless --path . res://scenes/dev/smoke_v110.tscn
 
+const SmokeUtil = preload("res://scripts/dev/SmokeUtil.gd")
+
 func _ready() -> void:
 	call_deferred("_run")
 
@@ -218,9 +220,10 @@ func _run() -> void:
 		errors.append("preview missing village effect text")
 
 	var panel: String = AcademySystem.describe_panel(hid)
-	if panel.find("技能樹") < 0:
+	## copy evolved (v0.15+ 武學／經世)；接受舊「技能樹」或現行標題
+	if panel.find("技能樹") < 0 and panel.find("師門書院") < 0 and panel.find("武學") < 0:
 		ok = false
-		errors.append("academy panel missing 技能樹")
+		errors.append("academy panel missing 技能樹/師門書院")
 
 	var dp: String = DungeonSystem.describe_pick_panel()
 	if dp.find("入場選擇") < 0:
@@ -228,10 +231,10 @@ func _run() -> void:
 		errors.append("dungeon pick panel text missing")
 
 	## --- main / save fields ---
-	var main_src := FileAccess.get_file_as_string("res://scenes/main/main.gd")
-	if not ("v0.11.0" in main_src):
+	var main_src := SmokeUtil.main_src()
+	if not SmokeUtil.version_at_least(main_src, 0, 11, 0):
 		ok = false
-		errors.append("main.gd not bumped to v0.11.0")
+		errors.append("main.gd title should be >= v0.11.0")
 	if not main_src.contains("_setup_dungeon_panel"):
 		ok = false
 		errors.append("main missing dungeon panel")

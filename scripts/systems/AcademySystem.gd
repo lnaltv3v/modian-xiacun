@@ -19,10 +19,11 @@ static func ensure_loaded() -> void:
 	_loaded = true
 	_ensure_starter_unlocks()
 
-static func reload() -> void:
-	## 測試／熱更用
+static func force_reload() -> void:
+	## 測試／熱更用（唔用名 reload，避免撞 GDScript.Script.reload）
 	_loaded = false
 	ensure_loaded()
+	_ensure_starter_unlocks()
 
 static func _tree() -> Dictionary:
 	ensure_loaded()

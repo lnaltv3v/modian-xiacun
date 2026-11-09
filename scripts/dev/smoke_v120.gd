@@ -2,6 +2,8 @@ extends Node
 ## headless 煙測 v0.12.0：新手秘境／前哨引導步＋HUD 資訊密度
 ## godot --headless --path . res://scenes/dev/smoke_v120.tscn
 
+const SmokeUtil = preload("res://scripts/dev/SmokeUtil.gd")
+
 func _ready() -> void:
 	call_deferred("_run")
 
@@ -19,10 +21,10 @@ func _run() -> void:
 		errors.append("cannot set tutorial 4")
 
 	## simulate main completion helper logic
-	var main_src := FileAccess.get_file_as_string("res://scenes/main/main.gd")
-	if not ("v0.12.0" in main_src):
+	var main_src := SmokeUtil.main_src()
+	if not SmokeUtil.version_at_least(main_src, 0, 12, 0):
 		ok = false
-		errors.append("main.gd not bumped to v0.12.0")
+		errors.append("main.gd title should be >= v0.12.0")
 	if not main_src.contains("_setup_dense_hud"):
 		ok = false
 		errors.append("main missing _setup_dense_hud")

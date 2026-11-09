@@ -574,6 +574,12 @@ static func sanitize_stations() -> void:
 				st["skirmishes"] = 0
 			if not st.has("last_summary"):
 				st["last_summary"] = ""
+			if not st.has("bag_silver"):
+				st["bag_silver"] = 0.0
+			if not st.has("bag_upkeep"):
+				st["bag_upkeep"] = 0.0
+			if not st.has("comfort"):
+				st["comfort"] = true
 			GameState.camp_stations[cid] = st
 	for h in GameState.heroes:
 		var hd: Dictionary = h as Dictionary

@@ -398,7 +398,11 @@ func load_from_dict(d: Dictionary) -> void:
 		inventory = (d["inventory"] as Array).duplicate(true)
 	if d.has("building_placements"):
 		building_placements = (d["building_placements"] as Dictionary).duplicate(true)
-	tutorial_step = int(d.get("tutorial_step", 0))
+	if d.has("tutorial_step"):
+		tutorial_step = int(d.get("tutorial_step", 0))
+	else:
+		## 舊存檔無此鍵 → 當完成，唔重播新手
+		tutorial_step = 0
 	fragments = int(d.get("fragments", 0))
 	bounty_target = str(d.get("bounty_target", ""))
 	auto_shop = bool(d.get("auto_shop", false))
@@ -415,9 +419,15 @@ func load_from_dict(d: Dictionary) -> void:
 	dungeon_pick_diff = str(d.get("dungeon_pick_diff", "normal"))
 	dungeon_pick_waves = str(d.get("dungeon_pick_waves", "full"))
 	outpost_pick_diff = str(d.get("outpost_pick_diff", "normal"))
-	camp_stations = (d.get("camp_stations", {}) as Dictionary).duplicate(true) if typeof(d.get("camp_stations", {})) == TYPE_DICTIONARY else {}
+	if typeof(d.get("camp_stations", {})) == TYPE_DICTIONARY:
+		camp_stations = (d.get("camp_stations", {}) as Dictionary).duplicate(true)
+	else:
+		camp_stations = {}
 	camp_pick_id = str(d.get("camp_pick_id", "luanshan"))
-	academy_unlocked_nodes = (d.get("academy_unlocked_nodes", []) as Array).duplicate(true) if typeof(d.get("academy_unlocked_nodes", [])) == TYPE_ARRAY else []
+	if typeof(d.get("academy_unlocked_nodes", [])) == TYPE_ARRAY:
+		academy_unlocked_nodes = (d.get("academy_unlocked_nodes", []) as Array).duplicate(true)
+	else:
+		academy_unlocked_nodes = []
 	OutpostSystem.sanitize_stations()
 	arena_day_key = str(d.get("arena_day_key", ""))
 	arena_spars_today = int(d.get("arena_spars_today", 0))

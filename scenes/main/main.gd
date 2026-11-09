@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.16.0 — 營地飽食平衡＋Web 試玩
+## 墨點俠村 v0.17.0 — 工程收尾：煙測 pin／存檔兼容／綠階 attack 噪音
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -124,7 +124,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.16.0"
+		title_label.text = "墨點俠村 · v0.17.0"
 
 	_setup_resource_icons()
 	_setup_ui_art()

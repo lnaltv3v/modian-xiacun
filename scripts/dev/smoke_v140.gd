@@ -2,6 +2,8 @@ extends Node
 ## headless 煙測 v0.14.0：戰鬥手感 hurt／parry／入場／區分層底圖
 ## godot --headless --path . res://scenes/dev/smoke_v140.tscn
 
+const SmokeUtil = preload("res://scripts/dev/SmokeUtil.gd")
+
 func _ready() -> void:
 	call_deferred("_run")
 
@@ -12,10 +14,10 @@ func _run() -> void:
 	SaveManager.clear_save()
 	GameState._load_starter_data()
 
-	var main_src := FileAccess.get_file_as_string("res://scenes/main/main.gd")
-	if not ("v0.14.0" in main_src):
+	var main_src := SmokeUtil.main_src()
+	if not SmokeUtil.version_at_least(main_src, 0, 14, 0):
 		ok = false
-		errors.append("main.gd not bumped to v0.14.0")
+		errors.append("main.gd title should be >= v0.14.0")
 
 	## SAVE 維持 14（本版無存檔結構變更）
 	if int(GameState.SAVE_VERSION) < 14:

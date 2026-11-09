@@ -2,6 +2,8 @@ extends Node
 ## headless 煙測 v0.15.0：書院武學／經世技能樹擴充＋效果接線
 ## godot --headless --path . res://scenes/dev/smoke_v150.tscn
 
+const SmokeUtil = preload("res://scripts/dev/SmokeUtil.gd")
+
 func _ready() -> void:
 	call_deferred("_run")
 
@@ -11,12 +13,12 @@ func _run() -> void:
 
 	SaveManager.clear_save()
 	GameState._load_starter_data()
-	AcademySystem.reload()
+	AcademySystem.force_reload()
 
-	var main_src := FileAccess.get_file_as_string("res://scenes/main/main.gd")
-	if not ("v0.15.0" in main_src):
+	var main_src := SmokeUtil.main_src()
+	if not SmokeUtil.version_at_least(main_src, 0, 15, 0):
 		ok = false
-		errors.append("main.gd not bumped to v0.15.0")
+		errors.append("main.gd title should be >= v0.15.0")
 	if not main_src.contains("_academy_play_unlock_flash"):
 		ok = false
 		errors.append("main missing unlock flash")
@@ -210,7 +212,7 @@ func _run() -> void:
 			ok = false
 			errors.append("expected many unlocked nodes in save got %d" % unlocked_n)
 		GameState.load_from_dict(save_d)
-		AcademySystem.reload()
+		AcademySystem.force_reload()
 		if not AcademySystem.is_node_unlocked("n_jingshi_yao"):
 			ok = false
 			errors.append("save restore lost n_jingshi_yao")

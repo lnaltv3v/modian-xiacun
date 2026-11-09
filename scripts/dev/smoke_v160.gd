@@ -2,6 +2,8 @@ extends Node
 ## headless 煙測 v0.16.0：營地單一飽食路徑＋舒適減耗；Web export 文件／腳本
 ## godot --headless --path . res://scenes/dev/smoke_v160.tscn
 
+const SmokeUtil = preload("res://scripts/dev/SmokeUtil.gd")
+
 func _ready() -> void:
 	call_deferred("_run")
 
@@ -21,10 +23,10 @@ func _run() -> void:
 	GameState._load_starter_data()
 	OutpostSystem.ensure_loaded()
 
-	var main_src := FileAccess.get_file_as_string("res://scenes/main/main.gd")
-	if not ("v0.16.0" in main_src):
+	var main_src := SmokeUtil.main_src()
+	if not SmokeUtil.version_at_least(main_src, 0, 16, 0):
 		ok = false
-		errors.append("main.gd not bumped to v0.16.0")
+		errors.append("main.gd title should be >= v0.16.0")
 	if not main_src.contains("舒適減耗"):
 		ok = false
 		errors.append("main camp hint should mention 舒適減耗")

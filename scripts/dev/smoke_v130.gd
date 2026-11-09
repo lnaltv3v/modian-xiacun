@@ -2,6 +2,8 @@ extends Node
 ## headless 煙測 v0.13.0：多前哨外派駐守／召回／涓滴／存檔
 ## godot --headless --path . res://scenes/dev/smoke_v130.tscn
 
+const SmokeUtil = preload("res://scripts/dev/SmokeUtil.gd")
+
 func _ready() -> void:
 	call_deferred("_run")
 
@@ -18,10 +20,10 @@ func _run() -> void:
 	SaveManager.clear_save()
 	GameState._load_starter_data()
 
-	var main_src := FileAccess.get_file_as_string("res://scenes/main/main.gd")
-	if not ("v0.13.0" in main_src):
+	var main_src := SmokeUtil.main_src()
+	if not SmokeUtil.version_at_least(main_src, 0, 13, 0):
 		ok = false
-		errors.append("main.gd not bumped to v0.13.0")
+		errors.append("main.gd title should be >= v0.13.0")
 	if not main_src.contains("_on_camp_station_pressed") or not main_src.contains("_on_camp_recall_pressed"):
 		ok = false
 		errors.append("main missing camp station/recall handlers")
