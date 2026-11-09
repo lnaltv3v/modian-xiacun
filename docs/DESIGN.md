@@ -84,3 +84,10 @@
 - 碎片解鎖；授徒被動＋全村 `village` 效果（`AcademySystem.village_effect_*`）
 - 自動戰鬥讀 `party_crit_chance`／`party_parry_chance`；Save 仍 **14**（`academy_unlocked_nodes`）
 - 煙測 `smoke_v150.tscn`
+
+
+## v0.16 營地飽食平衡
+- `camped` 唔再吃 `UpkeepSystem` 村莊饑餓；飽食／體力只走 `OutpostSystem.tick_camps`
+- 糧餉繳足 → `comfort_drain_mult`（約 0.55）＋`comfort_satiety_per_min` 微補；欠餉 → `unpaid_drain_mult`（約 1.15）
+- 亂山／官道基礎耗略收；疲憊自動召回仍在
+- Web：`tools/export_web.sh`；煙測 `smoke_v160.tscn`

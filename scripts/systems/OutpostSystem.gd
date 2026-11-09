@@ -590,7 +590,8 @@ static func _party_power(hero_ids: Array) -> int:
 
 
 static func tick_camps(delta: float) -> Dictionary:
-	## 被動涓滴＋週期小戰摘要；耗體／飽／少量銀維持
+	## 被動涓滴＋週期小戰摘要；駐守飽食／體力只走此路徑（唔疊村莊饑餓）
+	## 糧餉繳足 → 舒適減耗；欠餉 → 略加重耗；疲憊自動召回
 	if delta <= 0.0 or GameState.camp_stations.is_empty():
 		return {"ok": true, "gains": {}, "events": []}
 	ensure_loaded()
@@ -617,37 +618,52 @@ static func tick_camps(delta: float) -> Dictionary:
 		var power_m: float = 1.0 + float(power) * float(c.get("power_bonus_per", 0.08)) * 0.01
 		var tick_acc: float = float(st.get("tick_accum", 0.0)) + delta
 		var sk_acc: float = float(st.get("skirmish_accum", 0.0)) + delta
-		## stamina / satiety drain while posted
-		var stam_d: float = float(c.get("stamina_drain_per_min", 4.0)) / 60.0 * delta
-		var sat_d: float = float(c.get("satiety_drain_per_min", 2.5)) / 60.0 * delta
-		for hid in ids:
-			HeroSystem.mutate(str(hid), func(hd: Dictionary) -> void:
-				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - stam_d)
-				hd["satiety"] = maxf(0.0, float(hd.get("satiety", 100)) - sat_d)
-				hd["status"] = "camped"
-			)
-		## upkeep silver each full second bucket via tick_accum minutes
+		## 先結糧餉 → 決定舒適減耗（單一飽食路徑）
 		var camp_up_m: float = AcademySystem.village_effect_mult("camp_upkeep_mult", 1.0)
 		var camp_sil_b: float = AcademySystem.village_effect_add("camp_silver_bonus", 0.0)
 		var upkeep_rate: float = float(c.get("upkeep_silver_per_min", 1.5)) * n / 60.0 * camp_up_m
 		var silver_rate: float = float(c.get("trickle_silver_per_min", 10.0)) * power_m / 60.0 * (1.0 + camp_sil_b)
 		var fur_rate: float = float(c.get("trickle_fur_per_min", 0.0)) * power_m / 60.0
 		var iron_rate: float = float(c.get("trickle_iron_per_min", 0.0)) * power_m / 60.0
-		## accumulate fractional gains in station bag
 		var bag_s: float = float(st.get("bag_silver", 0.0)) + silver_rate * delta
 		var bag_f: float = float(st.get("bag_fur", 0.0)) + fur_rate * delta
 		var bag_i: float = float(st.get("bag_iron", 0.0)) + iron_rate * delta
 		var bag_u: float = float(st.get("bag_upkeep", 0.0)) + upkeep_rate * delta
 		var pay_u: int = int(floor(bag_u))
+		var comfort: bool = true
 		if pay_u > 0:
 			bag_u -= float(pay_u)
 			var paid: int = mini(GameState.silver, pay_u)
 			if paid > 0:
 				GameState.try_spend(paid, 0)
 				spent_upkeep += paid
-			## if cannot pay full upkeep, extra stamina drain already applied; mark summary
-			if paid < pay_u:
+			if paid >= pay_u:
+				comfort = true
+			else:
+				comfort = false
 				st["last_summary"] = "糧餉不足，駐軍更疲"
+				changed = true
+		elif upkeep_rate > 0.0:
+			## 未到整銀結算：銀庫空＝無乾糧舒適；有銀維持上一段舒適
+			if GameState.silver <= 0:
+				comfort = false
+			else:
+				comfort = bool(st.get("comfort", true))
+		var comfort_m: float = float(c.get("comfort_drain_mult", 0.55)) if comfort else float(c.get("unpaid_drain_mult", 1.15))
+		var stam_d: float = float(c.get("stamina_drain_per_min", 3.0)) / 60.0 * delta * comfort_m
+		var sat_d: float = float(c.get("satiety_drain_per_min", 1.8)) / 60.0 * delta * comfort_m
+		## 舒適時微補營帳乾糧（唔疊村莊客棧）
+		var sat_comfort: float = 0.0
+		if comfort:
+			sat_comfort = float(c.get("comfort_satiety_per_min", 0.35)) / 60.0 * delta
+		for hid in ids:
+			HeroSystem.mutate(str(hid), func(hd: Dictionary) -> void:
+				hd["stamina"] = maxf(0.0, float(hd.get("stamina", 100)) - stam_d)
+				var sat_now: float = float(hd.get("satiety", 100)) - sat_d + sat_comfort
+				hd["satiety"] = clampf(sat_now, 0.0, 100.0)
+				hd["status"] = "camped"
+			)
+		st["comfort"] = comfort
 		var add_s: int = int(floor(bag_s))
 		var add_f: int = int(floor(bag_f))
 		var add_i: int = int(floor(bag_i))
@@ -750,11 +766,14 @@ static func describe_camps_panel() -> String:
 			for hid_v in ids:
 				names.append(str(HeroSystem.get_hero(str(hid_v)).get("name", hid_v)))
 			lines.append("%s %s　駐：%s" % [mark, str(cd.get("name", cid)), "、".join(names)])
-			lines.append("　累計銀%d 鐵%d 毛皮%d 小戰%d｜%s" % [
+			var comfort_txt: String = "舒適" if bool(st.get("comfort", true)) else "欠餉"
+			lines.append("　累計銀%d 鐵%d 毛皮%d 小戰%d｜%s｜%s" % [
 				int(st.get("total_silver", 0)), int(st.get("total_iron", 0)),
 				int(st.get("total_fur", 0)), int(st.get("skirmishes", 0)),
+				comfort_txt,
 				str(st.get("last_summary", ""))
 			])
+	lines.append("規則：駐守飽食／體力只走營地耗（唔疊村莊饑餓）；糧餉繳足＝舒適減耗＋微補乾糧，欠餉加重。")
 	lines.append("剔選在村俠 → 揀營地 →「駐守」；「召回」返村。駐守中唔可派遣／秘境／一波防衛。")
 	return "\n".join(lines)
 

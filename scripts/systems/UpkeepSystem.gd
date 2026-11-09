@@ -89,8 +89,10 @@ static func tick(delta: float) -> Dictionary:
 		var before_i: float = float(hd.get("injury", 0))
 		var max_s: float = float(hd.get("max_stamina", 100))
 
-		var drain: float = hunger_drain * delta * (1.35 if status == "hunting" else 1.0)
-		hd["satiety"] = clampf(before_a - drain, 0.0, 100.0)
+		## camped：飽食只走 OutpostSystem 營地耗（避免同村莊饑餓雙重疊加）
+		if status != "camped":
+			var drain: float = hunger_drain * delta * (1.35 if status == "hunting" else 1.0)
+			hd["satiety"] = clampf(before_a - drain, 0.0, 100.0)
 
 		if status == "idle":
 			if serve_food and inn_lv >= 1 and before_a < 99.5:

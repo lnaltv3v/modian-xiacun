@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.15.0 — 書院武學／經世技能樹
+## 墨點俠村 v0.16.0 — 營地飽食平衡＋Web 試玩
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -124,7 +124,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.15.0"
+		title_label.text = "墨點俠村 · v0.16.0"
 
 	_setup_resource_icons()
 	_setup_ui_art()
@@ -1666,7 +1666,7 @@ func _setup_outpost_panel() -> void:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", Color(0.75, 0.7, 0.62))
 	hint.add_theme_font_size_override("font_size", 11)
-	hint.text = "駐守＝長期外派（被動銀／偶發小戰）；召回先清位。一波「守前哨」仍要在村閒置俠。"
+	hint.text = "駐守＝長期外派（被動銀／偶發小戰）；飽食只走營地耗；糧餉繳足＝舒適減耗。召回先清位。一波「守前哨」仍要在村閒置俠。"
 	_outpost_panel.add_child(hint)
 
 	_rebuild_outpost_pick_buttons()

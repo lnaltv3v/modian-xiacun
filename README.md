@@ -1,4 +1,4 @@
-# 墨點俠村（Ink Hero Village）· v0.15.0
+# 墨點俠村（Ink Hero Village）· v0.16.0
 
 武俠墨點風格村莊經營＋俠客養成。玩法跟足《獵魔村物語》核心循環（建築→養俠→派遣→資源→再升級）。
 
@@ -21,7 +21,7 @@ Headless 煙測（唔開窗）：
 /workspace/tools/godot/godot --headless --path /workspace/modian-xiacun res://scenes/dev/smoke_v06.tscn
 ```
 
-> **Web／HTML5**：`tools/export_web.sh` → `export/web/`（`python3 -m http.server 8877`）  
+> **Web／HTML5 試玩**：`tools/export_web.sh` → `cd export/web && python3 -m http.server 8877` → 瀏覽器開 `http://127.0.0.1:8877/`（詳見 `docs/EXPORT.md`）  
 > **iOS**：後期里程碑，要 Mac＋Apple 帳先 export。
 
 ## 試玩流程（新手 6 步）
@@ -111,6 +111,12 @@ Headless 煙測（唔開窗）：
 
 
 
+
+## v0.16.0
+- **營地手感平衡**：駐守飽食不再疊村莊饑餓（`UpkeepSystem` 對 `camped` 跳過）；只走營地耗
+- **糧餉舒適**：繳足銀＝`comfort_drain_mult` 減耗＋微補乾糧；欠餉加重；面板標「舒適／欠餉」
+- **Web 試玩**：`tools/export_web.sh` 一鍵 export；`cd export/web && python3 -m http.server 8877`
+- 煙測：`res://scenes/dev/smoke_v160.tscn`；SAVE 仍 14
 
 ## v0.15.0
 - **書院技能樹擴充**：武學／經世兩專精（保留舊 7 節點 id，存檔兼容）；新增破招／卸力／剛猛／鐵壁被動與村賬／礦脈／秘藏／營帳／前哨／心訣／要略等全村節點

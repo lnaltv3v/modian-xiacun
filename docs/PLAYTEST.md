@@ -1,4 +1,4 @@
-# 墨點俠村 · 試玩檢查清單（v0.15.0）
+# 墨點俠村 · 試玩檢查清單（v0.16.0）
 
 繁中。本機：`tools/play.sh`；Web：`cd export/web && python3 -m http.server 8877` 再開瀏覽器。
 
@@ -84,3 +84,10 @@
 3. 解鎖村賬＋經世要略後維護日耗銀再降；秘藏錄後秘境銀／碎片上升；營帳策後駐守涓滴銀升
 4. 舊存檔已解鎖節點仍保留；武學心訣後被動槽顯示＋1
 5. headless：`smoke_v150.tscn` → `SMOKE_V150_OK`
+
+
+## v0.16.0 加測
+1. 駐守後開「維護」：在村俠仍食住醫；駐守俠飽食唔應再被村莊饑餓雙重狂扣
+2. 銀庫充足駐守約 1 分鐘：面板顯示「舒適」、體力／飽食只緩降；銀清空後變「欠餉」加速疲憊
+3. Web：`tools/export_web.sh` 後 `cd export/web && python3 -m http.server 8877` 可開主循環
+4. headless：`smoke_v160.tscn` → `SMOKE_V160_OK`

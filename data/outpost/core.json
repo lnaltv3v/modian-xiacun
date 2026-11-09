@@ -89,7 +89,7 @@
     "full_clear_bonus_iron": 2
   },
   "fail_injury": 12,
-  "desc": "v0.13：三波防衛＋難度階；多前哨外派駐守 stub（亂山／官道）。",
+  "desc": "v0.16：三波防衛＋難度階；駐守單一飽食路徑＋糧餉舒適減耗（亂山／官道）。",
   "bg_key": "outpost",
   "difficulties": [
     {
@@ -128,14 +128,17 @@
       "trickle_silver_per_min": 10.0,
       "trickle_fur_per_min": 0.5,
       "trickle_iron_per_min": 0.12,
-      "stamina_drain_per_min": 4.0,
-      "satiety_drain_per_min": 2.5,
-      "upkeep_silver_per_min": 1.5,
+      "stamina_drain_per_min": 3.0,
+      "satiety_drain_per_min": 1.8,
+      "upkeep_silver_per_min": 1.2,
       "skirmish_interval_sec": 48.0,
       "skirmish_silver_base": 10,
       "skirmish_fur_chance": 0.35,
       "power_bonus_per": 0.08,
-      "desc": "亂山坡外圍常駐；被動收過路山賊薄賞。"
+      "desc": "亂山坡外圍常駐；糧餉繳足可持續駐；欠餉加快疲憊。",
+      "comfort_drain_mult": 0.55,
+      "unpaid_drain_mult": 1.15,
+      "comfort_satiety_per_min": 0.4
     },
     {
       "id": "guandao",
@@ -146,14 +149,17 @@
       "trickle_silver_per_min": 14.0,
       "trickle_fur_per_min": 0.25,
       "trickle_iron_per_min": 0.2,
-      "stamina_drain_per_min": 5.0,
-      "satiety_drain_per_min": 3.0,
-      "upkeep_silver_per_min": 2.0,
+      "stamina_drain_per_min": 3.8,
+      "satiety_drain_per_min": 2.2,
+      "upkeep_silver_per_min": 1.6,
       "skirmish_interval_sec": 40.0,
       "skirmish_silver_base": 14,
       "skirmish_fur_chance": 0.22,
       "power_bonus_per": 0.1,
-      "desc": "官道卡口；需先完成一次前哨全勝解鎖。"
+      "desc": "官道卡口；需先完成一次前哨全勝；舒適減耗同亂山。",
+      "comfort_drain_mult": 0.55,
+      "unpaid_drain_mult": 1.2,
+      "comfort_satiety_per_min": 0.3
     }
   ],
   "default_camp": "luanshan"
