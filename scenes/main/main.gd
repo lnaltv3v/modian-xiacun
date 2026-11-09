@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.18.1 — 開局六綠俠高密度美術接入
+## 墨點俠村 v0.19.0 — 開局六綠俠高密度美術接入
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -126,7 +126,7 @@ func _ready() -> void:
 	add_child(_gacha_flash)
 
 	if title_label:
-		title_label.text = "墨點俠村 · v0.18.1"
+		title_label.text = "墨點俠村 · v0.19.0"
 
 	_setup_resource_icons()
 	_setup_ui_art()
@@ -223,8 +223,8 @@ func _setup_ui_art() -> void:
 		hud.stretch_mode = TextureRect.STRETCH_SCALE
 		hud.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		## sit under InkBar content, left of resource icons
-		hud.position = Vector2(300, 4)
-		hud.size = Vector2(320, 64)
+		hud.position = Vector2(430, 4)
+		hud.size = Vector2(280, 64)
 		hud.z_index = -1
 		add_child(hud)
 		move_child(hud, 1)
@@ -270,8 +270,8 @@ func _setup_dense_hud() -> void:
 		_dense_hud_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_dense_hud_bg.stretch_mode = TextureRect.STRETCH_SCALE
 		_dense_hud_bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		_dense_hud_bg.position = Vector2(4, 68)
-		_dense_hud_bg.size = Vector2(1272, 34)
+		_dense_hud_bg.position = Vector2(4, 100)
+		_dense_hud_bg.size = Vector2(712, 34)
 		_dense_hud_bg.modulate = Color(1, 1, 1, 0.88)
 		add_child(_dense_hud_bg)
 		var status_i: int = status_label.get_index() if status_label else -1
@@ -281,49 +281,29 @@ func _setup_dense_hud() -> void:
 
 	## 騰出 chip 帶：狀態列同左欄微移
 	if status_label:
-		status_label.position = Vector2(16, 102)
-		status_label.size = Vector2(1248, 22)
-	var left_panel := get_node_or_null("LeftPanel") as Control
-	if left_panel and left_panel.position.y < 110:
-		left_panel.position.y = 118
-	var left_title := get_node_or_null("LeftTitle") as Control
-	if left_title and left_title.position.y < 110:
-		left_title.position.y = 118
-	var bscroll := get_node_or_null("BuildingsScroll") as Control
-	if bscroll and bscroll.position.y < 140:
-		bscroll.position.y = 146
-	var vhost := village_host
-	if vhost and vhost.position.y < 110:
-		vhost.position.y = 118
-	var right_panel := get_node_or_null("RightPanel") as Control
-	if right_panel and right_panel.position.y < 110:
-		right_panel.position.y = 118
-	var right_title := get_node_or_null("RightTitle") as Control
-	if right_title and right_title.position.y < 110:
-		right_title.position.y = 118
-	var hscroll := get_node_or_null("HeroesScroll") as Control
-	if hscroll and hscroll.position.y < 150:
-		hscroll.position.y = 146
+		status_label.position = Vector2(12, 136)
+		status_label.size = Vector2(696, 22)
 
-	var chip_y: float = 72.0
-	var x: float = 16.0
+	## portrait chips: wrap on 720-wide strip under InkBar
+	var chip_y: float = 104.0
+	var x: float = 12.0
 	_chip_food_icon = _ensure_chip_icon("ChipFoodIcon", ArtPaths.ICON_SILVER, Vector2(x, chip_y))
-	x += 22.0
-	_chip_food_lab = _ensure_chip_label("ChipFoodLab", Vector2(x, chip_y), 56.0)
-	x += 58.0
+	x += 20.0
+	_chip_food_lab = _ensure_chip_label("ChipFoodLab", Vector2(x, chip_y), 48.0)
+	x += 50.0
 	_chip_lodge_icon = _ensure_chip_icon("ChipLodgeIcon", ArtPaths.ICON_WOOD, Vector2(x, chip_y))
-	x += 22.0
-	_chip_lodge_lab = _ensure_chip_label("ChipLodgeLab", Vector2(x, chip_y), 56.0)
-	x += 58.0
+	x += 20.0
+	_chip_lodge_lab = _ensure_chip_label("ChipLodgeLab", Vector2(x, chip_y), 48.0)
+	x += 50.0
 	_chip_med_icon = _ensure_chip_icon("ChipMedIcon", ArtPaths.ICON_HERB, Vector2(x, chip_y))
-	x += 22.0
-	_chip_med_lab = _ensure_chip_label("ChipMedLab", Vector2(x, chip_y), 56.0)
-	x += 64.0
-	_chip_ready_lab = _ensure_chip_label("ChipReadyLab", Vector2(x, chip_y), 200.0)
-	x += 204.0
-	_chip_dungeon_lab = _ensure_chip_label("ChipDungeonLab", Vector2(x, chip_y), 200.0)
-	x += 204.0
-	_chip_outpost_lab = _ensure_chip_label("ChipOutpostLab", Vector2(x, chip_y), 220.0)
+	x += 20.0
+	_chip_med_lab = _ensure_chip_label("ChipMedLab", Vector2(x, chip_y), 48.0)
+	x += 54.0
+	_chip_ready_lab = _ensure_chip_label("ChipReadyLab", Vector2(x, chip_y), 140.0)
+	x += 144.0
+	_chip_dungeon_lab = _ensure_chip_label("ChipDungeonLab", Vector2(x, chip_y), 120.0)
+	x += 124.0
+	_chip_outpost_lab = _ensure_chip_label("ChipOutpostLab", Vector2(x, chip_y), 120.0)
 
 
 func _ensure_chip_icon(n: String, path: String, pos: Vector2) -> TextureRect:
@@ -1439,8 +1419,8 @@ func _setup_upkeep_panel() -> void:
 	_btn_upkeep.name = "BtnUpkeep"
 	_btn_upkeep.text = "維護"
 	_btn_upkeep.tooltip_text = "村莊維護：食／住／醫狀態與日耗預覽"
-	_btn_upkeep.position = Vector2(1188, 72)
-	_btn_upkeep.size = Vector2(72, 26)
+	_btn_upkeep.position = Vector2(620, 42)
+	_btn_upkeep.size = Vector2(88, 28)
 	_btn_upkeep.pressed.connect(_on_upkeep_pressed)
 	add_child(_btn_upkeep)
 	_apply_btn_art(_btn_upkeep, ArtPaths.BTN_BUILD, Vector2(72, 26))
@@ -1448,8 +1428,8 @@ func _setup_upkeep_panel() -> void:
 	_upkeep_panel = ColorRect.new()
 	_upkeep_panel.name = "UpkeepPanel"
 	_upkeep_panel.color = Color(0.08, 0.06, 0.05, 0.94)
-	_upkeep_panel.position = Vector2(880, 104)
-	_upkeep_panel.size = Vector2(380, 168)
+	_upkeep_panel.position = Vector2(40, 220)
+	_upkeep_panel.size = Vector2(640, 220)
 	_upkeep_panel.visible = false
 	_upkeep_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_upkeep_panel)
@@ -1457,7 +1437,7 @@ func _setup_upkeep_panel() -> void:
 	_upkeep_label = Label.new()
 	_upkeep_label.name = "UpkeepLabel"
 	_upkeep_label.position = Vector2(12, 10)
-	_upkeep_label.size = Vector2(356, 148)
+	_upkeep_label.size = Vector2(616, 200)
 	_upkeep_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_upkeep_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
 	_upkeep_label.add_theme_font_size_override("font_size", 13)
@@ -1506,42 +1486,42 @@ func _setup_dungeon_panel() -> void:
 	_dungeon_panel = ColorRect.new()
 	_dungeon_panel.name = "DungeonPickPanel"
 	_dungeon_panel.color = Color(0.07, 0.06, 0.08, 0.95)
-	_dungeon_panel.position = Vector2(420, 96)
-	_dungeon_panel.size = Vector2(440, 280)
+	_dungeon_panel.position = Vector2(40, 200)
+	_dungeon_panel.size = Vector2(640, 420)
 	_dungeon_panel.visible = false
 	_dungeon_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_dungeon_panel)
 
 	_dungeon_label = Label.new()
 	_dungeon_label.position = Vector2(12, 8)
-	_dungeon_label.size = Vector2(416, 120)
+	_dungeon_label.size = Vector2(616, 140)
 	_dungeon_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_dungeon_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
 	_dungeon_label.add_theme_font_size_override("font_size", 13)
 	_dungeon_panel.add_child(_dungeon_label)
 
 	_dungeon_btns = HBoxContainer.new()
-	_dungeon_btns.position = Vector2(12, 136)
+	_dungeon_btns.position = Vector2(12, 160)
 	_dungeon_btns.size = Vector2(416, 32)
 	_dungeon_btns.add_theme_constant_override("separation", 6)
 	_dungeon_panel.add_child(_dungeon_btns)
 
 	_dungeon_wave_btns = HBoxContainer.new()
-	_dungeon_wave_btns.position = Vector2(12, 176)
+	_dungeon_wave_btns.position = Vector2(12, 210)
 	_dungeon_wave_btns.size = Vector2(416, 32)
 	_dungeon_wave_btns.add_theme_constant_override("separation", 6)
 	_dungeon_panel.add_child(_dungeon_wave_btns)
 
 	_btn_dungeon_go = Button.new()
 	_btn_dungeon_go.text = "入秘境"
-	_btn_dungeon_go.position = Vector2(12, 228)
+	_btn_dungeon_go.position = Vector2(12, 280)
 	_btn_dungeon_go.size = Vector2(120, 36)
 	_btn_dungeon_go.pressed.connect(_run_dungeon_now)
 	_dungeon_panel.add_child(_btn_dungeon_go)
 
 	var btn_close := Button.new()
 	btn_close.text = "關閉"
-	btn_close.position = Vector2(148, 228)
+	btn_close.position = Vector2(160, 280)
 	btn_close.size = Vector2(80, 36)
 	btn_close.pressed.connect(func() -> void: _dungeon_panel.visible = false)
 	_dungeon_panel.add_child(btn_close)
@@ -1607,15 +1587,15 @@ func _setup_outpost_panel() -> void:
 	_outpost_panel = ColorRect.new()
 	_outpost_panel.name = "OutpostPickPanel"
 	_outpost_panel.color = Color(0.07, 0.06, 0.08, 0.95)
-	_outpost_panel.position = Vector2(400, 72)
-	_outpost_panel.size = Vector2(440, 460)
+	_outpost_panel.position = Vector2(24, 180)
+	_outpost_panel.size = Vector2(672, 560)
 	_outpost_panel.visible = false
 	_outpost_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_outpost_panel)
 
 	_outpost_label = Label.new()
 	_outpost_label.position = Vector2(12, 8)
-	_outpost_label.size = Vector2(416, 216)
+	_outpost_label.size = Vector2( 648.0, 210.0)
 	_outpost_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_outpost_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
 	_outpost_label.add_theme_font_size_override("font_size", 12)
@@ -1623,14 +1603,14 @@ func _setup_outpost_panel() -> void:
 
 	_outpost_btns = HBoxContainer.new()
 	_outpost_btns.position = Vector2(12, 232)
-	_outpost_btns.size = Vector2(416, 28)
+	_outpost_btns.size = Vector2(648, 28)
 	_outpost_btns.add_theme_constant_override("separation", 6)
 	_outpost_panel.add_child(_outpost_btns)
 
 	_camp_btns = HBoxContainer.new()
 	_camp_btns.name = "CampPickRow"
 	_camp_btns.position = Vector2(12, 268)
-	_camp_btns.size = Vector2(416, 28)
+	_camp_btns.size = Vector2(648, 28)
 	_camp_btns.add_theme_constant_override("separation", 6)
 	_outpost_panel.add_child(_camp_btns)
 
@@ -1865,23 +1845,23 @@ func _setup_academy_panel() -> void:
 	_academy_panel = ColorRect.new()
 	_academy_panel.name = "AcademyTreePanel"
 	_academy_panel.color = Color(0.07, 0.06, 0.08, 0.95)
-	_academy_panel.position = Vector2(300, 56)
-	_academy_panel.size = Vector2(620, 460)
+	_academy_panel.position = Vector2(24, 160)
+	_academy_panel.size = Vector2(672, 620)
 	_academy_panel.visible = false
 	_academy_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_academy_panel)
 
 	_academy_label = Label.new()
 	_academy_label.position = Vector2(12, 8)
-	_academy_label.size = Vector2(300, 150)
+	_academy_label.size = Vector2( 648.0, 118.0)
 	_academy_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_academy_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
 	_academy_label.add_theme_font_size_override("font_size", 12)
 	_academy_panel.add_child(_academy_label)
 
 	_academy_preview = Label.new()
-	_academy_preview.position = Vector2(320, 8)
-	_academy_preview.size = Vector2(286, 150)
+	_academy_preview.position = Vector2(12, 130)
+	_academy_preview.size = Vector2(648, 60)
 	_academy_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_academy_preview.add_theme_color_override("font_color", Color(0.85, 0.9, 0.78))
 	_academy_preview.add_theme_font_size_override("font_size", 12)
@@ -1889,14 +1869,14 @@ func _setup_academy_panel() -> void:
 	_academy_panel.add_child(_academy_preview)
 
 	_academy_branch_row = HBoxContainer.new()
-	_academy_branch_row.position = Vector2(12, 162)
-	_academy_branch_row.size = Vector2(596, 22)
+	_academy_branch_row.position = Vector2(12, 196)
+	_academy_branch_row.size = Vector2(648, 22)
 	_academy_branch_row.add_theme_constant_override("separation", 12)
 	_academy_panel.add_child(_academy_branch_row)
 
 	_academy_btns = VBoxContainer.new()
-	_academy_btns.position = Vector2(12, 188)
-	_academy_btns.size = Vector2(596, 220)
+	_academy_btns.position = Vector2(12, 224)
+	_academy_btns.size = Vector2(648, 300)
 	_academy_btns.add_theme_constant_override("separation", 4)
 	_academy_panel.add_child(_academy_btns)
 
@@ -1911,8 +1891,8 @@ func _setup_academy_panel() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	_academy_panel.add_child(row)
-	row.position = Vector2(12, 418)
-	row.size = Vector2(596, 32)
+	row.position = Vector2(12, 540)
+	row.size = Vector2(648, 36)
 
 	var btn_unlock := Button.new()
 	btn_unlock.text = "解鎖節點"

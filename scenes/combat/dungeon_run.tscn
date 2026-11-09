@@ -22,19 +22,19 @@ color = Color(0.05, 0.04, 0.03, 0.72)
 
 [node name="Panel" type="ColorRect" parent="."]
 layout_mode = 0
-offset_left = 220.0
-offset_top = 100.0
-offset_right = 1060.0
-offset_bottom = 580.0
+offset_left = 24.0
+offset_top = 220.0
+offset_right = 696.0
+offset_bottom = 980.0
 color = Color(0.101961, 0.0823529, 0.0627451, 0.96)
 
 [node name="TitleLabel" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 240.0
-offset_top = 116.0
-offset_right = 1040.0
-offset_bottom = 148.0
+offset_left = 40.0
+offset_top = 236.0
+offset_right = 680.0
+offset_bottom = 268.0
 theme_override_colors/font_color = Color(0.91, 0.86, 0.78, 1)
 theme_override_font_sizes/font_size = 22
 text = "秘境"
@@ -42,10 +42,10 @@ text = "秘境"
 [node name="WaveLabel" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 240.0
-offset_top = 152.0
-offset_right = 1040.0
-offset_bottom = 180.0
+offset_left = 40.0
+offset_top = 276.0
+offset_right = 680.0
+offset_bottom = 304.0
 theme_override_colors/font_color = Color(0.85, 0.55, 0.25, 1)
 theme_override_font_sizes/font_size = 16
 text = "第一波"
@@ -53,10 +53,10 @@ text = "第一波"
 [node name="ProgressLabel" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 240.0
-offset_top = 184.0
-offset_right = 1040.0
-offset_bottom = 208.0
+offset_left = 40.0
+offset_top = 312.0
+offset_right = 680.0
+offset_bottom = 336.0
 theme_override_colors/font_color = Color(0.8, 0.75, 0.68, 1)
 theme_override_font_sizes/font_size = 13
 text = "…"
@@ -64,20 +64,20 @@ text = "…"
 [node name="EnemiesBox" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 260.0
-offset_top = 220.0
-offset_right = 1020.0
-offset_bottom = 400.0
+offset_left = 40.0
+offset_top = 356.0
+offset_right = 680.0
+offset_bottom = 600.0
 alignment = 1
 theme_override_constants/separation = 24
 
 [node name="FlavorLabel" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 240.0
-offset_top = 420.0
-offset_right = 1040.0
-offset_bottom = 480.0
+offset_left = 40.0
+offset_top = 620.0
+offset_right = 680.0
+offset_bottom = 740.0
 theme_override_colors/font_color = Color(0.91, 0.86, 0.78, 0.95)
 theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
@@ -86,8 +86,8 @@ text = "…"
 [node name="BtnOk" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 560.0
-offset_top = 510.0
-offset_right = 720.0
-offset_bottom = 554.0
+offset_left = 220.0
+offset_top = 780.0
+offset_right = 500.0
+offset_bottom = 824.0
 text = "下一波"

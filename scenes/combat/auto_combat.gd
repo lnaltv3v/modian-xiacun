@@ -400,20 +400,24 @@ func _show_summary() -> void:
 	var tall: bool = mode3 in ["dungeon", "outpost"] or _summary.has("waves")
 	if summary_panel:
 		summary_panel.visible = true
+		summary_panel.offset_left = 40.0
+		summary_panel.offset_right = 680.0
 		if tall:
-			summary_panel.offset_top = 300.0
-			summary_panel.offset_bottom = 560.0
+			summary_panel.offset_top = 560.0
+			summary_panel.offset_bottom = 840.0
 		else:
-			summary_panel.offset_top = 430.0
-			summary_panel.offset_bottom = 540.0
+			summary_panel.offset_top = 640.0
+			summary_panel.offset_bottom = 820.0
 	if summary_label:
+		summary_label.offset_left = 52.0
+		summary_label.offset_right = 668.0
 		if tall:
-			summary_label.offset_top = 308.0
-			summary_label.offset_bottom = 548.0
+			summary_label.offset_top = 572.0
+			summary_label.offset_bottom = 828.0
 			summary_label.add_theme_font_size_override("font_size", 13)
 		else:
-			summary_label.offset_top = 440.0
-			summary_label.offset_bottom = 530.0
+			summary_label.offset_top = 652.0
+			summary_label.offset_bottom = 808.0
 			summary_label.add_theme_font_size_override("font_size", 14)
 		summary_label.text = _format_summary(_summary)
 	if btn_ok:

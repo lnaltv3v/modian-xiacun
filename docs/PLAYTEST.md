@@ -1,4 +1,4 @@
-# 墨點俠村 · 試玩檢查清單（v0.18.1）
+# 墨點俠村 · 試玩檢查清單（v0.19.0）
 
 繁中。本機：`tools/play.sh`；Web：`cd export/web && python3 -m http.server 8877` 再開瀏覽器。
 
@@ -89,7 +89,7 @@
 
 ## v0.17.0 加測
 - [ ] `smoke_v170.tscn` OK；舊稀疏存檔讀入後 tutorial=0、有 academy starter、camp_stations 空表
-- [x] 綠六人戰鬥有 attack anim（v0.18.1 `heroes/green/`）
+- [x] 綠六人戰鬥有 attack anim（v0.19.0 `heroes/green/`）
 
 ## v0.16.0 加測
 1. 駐守後開「維護」：在村俠仍食住醫；駐守俠飽食唔應再被村莊饑餓雙重狂扣
@@ -98,7 +98,7 @@
 4. headless：`smoke_v160.tscn` → `SMOKE_V160_OK`
 
 
-## v0.18.1 加測
+## v0.19.0 加測
 - [ ] 開局六綠俠頭像／戰鬥 idle 為高密度 64（非舊墨點簡陋）
 - [ ] 自動戰鬥可見 walk／attack sheet（4 幀）
 - [ ] `smoke_v181` headless OK
