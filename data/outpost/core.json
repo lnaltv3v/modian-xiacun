@@ -89,6 +89,34 @@
     "full_clear_bonus_iron": 2
   },
   "fail_injury": 12,
-  "desc": "v0.8：三波山賊／獸潮防衛；自動戰鬥演出後結算。",
-  "bg_key": "outpost"
+  "desc": "v0.11：三波防衛＋難度階；自動戰鬥演出後結算。",
+  "bg_key": "outpost",
+  "difficulties": [
+    {
+      "id": "normal",
+      "name": "普通",
+      "power_mult": 1.0,
+      "reward_mult": 1.0,
+      "desc": "標準三波防衛"
+    },
+    {
+      "id": "hard",
+      "name": "困難",
+      "power_mult": 1.35,
+      "reward_mult": 1.4,
+      "unlock_clears_of": "normal",
+      "unlock_clears_need": 1,
+      "desc": "潮更猛；需先普通全勝一次"
+    },
+    {
+      "id": "hell",
+      "name": "絕境",
+      "power_mult": 1.75,
+      "reward_mult": 1.85,
+      "unlock_clears_of": "hard",
+      "unlock_clears_need": 1,
+      "desc": "最高壓；需先困難全勝一次"
+    }
+  ],
+  "default_difficulty": "normal"
 }

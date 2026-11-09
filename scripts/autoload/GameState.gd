@@ -13,7 +13,7 @@ const STARTER_HEROES_PATH := "res://data/heroes/starter_six.json"
 const CORE_BUILDINGS_PATH := "res://data/buildings/core.json"
 const ZONES_PATH := "res://data/zones/core.json"
 const LAYOUT_PATH := "res://data/buildings/layout.json"
-const SAVE_VERSION := 11
+const SAVE_VERSION := 12
 
 const MIN_STAMINA_TO_HUNT := 20
 
@@ -55,6 +55,15 @@ var gacha_free_used_today: bool = false
 var selected_zone: String = "luan_shan_po"
 ## 前哨成功次數（stub 統計）
 var outpost_clears: int = 0
+## 秘境／前哨難度全破次數：diff_id -> int
+var dungeon_diff_clears: Dictionary = {}
+var outpost_diff_clears: Dictionary = {}
+## 秘境／前哨入場選擇（UI）
+var dungeon_pick_diff: String = "normal"
+var dungeon_pick_waves: String = "full"
+var outpost_pick_diff: String = "normal"
+## 書院技能樹已解鎖節點 id
+var academy_unlocked_nodes: Array = []
 ## 比武台日限／連勝
 var arena_day_key: String = ""
 var arena_spars_today: int = 0
@@ -91,6 +100,12 @@ func _load_starter_data() -> void:
 	gacha_free_used_today = false
 	selected_zone = "luan_shan_po"
 	outpost_clears = 0
+	dungeon_diff_clears = {}
+	outpost_diff_clears = {}
+	dungeon_pick_diff = "normal"
+	dungeon_pick_waves = "full"
+	outpost_pick_diff = "normal"
+	academy_unlocked_nodes = []
 	arena_day_key = ""
 	arena_spars_today = 0
 	arena_wins_total = 0
@@ -216,6 +231,15 @@ func add_fragments(amount: int) -> void:
 	fragments = maxi(0, fragments + amount)
 	resources_changed.emit()
 
+func try_spend_fragments(cost: int) -> bool:
+	if cost <= 0:
+		return true
+	if fragments < cost:
+		return false
+	fragments -= cost
+	resources_changed.emit()
+	return true
+
 func add_diamonds(amount: int) -> void:
 	diamonds = maxi(0, diamonds + amount)
 	resources_changed.emit()
@@ -320,6 +344,12 @@ func to_save_dict() -> Dictionary:
 		"gacha_free_used_today": gacha_free_used_today,
 		"selected_zone": selected_zone,
 		"outpost_clears": outpost_clears,
+		"dungeon_diff_clears": dungeon_diff_clears.duplicate(true),
+		"outpost_diff_clears": outpost_diff_clears.duplicate(true),
+		"dungeon_pick_diff": dungeon_pick_diff,
+		"dungeon_pick_waves": dungeon_pick_waves,
+		"outpost_pick_diff": outpost_pick_diff,
+		"academy_unlocked_nodes": academy_unlocked_nodes.duplicate(true),
 		"arena_day_key": arena_day_key,
 		"arena_spars_today": arena_spars_today,
 		"arena_wins_total": arena_wins_total,
@@ -372,6 +402,12 @@ func load_from_dict(d: Dictionary) -> void:
 	gacha_free_used_today = bool(d.get("gacha_free_used_today", false))
 	selected_zone = str(d.get("selected_zone", "luan_shan_po"))
 	outpost_clears = int(d.get("outpost_clears", 0))
+	dungeon_diff_clears = (d.get("dungeon_diff_clears", {}) as Dictionary).duplicate(true) if typeof(d.get("dungeon_diff_clears", {})) == TYPE_DICTIONARY else {}
+	outpost_diff_clears = (d.get("outpost_diff_clears", {}) as Dictionary).duplicate(true) if typeof(d.get("outpost_diff_clears", {})) == TYPE_DICTIONARY else {}
+	dungeon_pick_diff = str(d.get("dungeon_pick_diff", "normal"))
+	dungeon_pick_waves = str(d.get("dungeon_pick_waves", "full"))
+	outpost_pick_diff = str(d.get("outpost_pick_diff", "normal"))
+	academy_unlocked_nodes = (d.get("academy_unlocked_nodes", []) as Array).duplicate(true) if typeof(d.get("academy_unlocked_nodes", [])) == TYPE_ARRAY else []
 	arena_day_key = str(d.get("arena_day_key", ""))
 	arena_spars_today = int(d.get("arena_spars_today", 0))
 	arena_wins_total = int(d.get("arena_wins_total", 0))

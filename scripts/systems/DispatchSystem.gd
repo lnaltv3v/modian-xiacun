@@ -186,6 +186,7 @@ func _complete_hunt(hunt: Dictionary) -> void:
 	var mult: float = ResourceLoop.bounty_reward_mult()
 	var n: int = maxi(1, hero_ids.size())
 	var silver_gain: int = int(round((float(zone.get("base_silver", 10)) + float(total_power) * power_bonus_per) * mult))
+	silver_gain = int(round(float(silver_gain) * (1.0 + AcademySystem.village_effect_add("hunt_silver_bonus", 0.0))))
 	var fur_gain: int = int(round(float(zone.get("base_fur", 1)) * float(n) * mult))
 	var wood_gain: int = int(round(float(zone.get("base_wood", 0)) * mult))
 	var iron_gain: int = int(round(float(zone.get("base_iron", 0)) * mult))

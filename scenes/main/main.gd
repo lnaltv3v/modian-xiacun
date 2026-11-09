@@ -1,5 +1,5 @@
 extends Control
-## 墨點俠村 v0.10.4 — 書院 Pivot R3 academy 接入
+## 墨點俠村 v0.11.0 — 秘境難度／波次選擇＋書院技能樹 stub
 
 const VillageScene := preload("res://scenes/village/village.tscn")
 const HuntResultScene := preload("res://scenes/combat/hunt_result.tscn")
@@ -64,6 +64,20 @@ var _gacha_flash: Control
 var _btn_upkeep: Button
 var _upkeep_panel: ColorRect
 var _upkeep_label: Label
+var _dungeon_panel: ColorRect
+var _dungeon_label: Label
+var _dungeon_btns: HBoxContainer
+var _dungeon_wave_btns: HBoxContainer
+var _btn_dungeon_go: Button
+var _outpost_panel: ColorRect
+var _outpost_label: Label
+var _outpost_btns: HBoxContainer
+var _btn_outpost_go: Button
+var _academy_panel: ColorRect
+var _academy_label: Label
+var _academy_btns: VBoxContainer
+var _academy_preview: Label
+var _academy_pick_node: String = ""
 
 func _ready() -> void:
 	_dispatch = DispatchSystem.new()
@@ -153,6 +167,9 @@ func _ready() -> void:
 	if btn_arena:
 		btn_arena.pressed.connect(_on_arena_pressed)
 	_setup_upkeep_panel()
+	_setup_dungeon_panel()
+	_setup_outpost_panel()
+	_setup_academy_panel()
 
 	_rebuild_buildings()
 	_rebuild_heroes()
@@ -838,46 +855,55 @@ func _refresh_dungeon_btn() -> void:
 	if btn_dungeon == null:
 		return
 	var n: int = _selected_ids(99).size()
-	var waves_n: int = 3
-	var ddef: Dictionary = DungeonSystem.dungeon_def()
-	if not ddef.is_empty():
-		waves_n = maxi(1, (ddef.get("waves", []) as Array).size())
-	var chk: Dictionary = DungeonSystem.can_enter(_selected_ids(DungeonSystem.max_party())) if n > 0 else {"ok": false, "reason": "剔選 1～%d 俠入秘境（%d 波）" % [DungeonSystem.max_party(), waves_n]}
+	var diff: Dictionary = DungeonSystem.difficulty_by_id(str(GameState.dungeon_pick_diff))
+	var wset: Dictionary = DungeonSystem.wave_set_by_id(str(GameState.dungeon_pick_waves))
+	var waves_n: int = int(wset.get("max_waves", 3))
+	var dname: String = str(diff.get("name", "普通"))
+	var chk: Dictionary = DungeonSystem.can_enter(_selected_ids(DungeonSystem.max_party())) if n > 0 else {"ok": false, "reason": "剔選 1～%d 俠入秘境" % DungeonSystem.max_party()}
 	if GameState.dungeon_busy:
 		btn_dungeon.disabled = true
 		btn_dungeon.text = "秘境進行中"
-		btn_dungeon.tooltip_text = "三波自動戰鬥未完"
-	elif n < 1:
-		btn_dungeon.disabled = true
-		btn_dungeon.text = "秘境·%d波" % waves_n
-		btn_dungeon.tooltip_text = "剔選 1～%d 名在村俠客 → 亂山秘境（%d 波自動戰鬥）" % [DungeonSystem.max_party(), waves_n]
-	elif n > DungeonSystem.max_party():
-		btn_dungeon.disabled = true
-		btn_dungeon.text = "秘境（最多%d）" % DungeonSystem.max_party()
-		btn_dungeon.tooltip_text = "最多 %d 俠" % DungeonSystem.max_party()
+		btn_dungeon.tooltip_text = "自動戰鬥未完"
 	else:
-		btn_dungeon.disabled = not bool(chk.get("ok", false))
-		btn_dungeon.text = "秘境·%d波（%d）" % [waves_n, n] if bool(chk.get("ok", false)) else "秘境（未可）"
-		var tip: String = str(chk.get("reason", ""))
-		if tip == "":
-			tip = "亂山秘境 · %d 波自動戰鬥" % waves_n
+		## 按鈕永遠可撳開選擇面板；出發條件喺面板內檢查
+		btn_dungeon.disabled = false
+		btn_dungeon.text = "秘境·%s·%d波" % [dname, waves_n]
+		var tip: String = "亂山秘境 · %s／%s（撳開選擇）" % [dname, str(wset.get("name", ""))]
+		if n > 0 and not bool(chk.get("ok", false)):
+			tip = str(chk.get("reason", tip))
 		btn_dungeon.tooltip_text = tip
 	if btn_academy:
 		var alv: int = BuildingSystem.building_level("academy")
 		btn_academy.disabled = not AcademySystem.academy_ready()
 		if AcademySystem.academy_ready():
 			btn_academy.text = "書院 Lv%d" % maxi(1, alv)
-			btn_academy.tooltip_text = "剔選一名俠客 → 授／輪換被動技"
+			btn_academy.tooltip_text = "技能樹／授徒／全村心法"
 		else:
 			btn_academy.text = "書院（未建）"
-			btn_academy.tooltip_text = "左邊興建「師門書院」後可授被動技"
+			btn_academy.tooltip_text = "左邊興建「師門書院」後可開技能樹"
+	_refresh_dungeon_panel()
+	_refresh_academy_panel()
 
 func _on_dungeon_pressed() -> void:
+	if _dungeon_panel == null:
+		_run_dungeon_now()
+		return
+	## 開／關選擇面板；隱藏其他卡
+	var show: bool = not _dungeon_panel.visible
+	_hide_side_panels()
+	_dungeon_panel.visible = show
+	if show:
+		_dungeon_panel.move_to_front()
+		_refresh_dungeon_panel()
+
+func _run_dungeon_now() -> void:
 	var ids: Array = _selected_ids(DungeonSystem.max_party())
 	var res: Dictionary = DungeonSystem.run_dungeon(ids)
 	if not bool(res.get("ok", false)):
 		GameState.push_report("秘境失敗：%s" % str(res.get("reason", "")))
 		return
+	if _dungeon_panel:
+		_dungeon_panel.visible = false
 	GameState.dungeon_busy = true
 	_selected.clear()
 	_rebuild_heroes()
@@ -888,9 +914,13 @@ func _on_dungeon_pressed() -> void:
 	d_rewards["battle_mode"] = "dungeon"
 	d_rewards["waves"] = d_waves
 	d_rewards["cleared"] = bool(res.get("cleared", d_rewards.get("cleared", false)))
-	d_rewards["total_waves"] = maxi(d_waves.size(), int((DungeonSystem.dungeon_def().get("waves", []) as Array).size()))
+	d_rewards["total_waves"] = int(res.get("total_waves", d_waves.size()))
 	d_rewards["zone_name"] = str(res.get("dungeon_name", d_rewards.get("zone_name", "秘境")))
 	d_rewards["run_title"] = str(d_rewards["zone_name"])
+	d_rewards["difficulty_id"] = str(res.get("difficulty_id", d_rewards.get("difficulty_id", "")))
+	d_rewards["difficulty_name"] = str(res.get("difficulty_name", d_rewards.get("difficulty_name", "")))
+	d_rewards["wave_set_id"] = str(res.get("wave_set_id", d_rewards.get("wave_set_id", "")))
+	d_rewards["wave_set_name"] = str(res.get("wave_set_name", d_rewards.get("wave_set_name", "")))
 	_start_wave_battles(
 		"dungeon",
 		str(res.get("dungeon_name", "秘境")),
@@ -909,30 +939,14 @@ func _on_academy_pressed() -> void:
 	if not AcademySystem.academy_ready():
 		GameState.push_report("書院：先興建師門書院")
 		return
-	var ids: Array = _selected_ids(1)
-	if ids.is_empty() and _craft_hero_id != "":
-		ids = [_craft_hero_id]
-	if ids.is_empty():
-		GameState.push_report("書院：先剔選／點一名俠客")
+	if _academy_panel == null:
 		return
-	var hid: String = str(ids[0])
-	var skills: Array = AcademySystem.all_skills()
-	if skills.is_empty():
-		GameState.push_report("書院：技能表空")
-		return
-	## 最小：輪換下一招（按現有 passive 循環）
-	var cur: String = str(HeroSystem.get_hero(hid).get("passive_id", ""))
-	var idx: int = 0
-	for i in range(skills.size()):
-		if str((skills[i] as Dictionary).get("id", "")) == cur:
-			idx = (i + 1) % skills.size()
-			break
-	var sk: Dictionary = skills[idx] as Dictionary
-	var res: Dictionary = AcademySystem.assign_passive(hid, str(sk.get("id", "")))
-	if not bool(res.get("ok", false)):
-		GameState.push_report("書院失敗：%s" % str(res.get("reason", "")))
-	_rebuild_heroes()
-	_refresh_hud()
+	var show: bool = not _academy_panel.visible
+	_hide_side_panels()
+	_academy_panel.visible = show
+	if show:
+		_academy_panel.move_to_front()
+		_refresh_academy_panel()
 
 func _setup_zone_options() -> void:
 	if opt_zone == null:
@@ -990,18 +1004,18 @@ func _refresh_outpost_btn() -> void:
 			need_m, cur_m, need_b, cur_b, wn
 		]
 		return
+	var od: Dictionary = _OutpostScript.difficulty_by_id(str(GameState.outpost_pick_diff))
+	btn_outpost.disabled = false
+	btn_outpost.text = "前哨·%s·%d波" % [str(od.get("name", "普通")), wn]
 	if n < 1:
-		btn_outpost.disabled = true
-		btn_outpost.text = "前哨·%d波" % wn
-		btn_outpost.tooltip_text = "剔選在村俠客守點（%d 波山賊／獸潮自動戰鬥）" % wn
+		btn_outpost.tooltip_text = "撳開難度選擇 · %d 波" % wn
 	else:
 		var chk: Dictionary = _OutpostScript.can_defend(_selected_ids(6))
-		btn_outpost.disabled = not bool(chk.get("ok", false))
-		btn_outpost.text = "前哨·%d波（%d）" % [wn, n] if bool(chk.get("ok", false)) else "前哨（未可）"
 		var tip2: String = str(chk.get("reason", ""))
 		if tip2 == "":
-			tip2 = "前哨防衛 · %d 波" % wn
+			tip2 = "前哨防衛 · %d 波 · 撳開選擇" % wn
 		btn_outpost.tooltip_text = tip2
+	_refresh_outpost_panel()
 
 func _refresh_arena_btn() -> void:
 	if btn_arena == null:
@@ -1079,11 +1093,24 @@ func _on_inv_sell(inv_index: int) -> void:
 	_refresh_hud()
 
 func _on_outpost_pressed() -> void:
+	if _outpost_panel == null:
+		_run_outpost_now()
+		return
+	var show: bool = not _outpost_panel.visible
+	_hide_side_panels()
+	_outpost_panel.visible = show
+	if show:
+		_outpost_panel.move_to_front()
+		_refresh_outpost_panel()
+
+func _run_outpost_now() -> void:
 	var ids: Array = _selected_ids(6)
 	var res: Dictionary = _OutpostScript.run_defense(ids)
 	if not bool(res.get("ok", false)):
 		GameState.push_report("前哨失敗：%s" % str(res.get("reason", "")))
 		return
+	if _outpost_panel:
+		_outpost_panel.visible = false
 	_selected.clear()
 	_rebuild_heroes()
 	_refresh_hud()
@@ -1100,6 +1127,8 @@ func _on_outpost_pressed() -> void:
 	rewards["total_waves"] = maxi(o_waves.size(), _OutpostScript.wave_count())
 	rewards["zone_name"] = str(_OutpostScript.def().get("name", "前哨防衛"))
 	rewards["run_title"] = str(rewards["zone_name"])
+	rewards["difficulty_id"] = str(res.get("difficulty_id", rewards.get("difficulty_id", "")))
+	rewards["difficulty_name"] = str(res.get("difficulty_name", rewards.get("difficulty_name", "")))
 	_start_wave_battles(
 		"outpost",
 		"前哨防衛",
@@ -1224,7 +1253,9 @@ func _setup_upkeep_panel() -> void:
 func _on_upkeep_pressed() -> void:
 	if _upkeep_panel == null:
 		return
-	_upkeep_panel.visible = not _upkeep_panel.visible
+	var show: bool = not _upkeep_panel.visible
+	_hide_side_panels()
+	_upkeep_panel.visible = show
 	if _upkeep_panel.visible:
 		_upkeep_panel.move_to_front()
 		_refresh_upkeep_panel()
@@ -1242,3 +1273,319 @@ func _refresh_upkeep_panel() -> void:
 	if _upkeep_label and _upkeep_panel and _upkeep_panel.visible:
 		_upkeep_label.text = UpkeepSystem.describe_panel()
 
+
+
+func _hide_side_panels() -> void:
+	if _upkeep_panel:
+		_upkeep_panel.visible = false
+	if _dungeon_panel:
+		_dungeon_panel.visible = false
+	if _outpost_panel:
+		_outpost_panel.visible = false
+	if _academy_panel:
+		_academy_panel.visible = false
+
+
+func _setup_dungeon_panel() -> void:
+	_dungeon_panel = ColorRect.new()
+	_dungeon_panel.name = "DungeonPickPanel"
+	_dungeon_panel.color = Color(0.07, 0.06, 0.08, 0.95)
+	_dungeon_panel.position = Vector2(420, 96)
+	_dungeon_panel.size = Vector2(440, 280)
+	_dungeon_panel.visible = false
+	_dungeon_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_dungeon_panel)
+
+	_dungeon_label = Label.new()
+	_dungeon_label.position = Vector2(12, 8)
+	_dungeon_label.size = Vector2(416, 120)
+	_dungeon_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dungeon_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
+	_dungeon_label.add_theme_font_size_override("font_size", 13)
+	_dungeon_panel.add_child(_dungeon_label)
+
+	_dungeon_btns = HBoxContainer.new()
+	_dungeon_btns.position = Vector2(12, 136)
+	_dungeon_btns.size = Vector2(416, 32)
+	_dungeon_btns.add_theme_constant_override("separation", 6)
+	_dungeon_panel.add_child(_dungeon_btns)
+
+	_dungeon_wave_btns = HBoxContainer.new()
+	_dungeon_wave_btns.position = Vector2(12, 176)
+	_dungeon_wave_btns.size = Vector2(416, 32)
+	_dungeon_wave_btns.add_theme_constant_override("separation", 6)
+	_dungeon_panel.add_child(_dungeon_wave_btns)
+
+	_btn_dungeon_go = Button.new()
+	_btn_dungeon_go.text = "入秘境"
+	_btn_dungeon_go.position = Vector2(12, 228)
+	_btn_dungeon_go.size = Vector2(120, 36)
+	_btn_dungeon_go.pressed.connect(_run_dungeon_now)
+	_dungeon_panel.add_child(_btn_dungeon_go)
+
+	var btn_close := Button.new()
+	btn_close.text = "關閉"
+	btn_close.position = Vector2(148, 228)
+	btn_close.size = Vector2(80, 36)
+	btn_close.pressed.connect(func() -> void: _dungeon_panel.visible = false)
+	_dungeon_panel.add_child(btn_close)
+	_rebuild_dungeon_pick_buttons()
+
+
+func _rebuild_dungeon_pick_buttons() -> void:
+	if _dungeon_btns == null:
+		return
+	for c in _dungeon_btns.get_children():
+		c.queue_free()
+	for c2 in _dungeon_wave_btns.get_children():
+		c2.queue_free()
+	for d in DungeonSystem.difficulties():
+		var dd: Dictionary = d as Dictionary
+		var idd: String = str(dd.get("id", ""))
+		var b := Button.new()
+		var lock: bool = not DungeonSystem.is_difficulty_unlocked(idd)
+		b.text = str(dd.get("name", idd)) + ("鎖" if lock else "")
+		b.disabled = lock
+		b.toggle_mode = true
+		b.button_pressed = idd == str(GameState.dungeon_pick_diff)
+		b.tooltip_text = str(dd.get("desc", ""))
+		b.pressed.connect(_on_pick_dungeon_diff.bind(idd))
+		_dungeon_btns.add_child(b)
+	for w in DungeonSystem.wave_sets():
+		var ww: Dictionary = w as Dictionary
+		var iid: String = str(ww.get("id", ""))
+		var b2 := Button.new()
+		b2.text = str(ww.get("name", iid))
+		b2.toggle_mode = true
+		b2.button_pressed = iid == str(GameState.dungeon_pick_waves)
+		b2.tooltip_text = str(ww.get("desc", ""))
+		b2.pressed.connect(_on_pick_dungeon_waves.bind(iid))
+		_dungeon_wave_btns.add_child(b2)
+
+
+func _on_pick_dungeon_diff(diff_id: String) -> void:
+	GameState.dungeon_pick_diff = diff_id
+	_rebuild_dungeon_pick_buttons()
+	_refresh_dungeon_panel()
+	_refresh_dungeon_btn()
+
+
+func _on_pick_dungeon_waves(ws_id: String) -> void:
+	GameState.dungeon_pick_waves = ws_id
+	_rebuild_dungeon_pick_buttons()
+	_refresh_dungeon_panel()
+	_refresh_dungeon_btn()
+
+
+func _refresh_dungeon_panel() -> void:
+	if _dungeon_label and _dungeon_panel and _dungeon_panel.visible:
+		_dungeon_label.text = DungeonSystem.describe_pick_panel()
+		var n: int = _selected_ids(DungeonSystem.max_party()).size()
+		var chk: Dictionary = DungeonSystem.can_enter(_selected_ids(DungeonSystem.max_party())) if n > 0 else {"ok": false, "reason": "未揀俠"}
+		if _btn_dungeon_go:
+			_btn_dungeon_go.disabled = not bool(chk.get("ok", false)) or GameState.dungeon_busy
+			_btn_dungeon_go.tooltip_text = str(chk.get("reason", "出發"))
+
+
+func _setup_outpost_panel() -> void:
+	_outpost_panel = ColorRect.new()
+	_outpost_panel.name = "OutpostPickPanel"
+	_outpost_panel.color = Color(0.07, 0.06, 0.08, 0.95)
+	_outpost_panel.position = Vector2(420, 96)
+	_outpost_panel.size = Vector2(400, 220)
+	_outpost_panel.visible = false
+	_outpost_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_outpost_panel)
+
+	_outpost_label = Label.new()
+	_outpost_label.position = Vector2(12, 8)
+	_outpost_label.size = Vector2(376, 100)
+	_outpost_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_outpost_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
+	_outpost_label.add_theme_font_size_override("font_size", 13)
+	_outpost_panel.add_child(_outpost_label)
+
+	_outpost_btns = HBoxContainer.new()
+	_outpost_btns.position = Vector2(12, 120)
+	_outpost_btns.size = Vector2(376, 32)
+	_outpost_btns.add_theme_constant_override("separation", 6)
+	_outpost_panel.add_child(_outpost_btns)
+
+	_btn_outpost_go = Button.new()
+	_btn_outpost_go.text = "守前哨"
+	_btn_outpost_go.position = Vector2(12, 168)
+	_btn_outpost_go.size = Vector2(120, 36)
+	_btn_outpost_go.pressed.connect(_run_outpost_now)
+	_outpost_panel.add_child(_btn_outpost_go)
+
+	var btn_close2 := Button.new()
+	btn_close2.text = "關閉"
+	btn_close2.position = Vector2(148, 168)
+	btn_close2.size = Vector2(80, 36)
+	btn_close2.pressed.connect(func() -> void: _outpost_panel.visible = false)
+	_outpost_panel.add_child(btn_close2)
+	_rebuild_outpost_pick_buttons()
+
+
+func _rebuild_outpost_pick_buttons() -> void:
+	if _outpost_btns == null:
+		return
+	for c in _outpost_btns.get_children():
+		c.queue_free()
+	for d in _OutpostScript.difficulties():
+		var dd: Dictionary = d as Dictionary
+		var idd: String = str(dd.get("id", ""))
+		var b := Button.new()
+		var lock: bool = not _OutpostScript.is_difficulty_unlocked(idd)
+		b.text = str(dd.get("name", idd)) + ("鎖" if lock else "")
+		b.disabled = lock
+		b.toggle_mode = true
+		b.button_pressed = idd == str(GameState.outpost_pick_diff)
+		b.tooltip_text = str(dd.get("desc", ""))
+		b.pressed.connect(_on_pick_outpost_diff.bind(idd))
+		_outpost_btns.add_child(b)
+
+
+func _on_pick_outpost_diff(diff_id: String) -> void:
+	GameState.outpost_pick_diff = diff_id
+	_rebuild_outpost_pick_buttons()
+	_refresh_outpost_panel()
+	_refresh_outpost_btn()
+
+
+func _refresh_outpost_panel() -> void:
+	if _outpost_label and _outpost_panel and _outpost_panel.visible:
+		_outpost_label.text = _OutpostScript.describe_pick_panel()
+		var n: int = _selected_ids(6).size()
+		var chk: Dictionary = _OutpostScript.can_defend(_selected_ids(6)) if n > 0 else {"ok": false, "reason": "未揀俠"}
+		if _btn_outpost_go:
+			_btn_outpost_go.disabled = not bool(chk.get("ok", false))
+			_btn_outpost_go.tooltip_text = str(chk.get("reason", "出發"))
+
+
+func _setup_academy_panel() -> void:
+	_academy_panel = ColorRect.new()
+	_academy_panel.name = "AcademyTreePanel"
+	_academy_panel.color = Color(0.07, 0.06, 0.08, 0.95)
+	_academy_panel.position = Vector2(400, 88)
+	_academy_panel.size = Vector2(480, 360)
+	_academy_panel.visible = false
+	_academy_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_academy_panel)
+
+	_academy_label = Label.new()
+	_academy_label.position = Vector2(12, 8)
+	_academy_label.size = Vector2(280, 200)
+	_academy_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_academy_label.add_theme_color_override("font_color", Color(0.91, 0.86, 0.78))
+	_academy_label.add_theme_font_size_override("font_size", 12)
+	_academy_panel.add_child(_academy_label)
+
+	_academy_preview = Label.new()
+	_academy_preview.position = Vector2(300, 8)
+	_academy_preview.size = Vector2(168, 200)
+	_academy_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_academy_preview.add_theme_color_override("font_color", Color(0.85, 0.9, 0.78))
+	_academy_preview.add_theme_font_size_override("font_size", 12)
+	_academy_preview.text = "撳左邊節點預覽"
+	_academy_panel.add_child(_academy_preview)
+
+	_academy_btns = VBoxContainer.new()
+	_academy_btns.position = Vector2(12, 216)
+	_academy_btns.size = Vector2(456, 100)
+	_academy_btns.add_theme_constant_override("separation", 4)
+	_academy_panel.add_child(_academy_btns)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	_academy_panel.add_child(row)
+	row.position = Vector2(12, 320)
+	row.size = Vector2(456, 32)
+
+	var btn_unlock := Button.new()
+	btn_unlock.text = "解鎖節點"
+	btn_unlock.pressed.connect(_on_academy_unlock_pressed)
+	row.add_child(btn_unlock)
+
+	var btn_rotate := Button.new()
+	btn_rotate.text = "授／輪換"
+	btn_rotate.tooltip_text = "對剔選俠客輪換已解鎖被動"
+	btn_rotate.pressed.connect(_on_academy_rotate_pressed)
+	row.add_child(btn_rotate)
+
+	var btn_close3 := Button.new()
+	btn_close3.text = "關閉"
+	btn_close3.pressed.connect(func() -> void: _academy_panel.visible = false)
+	row.add_child(btn_close3)
+
+
+func _refresh_academy_panel() -> void:
+	if _academy_panel == null or not _academy_panel.visible:
+		return
+	var hid: String = ""
+	var ids: Array = _selected_ids(1)
+	if ids.is_empty() and _craft_hero_id != "":
+		hid = _craft_hero_id
+	elif ids.size() > 0:
+		hid = str(ids[0])
+	if _academy_label:
+		_academy_label.text = AcademySystem.describe_panel(hid)
+	if _academy_preview:
+		if _academy_pick_node != "":
+			_academy_preview.text = AcademySystem.preview_node(_academy_pick_node)
+		else:
+			_academy_preview.text = "撳節點預覽效果"
+	## 重建節點掣
+	for c in _academy_btns.get_children():
+		c.queue_free()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	_academy_btns.add_child(row)
+	var count: int = 0
+	for n in AcademySystem.tree_nodes():
+		var nd: Dictionary = n as Dictionary
+		var nid: String = str(nd.get("id", ""))
+		var b := Button.new()
+		var unlocked: bool = AcademySystem.is_node_unlocked(nid)
+		b.text = ("✓" if unlocked else "·") + str(nd.get("name", nid))
+		b.toggle_mode = true
+		b.button_pressed = nid == _academy_pick_node
+		b.tooltip_text = str(nd.get("desc", ""))
+		b.pressed.connect(_on_academy_pick_node.bind(nid))
+		row.add_child(b)
+		count += 1
+		if count % 4 == 0:
+			row = HBoxContainer.new()
+			row.add_theme_constant_override("separation", 4)
+			_academy_btns.add_child(row)
+
+
+func _on_academy_pick_node(node_id: String) -> void:
+	_academy_pick_node = node_id
+	_refresh_academy_panel()
+
+
+func _on_academy_unlock_pressed() -> void:
+	if _academy_pick_node == "":
+		GameState.push_report("書院：先揀一個節點")
+		return
+	var res: Dictionary = AcademySystem.unlock_node(_academy_pick_node)
+	if not bool(res.get("ok", false)):
+		GameState.push_report("書院解鎖失敗：%s" % str(res.get("reason", "")))
+	_refresh_hud()
+	_refresh_academy_panel()
+
+
+func _on_academy_rotate_pressed() -> void:
+	var ids: Array = _selected_ids(1)
+	if ids.is_empty() and _craft_hero_id != "":
+		ids = [_craft_hero_id]
+	if ids.is_empty():
+		GameState.push_report("書院：先剔選／點一名俠客")
+		return
+	var res: Dictionary = AcademySystem.rotate_passive(str(ids[0]))
+	if not bool(res.get("ok", false)):
+		GameState.push_report("書院失敗：%s" % str(res.get("reason", "")))
+	_rebuild_heroes()
+	_refresh_hud()
+	_refresh_academy_panel()

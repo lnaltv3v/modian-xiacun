@@ -120,8 +120,15 @@ static func format_run_result(s: Dictionary) -> String:
 	var wt: int = int(s.get("total_waves", 0))
 	if wt <= 0:
 		wt = waves.size() if waves.size() > 0 else maxi(wc, 1)
+	var diff_nm: String = str(s.get("difficulty_name", ""))
+	var wset_nm: String = str(s.get("wave_set_name", ""))
+	var title2: String = title
+	if diff_nm != "":
+		title2 = "%s·%s" % [title, diff_nm]
+		if wset_nm != "":
+			title2 += "·%s" % wset_nm
 	var head: String = "【%s】%s　波次 %d／%d" % [
-		title,
+		title2,
 		("全破" if cleared else ("部分守住" if wc > 0 else "失利")),
 		wc,
 		wt,
@@ -183,6 +190,13 @@ static func format_unlock_hints(mode: String, s: Dictionary) -> String:
 			])
 		if cleared:
 			tips.append("秘境全破：戰利可入鐵匠／貨棧；練功場消化 XP")
+			var did: String = str(s.get("difficulty_id", ""))
+			if did == "normal" and not DungeonSystem.is_difficulty_unlocked("hard"):
+				tips.append("下一階：困難已接近解鎖條件（普通全破累計）")
+			elif did == "hard" and not DungeonSystem.is_difficulty_unlocked("hell"):
+				tips.append("下一階：絕境需困難全破一次")
+			elif did == "hell":
+				tips.append("絕境已通：可試更高戰力黨或短波組刷碎片")
 		elif wc > 0:
 			tips.append("未全破：食住醫補狀態、升級練功／懸賞再戰")
 		else:

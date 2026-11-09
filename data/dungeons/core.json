@@ -141,5 +141,63 @@
         "require_boss": true
       }
     ]
-  }
+  },
+  "difficulties": [
+    {
+      "id": "normal",
+      "name": "普通",
+      "power_mult": 1.0,
+      "reward_mult": 1.0,
+      "stamina_mult": 1.0,
+      "injury_mult": 1.0,
+      "desc": "標準亂山三波"
+    },
+    {
+      "id": "hard",
+      "name": "困難",
+      "power_mult": 1.4,
+      "reward_mult": 1.45,
+      "stamina_mult": 1.1,
+      "injury_mult": 1.15,
+      "unlock_clears_of": "normal",
+      "unlock_clears_need": 1,
+      "desc": "敵強獎豐；需先普通全破一次"
+    },
+    {
+      "id": "hell",
+      "name": "絕境",
+      "power_mult": 1.85,
+      "reward_mult": 2.0,
+      "stamina_mult": 1.25,
+      "injury_mult": 1.35,
+      "unlock_clears_of": "hard",
+      "unlock_clears_need": 1,
+      "desc": "最高難；需先困難全破一次"
+    }
+  ],
+  "wave_sets": [
+    {
+      "id": "probe",
+      "name": "一波試探",
+      "max_waves": 1,
+      "reward_mult": 0.45,
+      "desc": "只打第1波，獎薄、耗少"
+    },
+    {
+      "id": "double",
+      "name": "雙波進攻",
+      "max_waves": 2,
+      "reward_mult": 0.75,
+      "desc": "前兩波；無末波通關大獎"
+    },
+    {
+      "id": "full",
+      "name": "三波全破",
+      "max_waves": 3,
+      "reward_mult": 1.0,
+      "desc": "全波＋通關／首領獎"
+    }
+  ],
+  "default_difficulty": "normal",
+  "default_wave_set": "full"
 }

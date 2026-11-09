@@ -1,6 +1,6 @@
 extends RefCounted
 class_name OutpostSystem
-## 前哨防衛（v0.8）— 三波山賊／獸潮結算；UI 接自動戰鬥演出
+## 前哨防衛（v0.11）— 三波＋難度階；UI 接自動戰鬥演出
 
 const DATA_PATH := "res://data/outpost/core.json"
 
@@ -27,6 +27,56 @@ static func def() -> Dictionary:
 	ensure_loaded()
 	return _def.duplicate(true)
 
+static func difficulties() -> Array:
+	ensure_loaded()
+	var out: Array = []
+	for d in _def.get("difficulties", []) as Array:
+		out.append((d as Dictionary).duplicate(true))
+	if out.is_empty():
+		out.append({"id": "normal", "name": "普通", "power_mult": 1.0, "reward_mult": 1.0})
+	return out
+
+static func difficulty_by_id(diff_id: String) -> Dictionary:
+	for d in difficulties():
+		var dd: Dictionary = d as Dictionary
+		if str(dd.get("id", "")) == diff_id:
+			return dd
+	var arr: Array = difficulties()
+	return (arr[0] as Dictionary).duplicate(true) if arr.size() > 0 else {}
+
+static func clears_of(diff_id: String) -> int:
+	return int(GameState.outpost_diff_clears.get(diff_id, 0))
+
+static func is_difficulty_unlocked(diff_id: String) -> bool:
+	var d: Dictionary = difficulty_by_id(diff_id)
+	if d.is_empty():
+		return false
+	var need_of: String = str(d.get("unlock_clears_of", ""))
+	if need_of.is_empty():
+		return true
+	return clears_of(need_of) >= int(d.get("unlock_clears_need", 1))
+
+static func record_clear(diff_id: String) -> void:
+	GameState.outpost_diff_clears[diff_id] = clears_of(diff_id) + 1
+
+static func describe_pick_panel() -> String:
+	ensure_loaded()
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("【前哨防衛 · 難度選擇】")
+	var did: String = str(GameState.outpost_pick_diff)
+	var diff: Dictionary = difficulty_by_id(did)
+	lines.append("而家：%s　敵×%.2f　獎×%.2f" % [
+		str(diff.get("name", did)), float(diff.get("power_mult", 1.0)), float(diff.get("reward_mult", 1.0))
+	])
+	for d in difficulties():
+		var dd: Dictionary = d as Dictionary
+		var idd: String = str(dd.get("id", ""))
+		var lock: String = "" if is_difficulty_unlocked(idd) else "（鎖）"
+		var mark: String = "●" if idd == did else "○"
+		lines.append("%s %s%s　全勝%d" % [mark, str(dd.get("name", idd)), lock, clears_of(idd)])
+	lines.append("剔選守點俠後撳「守前哨」出發。")
+	return "\n".join(lines)
+
 static func wave_count() -> int:
 	ensure_loaded()
 	var waves: Array = _def.get("waves", []) as Array
@@ -41,12 +91,18 @@ static func is_unlocked() -> bool:
 	return BuildingSystem.building_level("manor") >= need_manor \
 		and BuildingSystem.building_level("bounty") >= need_bounty
 
-static func can_defend(hero_ids: Array) -> Dictionary:
+static func can_defend(hero_ids: Array, diff_id: String = "") -> Dictionary:
 	ensure_loaded()
 	if not is_unlocked():
 		return {"ok": false, "reason": "前哨未解鎖（村長府＋懸賞榜皆要 Lv.%d／Lv.%d）" % [
 			int(_def.get("unlock_manor_level", 2)), int(_def.get("unlock_bounty_level", 2))
 		]}
+	var did: String = diff_id if diff_id != "" else str(GameState.outpost_pick_diff)
+	if did == "":
+		did = str(_def.get("default_difficulty", "normal"))
+	if not is_difficulty_unlocked(did):
+		var dd: Dictionary = difficulty_by_id(did)
+		return {"ok": false, "reason": "難度「%s」未解鎖" % str(dd.get("name", did))}
 	if hero_ids.is_empty():
 		return {"ok": false, "reason": "未揀守點俠客"}
 	for hid_v in hero_ids:
@@ -109,13 +165,20 @@ static func _pick_enemies(wave: Dictionary, count: int) -> Array:
 		})
 	return out
 
-static func run_defense(hero_ids: Array) -> Dictionary:
+static func run_defense(hero_ids: Array, diff_id: String = "") -> Dictionary:
 	## 同步結算最多三波；UI 再逐波自動戰鬥
-	var chk: Dictionary = can_defend(hero_ids)
+	var did: String = diff_id if diff_id != "" else str(GameState.outpost_pick_diff)
+	if did == "":
+		did = str(_def.get("default_difficulty", "normal"))
+	var chk: Dictionary = can_defend(hero_ids, did)
 	if not bool(chk.get("ok", false)):
 		return {"ok": false, "reason": str(chk.get("reason", "")), "success": false, "waves": [], "rewards": {}}
 
 	ensure_loaded()
+	var diff: Dictionary = difficulty_by_id(did)
+	var power_mult: float = float(diff.get("power_mult", 1.0))
+	var reward_mult: float = float(diff.get("reward_mult", 1.0))
+	var diff_name: String = str(diff.get("name", did))
 	var ids: Array = []
 	for hid_v in hero_ids:
 		ids.append(str(hid_v))
@@ -134,7 +197,7 @@ static func run_defense(hero_ids: Array) -> Dictionary:
 		var wd: Dictionary = wv as Dictionary
 		var count: int = int(wd.get("count_base", 5)) + manor_lv * int(wd.get("count_per_manor", 2))
 		var power_per: int = int(wd.get("power_per", 8))
-		var need: int = count * power_per
+		var need: int = int(round(float(count * power_per) * power_mult))
 		var success_chance: float = clampf(0.32 + float(total_power) / float(maxi(1, need)) * 0.55, 0.12, 0.95)
 		var success: bool = _rng.randf() <= success_chance
 		var enemies: Array = _pick_enemies(wd, mini(count, 4))
@@ -169,6 +232,9 @@ static func run_defense(hero_ids: Array) -> Dictionary:
 		if cleared_all:
 			silver_gain += int(rewards_def.get("full_clear_bonus_silver", 40))
 			iron_gain += int(rewards_def.get("full_clear_bonus_iron", 2))
+		silver_gain = maxi(0, int(round(float(silver_gain) * reward_mult)))
+		iron_gain = maxi(0, int(round(float(iron_gain) * reward_mult)))
+		fur_gain = maxi(0, int(round(float(fur_gain) * reward_mult)))
 		GameState.add_silver(silver_gain)
 		if iron_gain > 0:
 			GameState.add_iron(iron_gain)
@@ -203,14 +269,15 @@ static func run_defense(hero_ids: Array) -> Dictionary:
 
 	var flavor: String
 	if cleared_all:
-		flavor = "前哨三波盡破！山賊／獸潮退散。"
+		flavor = "前哨「%s」三波盡破！山賊／獸潮退散。" % diff_name
 	elif waves_cleared > 0:
-		flavor = "前哨守住 %d／3 波後不敵撤返。" % waves_cleared
+		flavor = "前哨「%s」守住 %d／3 波後不敵撤返。" % [diff_name, waves_cleared]
 	else:
-		flavor = "前哨首波即潰，守軍負傷。"
+		flavor = "前哨「%s」首波即潰，守軍負傷。" % diff_name
 
-	GameState.push_report("前哨「%s」%s 波%d／%d ＋銀%d 鐵%d 毛皮%d" % [
+	GameState.push_report("前哨「%s·%s」%s 波%d／%d ＋銀%d 鐵%d 毛皮%d" % [
 		str(_def.get("name", "前哨")),
+		diff_name,
 		("全勝" if cleared_all else ("部分" if waves_cleared > 0 else "失利")),
 		waves_cleared,
 		wave_count(),
@@ -220,6 +287,7 @@ static func run_defense(hero_ids: Array) -> Dictionary:
 	])
 	if cleared_all:
 		GameState.outpost_clears += 1
+		record_clear(did)
 	GameState.heroes_changed.emit()
 
 	return {
@@ -231,7 +299,18 @@ static func run_defense(hero_ids: Array) -> Dictionary:
 		"waves": waves_out,
 		"heroes": ids.duplicate(),
 		"flavor": flavor,
-		"rewards": {"silver": silver_gain, "iron": iron_gain, "fur": fur_gain, "wood": 0, "flavor": flavor, "injured": []},
+		"difficulty_id": did,
+		"difficulty_name": diff_name,
+		"rewards": {
+			"silver": silver_gain,
+			"iron": iron_gain,
+			"fur": fur_gain,
+			"wood": 0,
+			"flavor": flavor,
+			"injured": [],
+			"difficulty_id": did,
+			"difficulty_name": diff_name,
+		},
 	}
 
 ## 兼容舊 API

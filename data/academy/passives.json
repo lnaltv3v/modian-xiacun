@@ -30,6 +30,108 @@
       "desc": "戰力＋4；秘境清關銀兩略增。",
       "power_bonus": 4,
       "silver_bonus": 0.1
+    },
+    {
+      "id": "tiegu_plus",
+      "name": "鐵骨精通",
+      "desc": "傷勢抗性再升；戰力＋3。",
+      "power_bonus": 3,
+      "injury_resist": 0.65
     }
-  ]
+  ],
+  "skill_tree": {
+    "currency": "fragments",
+    "currency_name": "英雄帖碎片",
+    "starter_unlocks": [
+      "n_tiegu"
+    ],
+    "nodes": [
+      {
+        "id": "n_tiegu",
+        "skill_id": "tiegu",
+        "name": "鐵骨入門",
+        "cost": 0,
+        "requires": [],
+        "row": 0,
+        "col": 0,
+        "desc": "解鎖被動「鐵骨」可授徒"
+      },
+      {
+        "id": "n_jifeng",
+        "skill_id": "jifeng",
+        "name": "疾風入門",
+        "cost": 6,
+        "requires": [],
+        "row": 0,
+        "col": 1,
+        "desc": "解鎖被動「疾風」"
+      },
+      {
+        "id": "n_chenzhuo",
+        "skill_id": "chenzhuo",
+        "name": "沉著心法",
+        "cost": 12,
+        "requires": [
+          "n_tiegu"
+        ],
+        "row": 1,
+        "col": 0,
+        "desc": "解鎖被動「沉著」"
+      },
+      {
+        "id": "n_xueqi",
+        "skill_id": "xueqi",
+        "name": "血氣心法",
+        "cost": 12,
+        "requires": [
+          "n_jifeng"
+        ],
+        "row": 1,
+        "col": 1,
+        "desc": "解鎖被動「血氣」"
+      },
+      {
+        "id": "n_tiegu_plus",
+        "skill_id": "tiegu_plus",
+        "name": "鐵骨精通",
+        "cost": 20,
+        "requires": [
+          "n_chenzhuo"
+        ],
+        "row": 2,
+        "col": 0,
+        "desc": "進階被動「鐵骨精通」"
+      },
+      {
+        "id": "n_village_ledger",
+        "skill_id": "",
+        "name": "村賬精算",
+        "cost": 16,
+        "requires": [
+          "n_chenzhuo"
+        ],
+        "row": 2,
+        "col": 1,
+        "desc": "村莊日耗銀 −8%（全村生效）",
+        "village": {
+          "upkeep_silver_mult": 0.92
+        }
+      },
+      {
+        "id": "n_village_store",
+        "skill_id": "",
+        "name": "貨棧要訣",
+        "cost": 16,
+        "requires": [
+          "n_xueqi"
+        ],
+        "row": 2,
+        "col": 2,
+        "desc": "出征銀獎＋6%（全村生效）",
+        "village": {
+          "hunt_silver_bonus": 0.06
+        }
+      }
+    ]
+  }
 }

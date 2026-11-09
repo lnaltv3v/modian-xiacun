@@ -55,9 +55,10 @@ static func tick(delta: float) -> Dictionary:
 	if _bill_acc >= 1.0:
 		var steps: int = int(floor(_bill_acc))
 		_bill_acc -= float(steps)
-		var food_due: int = int(ceil(food_cost_ps * float(need_food_n) * float(steps)))
+		var upkeep_m: float = AcademySystem.village_effect_mult("upkeep_silver_mult", 1.0)
+		var food_due: int = int(ceil(food_cost_ps * float(need_food_n) * float(steps) * upkeep_m))
 		var lodge_due: int = int(ceil(lodge_cost_ps * float(need_lodge_n) * float(steps)))
-		var med_due: int = int(ceil(med_cost_ps * float(need_med_n) * float(steps)))
+		var med_due: int = int(ceil(med_cost_ps * float(need_med_n) * float(steps) * upkeep_m))
 
 		pay_food = mini(GameState.silver, food_due)
 		var silver_left: int = GameState.silver - pay_food

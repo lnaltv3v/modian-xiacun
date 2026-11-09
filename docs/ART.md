@@ -83,3 +83,6 @@ academy 160 已接入；八棟＋村景統一加厚打磨（瓦紋／木紋／�
 
 ### 書院 R3 接入（2026-11-06）
 Lemon 批核 Pivot R3 `academy.png`；live `assets/art/buildings/academy.png` 改用 R3 交付；`art_revision: pivot_r5_academy_r3`；預覽 `assets/art/_preview/pivot_r3_academy.png`。
+
+### 玩法 v0.11.0（2026-11-10）
+秘境／前哨難度選擇面板＋書院技能樹 UI（功能向，沿用現有 Pivot R6 HUD／按鈕風格；未新出立繪）。
