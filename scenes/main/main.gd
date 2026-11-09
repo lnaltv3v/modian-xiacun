@@ -230,11 +230,11 @@ func _setup_ui_art() -> void:
 		move_child(hud, 1)
 	_set_tex(hud, ArtPaths.HUD_PANEL)
 
-	_apply_btn_art(btn_dispatch, ArtPaths.BTN_DISPATCH, Vector2(128, 40))
-	_apply_btn_art(btn_dungeon, ArtPaths.BTN_DISPATCH, Vector2(108, 28))
-	_apply_btn_art(btn_outpost, ArtPaths.BTN_DISPATCH, Vector2(108, 28))
-	_apply_btn_art(btn_academy, ArtPaths.BTN_BUILD, Vector2(108, 28))
-	_apply_btn_art(btn_arena, ArtPaths.BTN_BUILD, Vector2(98, 28))
+	_apply_btn_art(btn_dispatch, ArtPaths.BTN_DISPATCH, Vector2(160, 48))
+	_apply_btn_art(btn_dungeon, ArtPaths.BTN_DISPATCH, Vector2(140, 44))
+	_apply_btn_art(btn_outpost, ArtPaths.BTN_DISPATCH, Vector2(140, 44))
+	_apply_btn_art(btn_academy, ArtPaths.BTN_BUILD, Vector2(140, 44))
+	_apply_btn_art(btn_arena, ArtPaths.BTN_BUILD, Vector2(140, 44))
 	if btn_gacha:
 		_apply_btn_art(btn_gacha, ArtPaths.BTN_BUILD, Vector2(96, 28))
 	_setup_dense_hud()

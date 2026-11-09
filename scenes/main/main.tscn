@@ -366,9 +366,9 @@ text = "讀檔"
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 16.0
-offset_top = 1052.0
-offset_right = 200.0
-offset_bottom = 1084.0
+offset_top = 1048.0
+offset_right = 220.0
+offset_bottom = 1092.0
 text = "英雄帖（抽卡）"
 
 [node name="FragLabel" type="Label" parent="."]
@@ -460,36 +460,36 @@ offset_bottom = 1120.0
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 16.0
-offset_top = 1132.0
-offset_right = 140.0
-offset_bottom = 1164.0
+offset_top = 1128.0
+offset_right = 160.0
+offset_bottom = 1176.0
 text = "秘境"
 
 [node name="BtnAcademy" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 148.0
-offset_top = 1132.0
-offset_right = 272.0
-offset_bottom = 1164.0
+offset_left = 168.0
+offset_top = 1128.0
+offset_right = 312.0
+offset_bottom = 1176.0
 text = "書院技"
 
 [node name="BtnOutpost" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 280.0
-offset_top = 1132.0
-offset_right = 404.0
-offset_bottom = 1164.0
+offset_left = 320.0
+offset_top = 1128.0
+offset_right = 464.0
+offset_bottom = 1176.0
 text = "前哨"
 
 [node name="BtnArena" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 412.0
-offset_top = 1132.0
-offset_right = 536.0
-offset_bottom = 1164.0
+offset_left = 472.0
+offset_top = 1128.0
+offset_right = 616.0
+offset_bottom = 1176.0
 text = "比武"
 
 [node name="Hint" type="Label" parent="."]

@@ -4,14 +4,14 @@
 
 [resource]
 default_font = ExtResource("1_font")
-default_font_size = 14
-Button/font_sizes/font_size = 14
+default_font_size = 16
+Button/font_sizes/font_size = 16
 Button/fonts/font = ExtResource("1_font")
-CheckBox/font_sizes/font_size = 13
+CheckBox/font_sizes/font_size = 15
 CheckBox/fonts/font = ExtResource("1_font")
-Label/font_sizes/font_size = 14
+Label/font_sizes/font_size = 16
 Label/fonts/font = ExtResource("1_font")
-OptionButton/font_sizes/font_size = 13
+OptionButton/font_sizes/font_size = 15
 OptionButton/fonts/font = ExtResource("1_font")
 PopupMenu/font_sizes/font_size = 13
 PopupMenu/fonts/font = ExtResource("1_font")
